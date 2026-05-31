@@ -1,0 +1,26 @@
+<nav class="topnav" data-active="<?!= activePage ?>">
+  <div class="topnav-inner">
+    <a href="<?!= appUrl ?>" target="_top" class="brand">맥비기획 자료실</a>
+    <div class="topnav-links">
+      <a href="<?!= appUrl ?>" target="_top" data-page="home"><svg class="ico"><use href="#i-home"/></svg><span class="label">홈</span></a>
+      <a href="<?!= appUrl ?>?page=files" target="_top" data-page="files"><svg class="ico"><use href="#i-folder"/></svg><span class="label">자료실</span></a>
+      <a href="<?!= appUrl ?>?page=insights" target="_top" data-page="insights"><svg class="ico"><use href="#i-news"/></svg><span class="label">인사이트</span></a>
+      <a href="<?!= appUrl ?>?page=faq" target="_top" data-page="faq"><svg class="ico"><use href="#i-question"/></svg><span class="label">FAQ</span></a>
+      <a href="<?!= appUrl ?>?page=submit" target="_top" data-page="submit"><svg class="ico"><use href="#i-add"/></svg><span class="label">등록</span></a>
+    </div>
+  </div>
+</nav>
+<script>
+  (function () {
+    const active = document.querySelector('.topnav').dataset.active;
+    document.querySelectorAll('.topnav-links a').forEach(a => {
+      if (a.dataset.page === active) a.classList.add('active');
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const href = a.getAttribute('href');
+        try { top.location.href = href; }
+        catch (err) { window.open(href, '_top'); }
+      });
+    });
+  })();
+</script>

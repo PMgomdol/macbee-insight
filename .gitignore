@@ -1,0 +1,43 @@
+# 비밀 키 — 절대 push 금지
+.env*
+!.env.example
+!.env.local.example
+*.key
+*-sa.json
+**/macbe_sheets_sa.json
+**/.macbe_supabase
+
+# Node / Next
+node_modules/
+.next/
+out/
+.turbo/
+
+# Build / cache
+dist/
+build/
+.cache/
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# 임시 / 분석 결과
+/tmp/
+*.tmp.json
+
+# 로컬 데이터 (대용량)
+docs/맥비기획_자료실_운영팀 DB_v2.xlsx
+docs/맥비톡방 자료실.xlsx
+macbee-document/~$*

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>FAQ · 맥비기획 자료실</title>
+<?!= include('styles'); ?>
+</head>
+<body>
+<?!= iconsHtml ?>
+<?!= navHtml ?>
+<div class="wrap wide">
+  <header class="hero">
+    <h1>자주 묻는 질문</h1>
+    <p>맥비톡방에서 자주 나온 질문과 답변. 카테고리·키워드로 빠르게 찾아보세요.</p>
+  </header>
+
+  <section class="filters faq-filters">
+    <input id="q" type="search" placeholder="질문·답변 검색" autocomplete="off">
+    <select id="mainCategory"><option value="">전체 대분류</option></select>
+  </section>
+
+  <p id="counter" class="muted"></p>
+
+  <div id="faqList" class="faq-list"></div>
+</div>
+
+<!-- 답변 모달 -->
+<div id="modal" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <button class="modal-close" id="modalClose" aria-label="닫기"><svg class="ico"><use href="#i-close"/></svg></button>
+    <div class="modal-cat" id="modalCat"></div>
+    <h2 class="modal-title" id="modalTitle"></h2>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <span class="muted" id="modalMeta"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// 서버에서 inline 주입된 초기 데이터 (RPC 호출 0회로 즉시 렌더)
+const INITIAL = <?!= faqInitial ?> || { ok: false, items: [], categories: {} };
+let CACHE = INITIAL.items || [];
+let debounceTimer = null;
+
+function load() {
+  if (INITIAL.ok) {
+    fillCategoryDropdown(INITIAL.categories || {});
+    render();
+  } else {
+    document.getElementById('counter').textContent = '데이터를 불러올 수 없습니다.';
+  }
+}
+
+function fillCategoryDropdown(categories) {
+  const sel = document.getElementById('mainCategory');
+  Object.keys(categories).sort().forEach(k => {
+    const o = document.createElement('option');
+    o.value = k;
+    o.textContent = k + ' (' + categories[k] + ')';
+    sel.appendChild(o);
+  });
+  sel.addEventListener('change', render);
+}
+
+function render() {
+  const q = document.getElementById('q').value.toLowerCase().trim();
+  const main = document.getElementById('mainCategory').value;
+  const list = document.getElementById('faqList');
+
+  const filtered = CACHE.filter(it => {
+    if (main && it.main !== main) return false;
+    if (q && (it.q + ' ' + it.a).toLowerCase().indexOf(q) < 0) return false;
+    return true;
+  });
+
+  list.innerHTML = '';
+  document.getElementById('counter').textContent = `총 ${filtered.length}건`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty"><p>결과가 없습니다.</p></div>';
+    return;
+  }
+
+  // 대분류별 그룹화
+  const grouped = {};
+  filtered.forEach(it => {
+    const k = it.main || '기타';
+    if (!grouped[k]) grouped[k] = [];
+    grouped[k].push(it);
+  });
+
+  Object.keys(grouped).forEach(cat => {
+    const section = document.createElement('div');
+    section.className = 'faq-group';
+    section.innerHTML = `<h3 class="faq-group-title">${esc(cat)} <span class="count">${grouped[cat].length}</span></h3>`;
+    const items = document.createElement('div');
+    items.className = 'faq-items';
+    grouped[cat].forEach(it => {
+      const row = document.createElement('button');
+      row.className = 'faq-row';
+      row.type = 'button';
+      row.innerHTML = `
+        <span class="faq-row-icon"><svg class="ico"><use href="#i-question"/></svg></span>
+        <span class="faq-row-text">
+          <span class="faq-q">${esc(it.q)}</span>
+          ${it.sub ? `<span class="faq-sub">${esc(it.sub)}</span>` : ''}
+        </span>
+        <span class="faq-row-arrow"><svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></span>
+      `;
+      row.addEventListener('click', () => openModal(it));
+      items.appendChild(row);
+    });
+    section.appendChild(items);
+    list.appendChild(section);
+  });
+}
+
+function openModal(it) {
+  document.getElementById('modalCat').textContent = (it.main || '') + (it.sub ? ' › ' + it.sub : '');
+  document.getElementById('modalTitle').textContent = it.q;
+  document.getElementById('modalBody').innerHTML = formatAnswer(it.a);
+  document.getElementById('modalMeta').textContent = '조회 ' + (it.views + 1) + '회 · 등록 ' + (it.registeredAt || '—');
+  document.getElementById('modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+  google.script.run.incrementFaqView(it.no);
+  it.views = (it.views || 0) + 1;
+}
+
+function closeModal() {
+  document.getElementById('modal').hidden = true;
+  document.body.style.overflow = '';
+}
+
+function formatAnswer(text) {
+  // 줄바꿈 + URL을 링크로
+  let html = esc(text)
+    .replace(/\n/g, '<br>')
+    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  return html;
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target.id === 'modal') closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+document.getElementById('q').addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(render, 200);
+});
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+load();
+</script>
+</body>
+</html>

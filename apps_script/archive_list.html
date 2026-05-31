@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>맥비기획 자료실</title>
+<?!= include('styles'); ?>
+</head>
+<body>
+<?!= iconsHtml ?>
+<?!= navHtml ?>
+<div class="wrap wide">
+  <header class="hero">
+    <? if (kind === 'files') { ?>
+      <h1>기획 자료실</h1>
+      <p>실무에 바로 쓰는 기획서·템플릿·가이드. 다운로드 가능한 파일 자료 모음.</p>
+    <? } else { ?>
+      <h1>인사이트</h1>
+      <p>아티클·영상·노션 자료. 학습과 영감을 주는 외부 콘텐츠.</p>
+    <? } ?>
+  </header>
+
+  <section class="filters">
+    <input id="q" type="search" placeholder="검색" autocomplete="off" value="<?!= initialQuery ?>">
+    <select id="mainCategory"><option value="">전체 대분류</option></select>
+    <select id="subCategory"><option value="">전체 소분류</option></select>
+    <select id="format">
+      <option value="">전체 형식</option>
+      <? if (kind === 'files') { ?>
+        <option>기획서</option><option>가이드</option><option>템플릿</option><option>세미나</option>
+      <? } else { ?>
+        <option>아티클</option><option>영상</option>
+      <? } ?>
+    </select>
+    <select id="sort">
+      <option value="recent">최신순</option>
+      <option value="popular">인기순</option>
+      <option value="views">조회순</option>
+    </select>
+  </section>
+
+  <div class="filter-bar">
+    <p id="counter" class="muted"></p>
+    <div class="segmented" role="tablist">
+      <button id="viewGrid" class="active" type="button"><svg class="ico ico-sm"><use href="#i-grid"/></svg>카드</button>
+      <button id="viewList" type="button"><svg class="ico ico-sm"><use href="#i-list"/></svg>리스트</button>
+    </div>
+  </div>
+
+  <div id="grid" class="grid"></div>
+  <div id="list" class="list-view" hidden></div>
+
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<script>
+const KIND = '<?!= kind ?>';
+let CATEGORY_TREE = {};
+let currentPage = 1;
+let totalPages = 1;
+let debounceTimer = null;
+let viewMode = localStorage.getItem('macbe_view_mode') || 'grid';
+
+function applyViewMode() {
+  document.getElementById('viewGrid').classList.toggle('active', viewMode === 'grid');
+  document.getElementById('viewList').classList.toggle('active', viewMode === 'list');
+  document.getElementById('grid').hidden = viewMode !== 'grid';
+  document.getElementById('list').hidden = viewMode !== 'list';
+}
+document.getElementById('viewGrid').onclick = () => { viewMode = 'grid'; localStorage.setItem('macbe_view_mode', viewMode); applyViewMode(); fetchItems(); };
+document.getElementById('viewList').onclick = () => { viewMode = 'list'; localStorage.setItem('macbe_view_mode', viewMode); applyViewMode(); fetchItems(); };
+
+const CATEGORY_INITIAL = <?!= categoryTreeInitial ?> || null;
+
+function load() {
+  if (CATEGORY_INITIAL && CATEGORY_INITIAL.ok) {
+    CATEGORY_TREE = CATEGORY_INITIAL.tree;
+    fillCategoryDropdowns();
+  } else {
+    google.script.run.withSuccessHandler(res => {
+      if (res.ok) { CATEGORY_TREE = res.tree; fillCategoryDropdowns(); }
+    }).getCategoryTree();
+  }
+  fetchItems();
+}
+
+function fillCategoryDropdowns() {
+  const main = document.getElementById('mainCategory');
+  Object.keys(CATEGORY_TREE).forEach(k => {
+    const o = document.createElement('option'); o.value = o.textContent = k; main.appendChild(o);
+  });
+  main.addEventListener('change', () => { refreshSub(); currentPage = 1; fetchItems(); });
+  refreshSub();
+}
+
+function refreshSub() {
+  const main = document.getElementById('mainCategory').value;
+  const sub = document.getElementById('subCategory');
+  sub.innerHTML = '<option value="">전체 소분류</option>';
+  (CATEGORY_TREE[main] || []).forEach(s => {
+    const o = document.createElement('option'); o.value = o.textContent = s; sub.appendChild(o);
+  });
+}
+
+function buildFilter() {
+  return {
+    kind: KIND,
+    query: document.getElementById('q').value,
+    mainCategory: document.getElementById('mainCategory').value,
+    subCategory: document.getElementById('subCategory').value,
+    format: document.getElementById('format').value,
+    sort: document.getElementById('sort').value,
+    page: currentPage,
+  };
+}
+
+function fetchItems() {
+  document.getElementById('counter').textContent = '불러오는 중...';
+  showSkeleton();
+  google.script.run
+    .withSuccessHandler(renderItems)
+    .withFailureHandler(err => { document.getElementById('counter').textContent = '오류: ' + err; })
+    .getArchiveItems(buildFilter());
+}
+
+function showSkeleton() {
+  const grid = document.getElementById('grid');
+  if (viewMode !== 'grid') return;
+  grid.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const c = document.createElement('div');
+    c.className = 'skeleton-card';
+    c.innerHTML = '<div class="skeleton sk-line sk-short"></div><div class="skeleton sk-line sk-title"></div><div class="skeleton sk-line"></div><div class="skeleton sk-line sk-short"></div>';
+    grid.appendChild(c);
+  }
+}
+
+function renderItems(res) {
+  const grid = document.getElementById('grid');
+  const list = document.getElementById('list');
+  grid.innerHTML = ''; list.innerHTML = '';
+
+  if (!res.ok || res.total === 0) {
+    document.getElementById('counter').innerHTML = '검색 결과가 없습니다.';
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+  totalPages = Math.max(1, Math.ceil(res.total / res.pageSize));
+  document.getElementById('counter').textContent = `총 ${res.total}건 · ${res.page}/${totalPages} 페이지`;
+
+  if (viewMode === 'list') {
+    const header = document.createElement('div');
+    header.className = 'list-row header';
+    header.innerHTML = `<span>카테고리</span><span>제목</span><span>형식</span><span>발행</span><span>등록</span><span></span>`;
+    list.appendChild(header);
+    res.items.forEach(it => list.appendChild(buildListRow(it)));
+  } else {
+    res.items.forEach(it => grid.appendChild(buildCard(it)));
+  }
+  renderPagination();
+}
+
+function buildCard(item) {
+  const card = document.createElement('article');
+  card.className = 'item';
+  const fmtBadge = item.format ? `<span class="badge">${esc(item.format)}</span>` : '';
+  const publishedLine = item.publishedAt || '발행일 미상';
+  const dateLine = [publishedLine, item.registeredAt && '등록 ' + item.registeredAt].filter(Boolean).join(' · ');
+  const stat = (item.views || item.downloads)
+    ? `<span class="stat"><svg class="ico"><use href="#i-eye"/></svg>${item.views || 0}${item.downloads ? ' · <svg class="ico"><use href="#i-download"/></svg>' + item.downloads : ''}</span>` : '';
+  const linkUrl = item.url || item.fileLink || '#';
+  card.innerHTML = `
+    <div class="item-head">
+      <span class="cat">${esc(item.mainCategory || '미분류')}${item.subCategory ? ' › ' + esc(item.subCategory) : ''}</span>
+      ${fmtBadge}
+    </div>
+    <h3 class="item-title"><a href="${esc(linkUrl)}" target="_blank" rel="noopener" data-no="${item.no}" data-kind="view">${esc(item.title || '(제목 없음)')}</a></h3>
+    ${item.summary ? `<p class="item-summary">${esc(item.summary)}</p>` : ''}
+    <div class="item-tags">${(item.tags || []).slice(0, 5).map(t => `<span class="tag">#${esc(t)}</span>`).join('')}</div>
+    <div class="item-foot">
+      <span class="muted">${esc(dateLine)} ${stat}</span>
+      <span class="links">
+        ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" data-no="${item.no}" data-kind="view"><svg class="ico ico-sm"><use href="#i-link"/></svg>원문</a>` : ''}
+        ${item.fileLink ? `<a href="${esc(item.fileLink)}" target="_blank" rel="noopener" data-no="${item.no}" data-kind="download"><svg class="ico ico-sm"><use href="#i-download"/></svg>파일</a>` : ''}
+      </span>
+    </div>
+  `;
+  card.querySelectorAll('a[data-no]').forEach(a => {
+    a.addEventListener('click', () => google.script.run.incrementCount(Number(a.dataset.no), a.dataset.kind));
+  });
+  return card;
+}
+
+function buildListRow(item) {
+  const row = document.createElement('div');
+  row.className = 'list-row';
+  const linkUrl = item.url || item.fileLink || '#';
+  row.innerHTML = `
+    <span class="col-cat">${esc(item.mainCategory || '미분류')}${item.subCategory ? ' › ' + esc(item.subCategory) : ''}</span>
+    <span class="col-title">
+      <a href="${esc(linkUrl)}" target="_blank" rel="noopener" data-no="${item.no}" data-kind="view">${esc(item.title || '(제목 없음)')}</a>
+      ${item.summary ? `<span class="sum">${esc(item.summary)}</span>` : ''}
+    </span>
+    <span class="col-fmt">${esc(item.format || '')}</span>
+    <span class="col-date">${esc(item.publishedAt || '—')}</span>
+    <span class="col-date">${esc(item.registeredAt || '')}</span>
+    <span class="col-links">
+      ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" data-no="${item.no}" data-kind="view" title="원문"><svg class="ico ico-sm"><use href="#i-link"/></svg></a>` : ''}
+      ${item.fileLink ? `<a href="${esc(item.fileLink)}" target="_blank" rel="noopener" data-no="${item.no}" data-kind="download" title="파일"><svg class="ico ico-sm"><use href="#i-download"/></svg></a>` : ''}
+    </span>
+  `;
+  row.querySelectorAll('a[data-no]').forEach(a => {
+    a.addEventListener('click', () => google.script.run.incrementCount(Number(a.dataset.no), a.dataset.kind));
+  });
+  return row;
+}
+
+function renderPagination() {
+  const p = document.getElementById('pagination');
+  p.innerHTML = '';
+  if (totalPages <= 1) return;
+  const mk = (label, page, disabled) => {
+    const b = document.createElement('button');
+    b.textContent = label; b.disabled = !!disabled;
+    if (page === currentPage) b.classList.add('current');
+    b.addEventListener('click', () => { currentPage = page; fetchItems(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    return b;
+  };
+  p.appendChild(mk('‹ 이전', Math.max(1, currentPage - 1), currentPage === 1));
+  const pages = new Set([1, totalPages, currentPage, currentPage - 1, currentPage + 1, currentPage - 2, currentPage + 2]);
+  const list = [...pages].filter(n => n >= 1 && n <= totalPages).sort((a, b) => a - b);
+  let prev = 0;
+  list.forEach(n => {
+    if (prev && n > prev + 1) p.appendChild(Object.assign(document.createElement('span'), { className: 'gap', textContent: '…' }));
+    p.appendChild(mk(String(n), n));
+    prev = n;
+  });
+  p.appendChild(mk('다음 ›', Math.min(totalPages, currentPage + 1), currentPage === totalPages));
+}
+
+document.getElementById('q').addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => { currentPage = 1; fetchItems(); }, 250);
+});
+['subCategory', 'format', 'sort'].forEach(id =>
+  document.getElementById(id).addEventListener('change', () => { currentPage = 1; fetchItems(); })
+);
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+applyViewMode();
+load();
+</script>
+</body>
+</html>

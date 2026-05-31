@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>맥비기획 자료실</title>
+<?!= include('styles'); ?>
+</head>
+<body>
+<?!= iconsHtml ?>
+<?!= navHtml ?>
+<div class="wrap wide">
+  <header class="hero">
+    <h1>맥비기획 자료실</h1>
+    <p>기획·PM·UX·개발 인사이트와 실무 자료를 한 곳에서.</p>
+    <form class="search-wrap" id="searchForm" action="<?!= appUrl ?>" method="get" target="_top">
+      <svg class="search-icon ico"><use href="#i-search"/></svg>
+      <input type="hidden" name="page" value="insights">
+      <input class="big-search" id="q" name="q" type="search" placeholder="제목·태그·키워드로 검색" autocomplete="off">
+    </form>
+  </header>
+
+  <section id="popularSection" class="popular section" hidden>
+    <h2><svg class="ico"><use href="#i-trending"/></svg> 인기 자료</h2>
+    <div id="popularGrid" class="grid"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2><svg class="ico"><use href="#i-folder"/></svg> 기획 자료실 <span class="count" id="filesCount"></span></h2>
+      <a class="more" href="<?!= appUrl ?>?page=files" target="_top">전체 보기 <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></a>
+    </div>
+    <div id="filesGrid" class="grid"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2><svg class="ico"><use href="#i-news"/></svg> 인사이트 <span class="count" id="insightsCount"></span></h2>
+      <a class="more" href="<?!= appUrl ?>?page=insights" target="_top">전체 보기 <svg class="ico ico-sm"><use href="#i-arrow-right"/></svg></a>
+    </div>
+    <div id="insightsGrid" class="grid"></div>
+  </section>
+</div>
+
+<script>
+const APP_URL = '<?!= appUrl ?>';
+
+// JS 클릭 fallback (sandbox에서 target=_top 무시 대비)
+document.querySelectorAll('a[href^="<?!= appUrl ?>"], a.more').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const href = a.getAttribute('href');
+    try { top.location.href = href; } catch (err) { window.open(href, '_top'); }
+  });
+});
+
+// 검색 form fallback
+document.getElementById('searchForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const q = document.getElementById('q').value.trim();
+  const url = APP_URL + '?page=insights' + (q ? '&q=' + encodeURIComponent(q) : '');
+  try { top.location.href = url; } catch (err) { window.open(url, '_top'); }
+});
+
+const HOME_INITIAL = <?!= homeInitial ?> || null;
+
+function load() {
+  if (HOME_INITIAL && HOME_INITIAL.ok) {
+    render(HOME_INITIAL);
+    return;
+  }
+  google.script.run.withSuccessHandler(render).withFailureHandler(err => {
+    document.getElementById('filesGrid').innerHTML = '<p class="muted">오류: ' + err + '</p>';
+  }).getHomeOverview();
+}
+
+function render(res) {
+  if (!res.ok) return;
+  if (res.popular && res.popular.length) {
+    document.getElementById('popularSection').hidden = false;
+    fillGrid('popularGrid', res.popular);
+  }
+  document.getElementById('filesCount').textContent = res.totalFiles ? `· ${res.totalFiles}건` : '';
+  document.getElementById('insightsCount').textContent = res.totalInsights ? `· ${res.totalInsights}건` : '';
+  fillGrid('filesGrid', res.files, '아직 등록된 자료가 없어요. <a href="' + APP_URL + '?page=submit" target="_top">첫 자료를 등록</a>해보세요.');
+  fillGrid('insightsGrid', res.insights, '아직 등록된 인사이트가 없어요.');
+}
+
+function fillGrid(id, items, emptyMsg) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  if (!items || items.length === 0) {
+    if (emptyMsg) el.innerHTML = '<div class="empty"><p>' + emptyMsg + '</p></div>';
+    return;
+  }
+  items.forEach(it => el.appendChild(buildCard(it)));
+}
+
+function buildCard(item) {
+  const card = document.createElement('article');
+  card.className = 'item';
+  const fmtBadge = item.format ? `<span class="badge">${esc(item.format)}</span>` : '';
+  const publishedLine = item.publishedAt || '발행일 미상';
+  const dateLine = [publishedLine, item.registeredAt && '등록 ' + item.registeredAt].filter(Boolean).join(' · ');
+  const stat = (item.views || item.downloads)
+    ? `<span class="stat"><svg class="ico"><use href="#i-eye"/></svg>${item.views || 0}${item.downloads ? ' · <svg class="ico"><use href="#i-download"/></svg>' + item.downloads : ''}</span>` : '';
+  const linkUrl = item.url || item.fileLink || '#';
+  card.innerHTML = `
+    <div class="item-head">
+      <span class="cat">${esc(item.mainCategory || '미분류')}${item.subCategory ? ' › ' + esc(item.subCategory) : ''}</span>
+      ${fmtBadge}
+    </div>
+    <h3 class="item-title"><a href="${esc(linkUrl)}" target="_blank" rel="noopener" data-no="${item.no}" data-kind="view">${esc(item.title || '(제목 없음)')}</a></h3>
+    ${item.summary ? `<p class="item-summary">${esc(item.summary)}</p>` : ''}
+    <div class="item-tags">${(item.tags || []).slice(0, 5).map(t => `<span class="tag">#${esc(t)}</span>`).join('')}</div>
+    <div class="item-foot">
+      <span class="muted">${esc(dateLine)} ${stat}</span>
+      <span class="links">
+        ${item.url ? `<a href="${esc(item.url)}" target="_blank" rel="noopener" data-no="${item.no}" data-kind="view"><svg class="ico ico-sm"><use href="#i-link"/></svg>원문</a>` : ''}
+        ${item.fileLink ? `<a href="${esc(item.fileLink)}" target="_blank" rel="noopener" data-no="${item.no}" data-kind="download"><svg class="ico ico-sm"><use href="#i-download"/></svg>파일</a>` : ''}
+      </span>
+    </div>
+  `;
+  card.querySelectorAll('a[data-no]').forEach(a => {
+    a.addEventListener('click', () => google.script.run.incrementCount(Number(a.dataset.no), a.dataset.kind));
+  });
+  return card;
+}
+
+// 검색은 form action+target=_top 으로 자동 navigate
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>맥비기획 자료실 등록</title>
+<?!= include('styles'); ?>
+</head>
+<body>
+<?!= iconsHtml ?>
+<?!= navHtml ?>
+<div class="wrap">
+  <header>
+    <h1>자료 등록</h1>
+    <p class="sub">URL만 붙여넣으면 AI가 알아서 분류해드려요. <a href="<?!= appUrl ?>" target="_top" data-nav>자료실로 돌아가기</a></p>
+  </header>
+
+  <div id="successCard" class="success-card" hidden>
+    <div class="success-icon"><svg class="ico"><use href="#i-check"/></svg></div>
+    <h2>제출 완료</h2>
+    <p>운영팀 검토 후 자료실에 반영됩니다.</p>
+    <p class="success-meta" id="successMeta"></p>
+    <div class="success-actions">
+      <button class="primary" id="successAnother" type="button">다른 자료 더 등록</button>
+      <a class="success-link" href="<?!= appUrl ?>" target="_top" data-nav>자료실 보기</a>
+    </div>
+  </div>
+
+  <form id="form" onsubmit="return false;">
+    <label>
+      <span>① URL을 붙여넣으세요</span>
+      <input id="url" type="url" placeholder="https://..." required autocomplete="off">
+    </label>
+
+    <button id="analyze" type="button" class="primary">AI 분석하기</button>
+    <p id="analyzeStatus" class="status"></p>
+
+    <fieldset id="result" hidden>
+      <legend>② 분석 결과 확인 (필요시 수정)</legend>
+
+      <label><span>제목</span><input id="title" type="text"></label>
+      <label><span>한 줄 설명</span><input id="summary" type="text" maxlength="60"></label>
+
+      <div class="row">
+        <label><span>대분류</span>
+          <select id="mainCategory"></select>
+        </label>
+        <label><span>소분류</span>
+          <select id="subCategory"></select>
+        </label>
+      </div>
+
+      <label><span>태그 (쉼표로 구분)</span><input id="tags" type="text" placeholder="기획, B2B, 실무"></label>
+
+      <label><span>자료 형식</span>
+        <select id="format">
+          <option>아티클</option><option>영상</option><option>기획서</option>
+          <option>가이드</option><option>템플릿</option><option>세미나</option>
+        </select>
+      </label>
+
+      <label><span>(선택) 파일 업로드 — PDF/PPT/DOCX 등 50MB 이하</span>
+        <input id="file" type="file">
+      </label>
+
+      <label><span>닉네임 (선택)</span><input id="proposer" type="text" placeholder="익명 OK"></label>
+
+      <button id="submit" type="button" class="primary">자료실에 제안</button>
+      <p id="submitStatus" class="status"></p>
+    </fieldset>
+  </form>
+
+  <footer>
+    <p>제안하신 자료는 운영팀 검토 후 자료실에 반영됩니다.</p>
+  </footer>
+</div>
+
+<script>
+const SUB_BY_MAIN = <?!= JSON.stringify(CATEGORY_HINT); ?>;
+
+// JS 클릭 fallback (sandbox에서 target=_top 무시 대비)
+document.querySelectorAll('a[data-nav]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const href = a.getAttribute('href');
+    try { top.location.href = href; } catch (err) { window.open(href, '_top'); }
+  });
+});
+
+function fillCategory(main, sub) {
+  const mainEl = document.getElementById('mainCategory');
+  const subEl = document.getElementById('subCategory');
+  mainEl.innerHTML = '';
+  ['미분류', ...Object.keys(SUB_BY_MAIN)].forEach(k => {
+    const o = document.createElement('option'); o.value = o.textContent = k;
+    if (k === main) o.selected = true;
+    mainEl.appendChild(o);
+  });
+  refreshSub(sub);
+  mainEl.onchange = () => refreshSub();
+}
+function refreshSub(preselect) {
+  const main = document.getElementById('mainCategory').value;
+  const subEl = document.getElementById('subCategory');
+  subEl.innerHTML = '';
+  const subs = SUB_BY_MAIN[main] || [];
+  ['', ...subs].forEach(s => {
+    const o = document.createElement('option'); o.value = o.textContent = s;
+    if (s === preselect) o.selected = true;
+    subEl.appendChild(o);
+  });
+}
+
+document.getElementById('analyze').addEventListener('click', () => {
+  const url = document.getElementById('url').value.trim();
+  if (!url) return;
+  const status = document.getElementById('analyzeStatus');
+  status.textContent = '🤖 분석 중... (3~5초)';
+  status.className = 'status loading';
+  google.script.run
+    .withSuccessHandler(res => {
+      if (!res.ok) { status.textContent = '⚠️ ' + res.error; status.className = 'status error'; return; }
+      const d = res.data;
+      document.getElementById('title').value = d.title || '';
+      document.getElementById('summary').value = d.summary || '';
+      document.getElementById('tags').value = (d.tags || []).join(', ');
+      document.getElementById('format').value = d.format || '아티클';
+      fillCategory(d.mainCategory || '미분류', d.subCategory || '');
+      document.getElementById('result').hidden = false;
+      const aiBadge = d._aiUsed ? '✨ AI 분석' : '⚙️ 규칙 기반';
+      status.textContent = aiBadge + ' 완료. 확인 후 제출하세요.';
+      status.className = 'status ok';
+    })
+    .withFailureHandler(err => {
+      status.textContent = '오류: ' + err;
+      status.className = 'status error';
+    })
+    .analyzeUrl(url);
+});
+
+async function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+document.getElementById('submit').addEventListener('click', async () => {
+  const status = document.getElementById('submitStatus');
+  status.className = 'status loading';
+  status.textContent = '제출 중...';
+
+  const payload = {
+    url: document.getElementById('url').value.trim(),
+    title: document.getElementById('title').value.trim(),
+    summary: document.getElementById('summary').value.trim(),
+    mainCategory: document.getElementById('mainCategory').value,
+    subCategory: document.getElementById('subCategory').value,
+    tags: document.getElementById('tags').value.split(',').map(s => s.trim()).filter(Boolean),
+    format: document.getElementById('format').value,
+    proposer: document.getElementById('proposer').value.trim(),
+    fileLink: '',
+  };
+
+  const fileEl = document.getElementById('file');
+  if (fileEl.files && fileEl.files[0]) {
+    const f = fileEl.files[0];
+    if (f.size > 50 * 1024 * 1024) {
+      status.textContent = '파일이 50MB를 초과합니다.'; status.className = 'status error'; return;
+    }
+    try {
+      const b64 = await readFileAsBase64(f);
+      const upRes = await new Promise((resolve, reject) => {
+        google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)
+          .uploadFile({ fileName: f.name, mimeType: f.type }, b64);
+      });
+      if (upRes.ok) payload.fileLink = upRes.fileLink;
+    } catch (e) {
+      status.textContent = '업로드 실패: ' + e; status.className = 'status error'; return;
+    }
+  }
+
+  google.script.run
+    .withSuccessHandler(res => {
+      if (res.ok) {
+        showSuccess(payload);
+      } else {
+        status.textContent = '오류: ' + (res.error || '알 수 없음'); status.className = 'status error';
+      }
+    })
+    .withFailureHandler(err => { status.textContent = '오류: ' + err; status.className = 'status error'; })
+    .submitProposal(payload);
+});
+
+function showSuccess(payload) {
+  const card = document.getElementById('successCard');
+  const meta = document.getElementById('successMeta');
+  meta.textContent = '"' + (payload.title || '(제목 없음)') + '"  ·  ' + (payload.mainCategory || '미분류');
+  card.hidden = false;
+  document.getElementById('form').hidden = true;
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.getElementById('successAnother').addEventListener('click', () => {
+  document.getElementById('form').reset();
+  document.getElementById('result').hidden = true;
+  document.getElementById('successCard').hidden = true;
+  document.getElementById('form').hidden = false;
+  document.getElementById('analyzeStatus').textContent = '';
+  document.getElementById('submitStatus').textContent = '';
+  document.getElementById('url').focus();
+});
+
+fillCategory('미분류', '');
+</script>
+</body>
+</html>

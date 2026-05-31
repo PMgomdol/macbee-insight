@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:yslab.kr)",
+      "WebFetch(domain:uxacademia.oopy.io)",
+      "WebFetch(domain:www.kolleges.net)",
+      "WebFetch(domain:docs.google.com)",
+      "Bash(python3 -c ' *)",
+      "Bash(mkdir -p docs proposals)",
+      "Bash(mv \"맥비기획 자료실_운영팀.pdf\" \"맥비기획_자료실 운영진 오프모임_2026.01.29.docx\" \"맥비기획_자료실_운영팀 DB_v2.xlsx\" \"맥비기획자료실 개선 방향 \\(1\\).pdf\" docs/)"
+    ]
+  }
+}

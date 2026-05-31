@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>자료실 검토 (운영팀)</title>
+<?!= include('styles'); ?>
+</head>
+<body>
+<?!= iconsHtml ?>
+<?!= navHtml ?>
+<div class="wrap">
+  <header>
+    <h1>자료실 검토</h1>
+    <p class="sub" id="reviewerLabel">운영자: <b></b> · <a href="#" id="changeReviewer">바꾸기</a> · <span id="ruleHint"></span></p>
+  </header>
+
+  <button id="refresh" class="primary">새로 불러오기</button>
+  <p id="msg" class="status"></p>
+
+  <div id="list"></div>
+</div>
+
+<script>
+const KEY_REVIEWER = 'macbe_reviewer_name';
+let MIN_APPROVALS = 2;
+
+function getReviewer() {
+  let name = localStorage.getItem(KEY_REVIEWER);
+  while (!name) {
+    name = prompt('운영자 이름을 입력하세요 (예: 안재찬). 같은 사람이 두 번 승인해도 1표로 카운트됩니다.');
+    if (name) name = name.trim();
+    if (name) localStorage.setItem(KEY_REVIEWER, name);
+  }
+  return name;
+}
+
+function setReviewerLabel() {
+  document.querySelector('#reviewerLabel b').textContent = getReviewer();
+  document.getElementById('ruleHint').textContent = MIN_APPROVALS + '명 이상 승인 시 자료실로 이관';
+}
+
+document.getElementById('changeReviewer').addEventListener('click', e => {
+  e.preventDefault();
+  localStorage.removeItem(KEY_REVIEWER);
+  setReviewerLabel();
+  load();
+});
+
+function load() {
+  setReviewerLabel();
+  document.getElementById('msg').textContent = '불러오는 중...';
+  google.script.run.withSuccessHandler(render).withFailureHandler(err => {
+    document.getElementById('msg').textContent = '오류: ' + err;
+  }).listStaging();
+}
+
+function render(res) {
+  if (res.minApprovals) MIN_APPROVALS = res.minApprovals;
+  setReviewerLabel();
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+  if (!res.ok || res.items.length === 0) {
+    document.getElementById('msg').textContent = '검토 대기 항목이 없습니다.';
+    return;
+  }
+  document.getElementById('msg').textContent = res.items.length + '건 대기 중';
+
+  const me = getReviewer();
+  res.items.forEach(item => {
+    const myApproved = item.approvers.indexOf(me) >= 0;
+    const remaining = Math.max(0, MIN_APPROVALS - item.approvers.length);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <h3>${esc(item.title || '(제목 없음)')}</h3>
+      <p class="meta">${esc(item.mainCategory)} › ${esc(item.subCategory)} · ${esc(item.format)} · 제안: ${esc(item.proposer || '익명')}</p>
+      <p>${esc(item.summary || '')}</p>
+      <p class="tags">${(item.tags || []).map(t => '#' + esc(t)).join(' ')}</p>
+      <p><a href="${esc(item.url)}" target="_blank">${esc(item.url)}</a></p>
+      ${item.fileLink ? `<p>📎 <a href="${esc(item.fileLink)}" target="_blank">첨부파일</a></p>` : ''}
+      <p class="approve-status">
+        승인: <b>${item.approvers.length}/${MIN_APPROVALS}</b>
+        ${item.approvers.length ? '(' + item.approvers.map(esc).join(', ') + ')' : ''}
+        ${remaining > 0 ? ` · <span class="muted">${remaining}명 더 필요</span>` : ' · <span class="ok">곧 이관</span>'}
+      </p>
+      <div class="actions">
+        <button class="primary" data-action="approve" data-id="${item.id}" ${myApproved ? 'disabled title="이미 승인하셨습니다"' : ''}>
+          ${myApproved ? '✓ 승인 완료' : '승인'}
+        </button>
+        <button data-action="reject" data-id="${item.id}">반려</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  list.querySelectorAll('button[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => act(btn.dataset.action, btn.dataset.id, btn));
+  });
+}
+
+function act(action, id, btn) {
+  const me = getReviewer();
+  btn.disabled = true; btn.textContent = '처리 중...';
+  if (action === 'approve') {
+    google.script.run
+      .withSuccessHandler(res => {
+        if (res && res.alreadyApproved) {
+          alert('이미 이 항목을 승인하셨습니다.');
+        } else if (res && res.promoted) {
+          alert('✅ 자료실에 이관됐습니다.');
+        }
+        load();
+      })
+      .withFailureHandler(err => { alert('오류: ' + err); load(); })
+      .approveStaging(id, me, {});
+  } else {
+    const reason = prompt('반려 사유 (선택)') || '';
+    google.script.run.withSuccessHandler(load).withFailureHandler(err => { alert('오류: ' + err); load(); })
+      .rejectStaging(id, me, reason);
+  }
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+document.getElementById('refresh').addEventListener('click', load);
+load();
+</script>
+</body>
+</html>
