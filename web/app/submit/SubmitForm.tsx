@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Sparkles, Upload, Loader2 } from 'lucide-react';
+import { Sparkles, Upload, Loader2, CheckCircle2, AlertCircle, FileCheck2 } from 'lucide-react';
 import { analyzeUrl, submitProposal, uploadFile, type AnalyzeResult } from './actions';
 
 const FORMATS = ['아티클', '영상', '가이드', '템플릿', '기획서', '세미나'];
@@ -24,7 +24,7 @@ export function SubmitForm({ categories }: Props) {
   const [analyzing, startAnalyze] = useTransition();
   const [uploading, startUpload] = useTransition();
   const [submitting, startSubmit] = useTransition();
-  const [analyzeMsg, setAnalyzeMsg] = useState<string | null>(null);
+  const [analyzeMsg, setAnalyzeMsg] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
 
   const cats = Array.from(new Set(categories.map((c) => c.main_category)));
@@ -38,7 +38,7 @@ export function SubmitForm({ categories }: Props) {
 
   function applyAnalysis(r: AnalyzeResult) {
     if (!r.ok) {
-      setAnalyzeMsg(r.error ?? '분석 실패');
+      setAnalyzeMsg({ kind: 'error', text: r.error ?? '분석 실패' });
       return;
     }
     if (r.title) setTitle(r.title);
@@ -48,14 +48,11 @@ export function SubmitForm({ categories }: Props) {
     if (r.tags) setTags(r.tags.join(', '));
     if (r.format) setFormat(r.format);
     if (r.publishedAt) setPublishedAt(r.publishedAt);
-    setAnalyzeMsg(r.aiUsed ? '✨ AI 분석 완료 — 내용 확인 후 등록' : '✓ 메타 추출 완료 — 내용 확인 후 등록');
+    setAnalyzeMsg({ kind: 'ok', text: r.aiUsed ? 'AI 분석 완료 — 내용 확인 후 등록' : '메타 추출 완료 — 내용 확인 후 등록' });
   }
 
   function onAnalyze() {
-    if (!url.trim()) {
-      setAnalyzeMsg('URL을 먼저 입력');
-      return;
-    }
+    if (!url.trim()) { setAnalyzeMsg({ kind: 'error', text: 'URL을 먼저 입력' }); return; }
     setAnalyzeMsg(null);
     startAnalyze(async () => {
       const r = await analyzeUrl(url);
@@ -73,16 +70,15 @@ export function SubmitForm({ categories }: Props) {
     startUpload(async () => {
       const r = await uploadFile(fd);
       if (!r.ok) {
-        setAnalyzeMsg('파일 업로드 실패: ' + r.error);
+        setAnalyzeMsg({ kind: 'error', text: '파일 업로드 실패: ' + r.error });
         return;
       }
       setFileUrl(r.url ?? '');
-      // 파일명에서 제목 자동 추출
       if (!title) {
         const base = f.name.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
         setTitle(base);
       }
-      setAnalyzeMsg('✓ 파일 업로드 완료');
+      setAnalyzeMsg({ kind: 'ok', text: '파일 업로드 완료' });
     });
   }
 
@@ -105,19 +101,23 @@ export function SubmitForm({ categories }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full min-w-0">
-      {/* 모드 토글 */}
-      <div className="grid grid-cols-2 gap-1 p-1 rounded-md bg-[var(--card)] border border-[var(--border)]">
+      {/* 모드 토글 — segmented */}
+      <div role="tablist" aria-label="등록 방식" className="grid grid-cols-2 gap-1 p-0.5 rounded-[var(--r-sm)] bg-[var(--card)] border border-[var(--border)]">
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === 'url'}
           onClick={() => setMode('url')}
-          className={`px-3 py-2 rounded text-sm ${mode === 'url' ? 'bg-[var(--bg)] shadow-sm font-medium' : 'text-[var(--muted)]'}`}
+          className={`px-3 py-2 rounded-[var(--r-sm)] text-sm transition ${mode === 'url' ? 'bg-[var(--bg)] shadow-[var(--shadow-2)] font-semibold' : 'text-[var(--muted)]'}`}
         >
           URL 등록
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === 'file'}
           onClick={() => setMode('file')}
-          className={`px-3 py-2 rounded text-sm ${mode === 'file' ? 'bg-[var(--bg)] shadow-sm font-medium' : 'text-[var(--muted)]'}`}
+          className={`px-3 py-2 rounded-[var(--r-sm)] text-sm transition ${mode === 'file' ? 'bg-[var(--bg)] shadow-[var(--shadow-2)] font-semibold' : 'text-[var(--muted)]'}`}
         >
           파일 업로드
         </button>
@@ -127,7 +127,7 @@ export function SubmitForm({ categories }: Props) {
       {mode === 'url' && (
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium" htmlFor="url-input">
-            URL <span className="text-red-500">*</span>
+            URL <span className="text-[var(--danger)]">*</span>
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
@@ -136,13 +136,13 @@ export function SubmitForm({ categories }: Props) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://..."
-              className="flex-1 min-w-0 px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+              className="flex-1 min-w-0 px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
             />
             <button
               type="button"
               onClick={onAnalyze}
               disabled={analyzing || !url.trim()}
-              className="px-3 py-2.5 rounded bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
+              className="fc-btn fc-btn-primary px-4 whitespace-nowrap shrink-0"
             >
               {analyzing ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Sparkles size={14} aria-hidden />}
               {analyzing ? '분석 중...' : '자동 분석'}
@@ -156,9 +156,9 @@ export function SubmitForm({ categories }: Props) {
       {mode === 'file' && (
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium">
-            파일 <span className="text-red-500">*</span>
+            파일 <span className="text-[var(--danger)]">*</span>
           </label>
-          <label className="flex items-center gap-2 px-3 py-3 rounded border-2 border-dashed border-[var(--border)] bg-[var(--card)] cursor-pointer hover:border-[var(--accent)]">
+          <label className="flex items-center gap-2 px-3 py-3 rounded-[var(--r-sm)] border-2 border-dashed border-[var(--border-strong)] bg-[var(--card)] cursor-pointer hover:border-[var(--accent)]">
             <input type="file" onChange={onFileChange} className="hidden" />
             {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
             <span className="text-sm">
@@ -166,30 +166,38 @@ export function SubmitForm({ categories }: Props) {
             </span>
           </label>
           {fileUrl && (
-            <div className="text-xs text-[var(--muted)] break-all">
-              ✓ <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">{fileUrl}</a>
+            <div className="text-xs text-[var(--muted)] break-all flex items-center gap-1.5">
+              <FileCheck2 size={12} className="text-[var(--success)] shrink-0" aria-hidden />
+              <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">{fileUrl}</a>
             </div>
           )}
         </div>
       )}
 
       {analyzeMsg && (
-        <div className={`p-3 rounded border text-sm ${analyzeMsg.includes('실패') ? 'border-red-500/40 bg-red-500/10' : 'border-[var(--accent)]/40 bg-[var(--accent)]/10'}`}>
-          {analyzeMsg}
+        <div
+          role={analyzeMsg.kind === 'error' ? 'alert' : 'status'}
+          className={`flex items-start gap-2 p-3 rounded-[var(--r-sm)] border text-sm ${
+            analyzeMsg.kind === 'error'
+              ? 'border-[var(--danger)]/40 bg-[var(--danger)]/10 text-[var(--fg)]'
+              : 'border-[var(--accent)]/40 bg-[var(--accent-bg)] text-[var(--fg)]'
+          }`}
+        >
+          {analyzeMsg.kind === 'error'
+            ? <AlertCircle size={16} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
+            : <CheckCircle2 size={16} className="text-[var(--success)] shrink-0 mt-0.5" aria-hidden />}
+          <span className="flex-1">{analyzeMsg.text}</span>
         </div>
       )}
 
-      {/* 자동 채워지는 필드들 */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">
-          제목 <span className="text-red-500">*</span>
-        </label>
+        <label className="text-sm font-medium">제목 <span className="text-[var(--danger)]">*</span></label>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
           placeholder="자료 제목"
-          className="px-3 py-2 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+          className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
         />
       </div>
 
@@ -200,7 +208,7 @@ export function SubmitForm({ categories }: Props) {
           onChange={(e) => setSummary(e.target.value)}
           rows={3}
           placeholder="이 자료가 어떤 내용인지 한 줄로..."
-          className="px-3 py-2 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none resize-y"
+          className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none resize-y"
         />
       </div>
 
@@ -210,7 +218,7 @@ export function SubmitForm({ categories }: Props) {
           <select
             value={main}
             onChange={(e) => { setMain(e.target.value); setSub(''); }}
-            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
           >
             <option value="">선택</option>
             {cats.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -221,7 +229,7 @@ export function SubmitForm({ categories }: Props) {
           <select
             value={sub}
             onChange={(e) => setSub(e.target.value)}
-            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
           >
             <option value="">선택</option>
             {(subs[main] ?? []).map((s) => <option key={s} value={s}>{s}</option>)}
@@ -236,51 +244,55 @@ export function SubmitForm({ categories }: Props) {
           <select
             value={format}
             onChange={(e) => setFormat(e.target.value)}
-            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
           >
             <option value="">선택</option>
             {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
           </select>
         </div>
         <div className="flex flex-col gap-1.5 min-w-0">
-          <label className="text-sm font-medium">발행일 (선택)</label>
+          <label className="text-sm font-medium" htmlFor="published-at">발행일 <span className="text-[var(--muted-2)] font-normal">(선택)</span></label>
           <input
+            id="published-at"
             type="date"
             value={publishedAt}
             onChange={(e) => setPublishedAt(e.target.value)}
-            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            lang="ko-KR"
+            placeholder="YYYY-MM-DD"
+            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
           />
+          <span className="text-[11px] text-[var(--muted-2)]">예: 2026-05-12 (원본 자료 발행일)</span>
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">태그 (쉼표 구분)</label>
+        <label className="text-sm font-medium">태그 <span className="text-[var(--muted-2)] font-normal">(쉼표 구분)</span></label>
         <input
           value={tags}
           onChange={(e) => setTags(e.target.value)}
           placeholder="피그마, Figma, 디자인툴"
-          className="px-3 py-2 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+          className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
         />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[var(--border)]">
         <div className="flex flex-col gap-1.5 min-w-0">
-          <label className="text-sm font-medium">제안자 (선택)</label>
+          <label className="text-sm font-medium">제안자 <span className="text-[var(--muted-2)] font-normal">(선택)</span></label>
           <input
             value={proposer}
             onChange={(e) => setProposer(e.target.value)}
             placeholder="이름·닉네임"
-            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
           />
         </div>
         <div className="flex flex-col gap-1.5 min-w-0">
-          <label className="text-sm font-medium">이메일 (선택)</label>
+          <label className="text-sm font-medium">이메일 <span className="text-[var(--muted-2)] font-normal">(선택)</span></label>
           <input
             type="email"
             value={proposerEmail}
             onChange={(e) => setProposerEmail(e.target.value)}
             placeholder="검토 결과 알림용"
-            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
           />
         </div>
       </div>
@@ -288,7 +300,7 @@ export function SubmitForm({ categories }: Props) {
       <button
         type="submit"
         disabled={submitting || !title || (!url && !fileUrl)}
-        className="mt-4 px-4 py-3 rounded-md bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+        className="fc-btn fc-btn-primary mt-4 px-4 py-3"
       >
         {submitting && <Loader2 size={14} className="animate-spin" />}
         {submitting ? '등록 중...' : '등록 신청'}

@@ -15,7 +15,7 @@ export default async function SearchPage({
   return (
     <div className="flex flex-col gap-5">
       <section className="flex flex-col gap-3">
-        <h1 className="text-xl sm:text-2xl font-bold">검색</h1>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">검색</h1>
         <Suspense fallback={null}><SearchBox initial={q} /></Suspense>
       </section>
 
@@ -27,8 +27,8 @@ export default async function SearchPage({
 
       {q && archives.length > 0 && (
         <section className="flex flex-col gap-2.5">
-          <h2 className="text-sm font-semibold text-[var(--muted)] uppercase">자료·인사이트</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5">
+          <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">자료·인사이트</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {archives.map((it) => <ItemCard key={it.id} item={it} />)}
           </div>
         </section>
@@ -36,11 +36,11 @@ export default async function SearchPage({
 
       {q && faqs.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold text-[var(--muted)] uppercase">FAQ</h2>
+          <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">FAQ</h2>
           <div className="flex flex-col">
             {faqs.map((f) => (
               <details key={f.id} className="border-b border-[var(--border)]">
-                <summary className="cursor-pointer py-3 text-sm font-medium select-none flex items-start justify-between gap-3 hover:text-[var(--accent)]">
+                <summary className="cursor-pointer py-3 text-sm font-medium select-none flex items-start justify-between gap-3 hover:text-[var(--accent)] list-none">
                   <span className="flex-1 min-w-0">{f.question}</span>
                   <span className="text-xs text-[var(--muted-2)] shrink-0">{f.main_category}</span>
                 </summary>

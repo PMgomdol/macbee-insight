@@ -1,92 +1,70 @@
 import type { ArchiveItem } from '@/types/db';
-import { ExternalLink, Download, Eye, FileText, Video, BookOpen, FileBox } from 'lucide-react';
+import { ExternalLink, Download, FileText, Video, BookOpen, FileBox, Presentation } from 'lucide-react';
 
-function formatIcon(format: string | null, size = 13) {
+function formatIcon(format: string | null, size = 14) {
   switch (format) {
     case '영상': return <Video size={size} aria-hidden />;
-    case '템플릿':
-    case '기획서':
-      return <FileBox size={size} aria-hidden />;
+    case '템플릿': return <FileBox size={size} aria-hidden />;
+    case '기획서': return <Presentation size={size} aria-hidden />;
     case '가이드': return <BookOpen size={size} aria-hidden />;
     default: return <FileText size={size} aria-hidden />;
   }
 }
 
-/** kind에 따라 색 분기 — 자료실(files) 초록 / 인사이트(insights) 인디고 */
-function kindStyles(kind: 'files' | 'insights') {
-  if (kind === 'files') {
-    return {
-      badgeBg: 'bg-[var(--files-bg)]',
-      badgeBorder: 'border-[var(--files-border)]',
-      badgeText: 'text-[var(--files)]',
-      hoverBorder: 'hover:border-[var(--files)]',
-      label: '자료실',
-    };
-  }
-  return {
-    badgeBg: 'bg-[var(--insights-bg)]',
-    badgeBorder: 'border-[var(--insights-border)]',
-    badgeText: 'text-[var(--insights)]',
-    hoverBorder: 'hover:border-[var(--insights)]',
-    label: '인사이트',
-  };
+function kindLabel(kind: 'files' | 'insights') {
+  return kind === 'files' ? '자료실' : '인사이트';
 }
 
 export function ItemCard({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
   const isFile = item.kind === 'files';
-  const styles = kindStyles(item.kind);
 
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`group flex flex-col gap-1.5 p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] ${styles.hoverBorder} hover:bg-[var(--card)] transition min-h-[120px]`}
-      aria-label={`${styles.label}: ${item.title}`}
+      className="fc-card group flex flex-col gap-2 p-3.5 min-h-[132px]"
+      aria-label={`${kindLabel(item.kind)}: ${item.title}`}
     >
-      <div className="flex items-center justify-between gap-2 text-[10px]">
-        <span className={`px-1.5 py-0.5 rounded-sm border ${styles.badgeBg} ${styles.badgeBorder} ${styles.badgeText} font-medium`}>
-          {styles.label}
+      <div className="flex items-center justify-between gap-2">
+        <span className="fc-badge">{kindLabel(item.kind)}</span>
+        <span className="text-[var(--muted-2)] opacity-0 group-hover:opacity-100 transition" aria-hidden>
+          {isFile ? <Download size={14} /> : <ExternalLink size={14} />}
         </span>
-        {isFile ? <Download size={11} className={styles.badgeText} aria-hidden /> : <ExternalLink size={11} className={styles.badgeText} aria-hidden />}
       </div>
-      <div className="flex items-center gap-1.5 text-[11px] text-[var(--muted-2)]">
-        {formatIcon(item.format)}
+      <div className="flex items-center gap-1.5 text-[12px] text-[var(--muted-2)]">
+        <span className="text-[var(--muted)]">{formatIcon(item.format, 13)}</span>
         <span className="truncate">{item.main_category}{item.sub_category ? ` · ${item.sub_category}` : ''}</span>
       </div>
-      <h3 className="font-semibold text-[13px] leading-tight line-clamp-2 group-hover:text-[var(--fg)] transition">
+      <h3 className="font-semibold text-[14px] leading-snug line-clamp-2 text-[var(--fg)]">
         {item.title}
       </h3>
       {item.summary && (
-        <p className="text-[11px] text-[var(--muted)] line-clamp-2 leading-relaxed">{item.summary}</p>
+        <p className="text-[12px] text-[var(--muted)] line-clamp-2 leading-relaxed">{item.summary}</p>
       )}
-      {item.views > 0 && (
-        <div className="flex items-center gap-1 text-[10px] text-[var(--muted-2)] mt-auto">
-          <Eye size={10} aria-hidden /> {item.views}
-        </div>
-      )}
+      <div className="flex items-center gap-3 text-[11px] text-[var(--muted-2)] mt-auto pt-1">
+        {item.format && <span>{item.format}</span>}
+        {item.views > 0 && <span>조회 {item.views.toLocaleString()}</span>}
+      </div>
     </a>
   );
 }
 
 export function ItemRow({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
-  const styles = kindStyles(item.kind);
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[var(--card)] transition"
+      className="group flex items-center gap-3 px-3 py-2.5 rounded-[var(--r-sm)] hover:bg-[var(--card)] transition"
     >
-      <span className={`shrink-0 w-1.5 h-12 rounded ${styles.badgeBg} ${styles.badgeBorder} border`} aria-hidden />
+      <span className="text-[var(--muted-2)] shrink-0">{formatIcon(item.format, 16)}</span>
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-sm truncate group-hover:text-[var(--accent)]">{item.title}</span>
-        </div>
+        <span className="font-medium text-sm truncate group-hover:text-[var(--accent)]">{item.title}</span>
         <div className="flex items-center gap-2 text-[11px] text-[var(--muted-2)]">
-          <span className={`${styles.badgeText} font-medium`}>{styles.label}</span>
+          <span className="fc-badge">{kindLabel(item.kind)}</span>
           <span className="truncate">{item.main_category}{item.sub_category ? ` · ${item.sub_category}` : ''}</span>
           {item.format && <span>· {item.format}</span>}
         </div>

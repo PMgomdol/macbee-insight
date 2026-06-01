@@ -87,18 +87,20 @@ export const getCategories = unstable_cache(
 );
 
 export const getCategoryCounts = unstable_cache(
-  async () => {
+  async (kind?: 'files' | 'insights') => {
     const sb = createPublicClient();
-    const { data } = await sb
+    let q = sb
       .from('archive_item')
       .select('main_category')
       .eq('status', 'public');
+    if (kind) q = q.eq('kind', kind);
+    const { data } = await q;
     const counts: Record<string, number> = {};
     for (const r of data ?? []) {
       counts[r.main_category] = (counts[r.main_category] ?? 0) + 1;
     }
     return counts;
   },
-  ['category-counts'],
+  ['category-counts-v2'],
   { revalidate: HOUR, tags: ['archive'] }
 );

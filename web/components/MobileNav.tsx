@@ -39,7 +39,7 @@ export function MobileNav() {
     <>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="sm:hidden p-2 rounded hover:bg-[var(--card)] text-[var(--muted)] hover:text-[var(--fg)]"
+        className="md:hidden p-2 rounded-[var(--r-sm)] hover:bg-[var(--card)] text-[var(--muted)] hover:text-[var(--fg)]"
         aria-label={open ? '메뉴 닫기' : '메뉴 열기'}
         aria-expanded={open}
       >
@@ -48,19 +48,19 @@ export function MobileNav() {
 
       {open && (
         <div
-          className="sm:hidden fixed inset-0 top-14 z-40 bg-[var(--bg)] flex flex-col"
+          className="md:hidden fixed inset-0 top-14 z-40 bg-[var(--bg)] flex flex-col"
           role="dialog"
           aria-label="모바일 메뉴"
         >
           <form onSubmit={onSearch} className="px-4 py-3 border-b border-[var(--border)]">
-            <div className="flex items-center gap-2 px-3 py-2.5 rounded-md border border-[var(--border)] bg-[var(--card)] focus-within:border-[var(--accent)]">
+            <div className="fc-input px-3 py-2.5">
               <Search size={16} className="text-[var(--muted)]" aria-hidden />
               <input
                 type="search"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="자료·FAQ 검색..."
-                className="flex-1 bg-transparent outline-none text-sm"
+                className="text-sm"
                 aria-label="검색어"
               />
             </div>
@@ -70,7 +70,7 @@ export function MobileNav() {
               <Link
                 key={n.href}
                 href={n.href}
-                className={`px-3 py-3 rounded text-sm ${pathname === n.href ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium' : 'hover:bg-[var(--card)]'}`}
+                className={`px-3 py-3 rounded-[var(--r-sm)] text-sm ${pathname === n.href ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium' : 'hover:bg-[var(--card)]'}`}
               >
                 {n.label}
               </Link>

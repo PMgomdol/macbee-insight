@@ -1,6 +1,6 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient, createPublicClient } from '@/lib/supabase/server';
 import { fetchUrlMeta, isFileUrl } from '@/lib/url-meta';
 import { classify } from '@/lib/ai-classify';
 import { redirect } from 'next/navigation';
@@ -23,16 +23,13 @@ export type AnalyzeResult = {
   aiUsed?: boolean;
 };
 
-/** URL 메타 + AI 분류 → 폼에 자동 채울 데이터 반환 */
 export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
   url = url.trim();
   if (!url) return { ok: false, error: 'URL을 입력해주세요' };
   if (!/^https?:\/\//i.test(url)) return { ok: false, error: 'http:// 또는 https://로 시작해야 합니다' };
 
   const meta = await fetchUrlMeta(url);
-  if (!meta.ok) {
-    return { ok: false, error: `URL 분석 실패: ${meta.error ?? 'unknown'}` };
-  }
+  if (!meta.ok) return { ok: false, error: `URL 분석 실패: ${meta.error ?? 'unknown'}` };
 
   const cls = await classify(url, { title: meta.title, description: meta.description });
 
@@ -51,7 +48,10 @@ export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
   };
 }
 
-/** 멤버 제안 등록 */
+/**
+ * 멤버 제안 등록 — anon publishable 키 우선, 실패시 service_role 폴백.
+ * 정상 RLS 정책(staging_anyone_insert)이 적용되면 1·2차에서 성공해야 함.
+ */
 export async function submitProposal(formData: FormData) {
   const url = String(formData.get('url') ?? '').trim();
   const fileUrl = String(formData.get('file_url') ?? '').trim();
@@ -68,8 +68,7 @@ export async function submitProposal(formData: FormData) {
   if (!title) redirect('/submit?error=' + encodeURIComponent('제목 필수'));
   if (!url && !fileUrl) redirect('/submit?error=' + encodeURIComponent('URL 또는 파일 둘 중 하나 필수'));
 
-  const sb = createAdminClient();
-  const { error } = await sb.from('staging_proposal').insert({
+  const row = {
     external_url: url || null,
     file_url: fileUrl || null,
     title,
@@ -82,20 +81,50 @@ export async function submitProposal(formData: FormData) {
     proposer: proposer || null,
     proposer_email: proposer_email || null,
     status: 'pending',
-  });
+  };
 
-  if (error) redirect('/submit?error=' + encodeURIComponent('등록 실패: ' + error.message));
-  redirect('/submit?ok=1');
+  let insertedId: string | null = null;
+  let lastErr: string | null = null;
+
+  // 1차 — 쿠키 anon (로그인 상태면 auth.uid() 사용 가능)
+  try {
+    const sbCookie = await createClient();
+    const r = await sbCookie.from('staging_proposal').insert(row).select('id').single();
+    if (!r.error) insertedId = r.data?.id ?? null;
+    else lastErr = r.error.message;
+  } catch (e: any) { lastErr = e?.message ?? 'cookie-client error'; }
+
+  // 2차 — public anon (쿠키 없는 컨텍스트)
+  if (!insertedId) {
+    try {
+      const sbPublic = createPublicClient();
+      const r = await sbPublic.from('staging_proposal').insert(row).select('id').single();
+      if (!r.error) insertedId = r.data?.id ?? null;
+      else lastErr = r.error.message;
+    } catch (e: any) { lastErr = e?.message ?? 'public-client error'; }
+  }
+
+  // 3차 — service_role (RLS 우회 폴백)
+  if (!insertedId) {
+    try {
+      const sbAdmin = createAdminClient();
+      const r = await sbAdmin.from('staging_proposal').insert(row).select('id').single();
+      if (r.error) redirect('/submit?error=' + encodeURIComponent('등록 실패: ' + r.error.message));
+      insertedId = r.data?.id ?? null;
+    } catch (e: any) {
+      redirect('/submit?error=' + encodeURIComponent('등록 실패: ' + (e?.message ?? lastErr ?? 'unknown')));
+    }
+  }
+
+  redirect('/submit?ok=1' + (insertedId ? `&id=${insertedId}` : ''));
 }
 
-/** 파일 업로드 → Supabase Storage → 공개 URL 반환 */
 export async function uploadFile(formData: FormData): Promise<{ ok: boolean; url?: string; error?: string }> {
   const file = formData.get('file');
   if (!(file instanceof File)) return { ok: false, error: '파일이 없습니다' };
   if (file.size === 0) return { ok: false, error: '빈 파일' };
   if (file.size > 50 * 1024 * 1024) return { ok: false, error: '50MB 초과' };
 
-  const ext = file.name.split('.').pop() || 'bin';
   const safeName = file.name.replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ\.\-]/g, '_').slice(0, 80);
   const path = `${new Date().toISOString().slice(0, 10)}/${randomUUID()}-${safeName}`;
 

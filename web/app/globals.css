@@ -1,25 +1,91 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Fluent 2 Design Tokens
+   - 색은 1개 accent (Communication Blue) + 중성 그레이만
+   - kind 구분은 텍스트·아이콘 (색 X)
+   - 라운드 4·8·12, 그림자는 elevation 2/4/8
+   ============================================================ */
 :root {
   --bg: #ffffff;
-  --fg: #171717;
-  --muted: #5a5a5a;
-  --muted-2: #777;
-  --border: #e5e5e5;
-  --border-strong: #c4c4c4;
-  --card: #f6f6f6;
-  --card-hover: #efefef;
-  --accent: #0078d4;
-  --accent-hover: #106ebe;
-  --accent-bg: #e7f1fb;
-  --focus-ring: #0078d4;
-  /* kind 색 — files 자료실(파일) / insights 인사이트(외부링크) */
-  --files: #16a34a;       /* green */
-  --files-bg: #ecfdf5;
-  --files-border: #bbf7d0;
-  --insights: #6366f1;    /* indigo */
-  --insights-bg: #eef2ff;
-  --insights-border: #c7d2fe;
+  --bg-alt: #fafafa;
+  --fg: #1f1f1f;
+  --muted: #5c5c5c;
+  --muted-2: #8a8a8a;
+  --border: #e0e0e0;
+  --border-strong: #c7c7c7;
+  --card: #f5f5f5;
+  --card-hover: #ebebeb;
+  --accent: #0f6cbd;        /* Fluent 2 communicationBlue Primary */
+  --accent-hover: #115ea3;
+  --accent-pressed: #0c3b5e;
+  --accent-bg: #ebf3fc;
+  --focus-ring: #0f6cbd;
+  --success: #107c10;
+  --danger: #c50f1f;
+  --warning: #b89500;
+  /* Fluent elevation (depth) */
+  --shadow-2: 0 1px 2px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.04);
+  --shadow-4: 0 2px 4px rgba(0,0,0,0.08), 0 0 2px rgba(0,0,0,0.06);
+  --shadow-8: 0 4px 8px rgba(0,0,0,0.10), 0 0 2px rgba(0,0,0,0.08);
+  --shadow-16: 0 8px 16px rgba(0,0,0,0.12), 0 0 2px rgba(0,0,0,0.10);
+  /* Radius */
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
+}
+
+/* 사용자 수동 다크모드 (data-theme="dark") */
+[data-theme="dark"],
+:root[data-theme="dark"] {
+  --bg: #1f1f1f;
+  --bg-alt: #292929;
+  --fg: #f5f5f5;
+  --muted: #c7c7c7;
+  --muted-2: #999;
+  --border: #3b3b3b;
+  --border-strong: #525252;
+  --card: #2b2b2b;
+  --card-hover: #353535;
+  --accent: #62abf5;        /* Fluent communicationBlue Tint for dark */
+  --accent-hover: #82bcf7;
+  --accent-pressed: #4b9be8;
+  --accent-bg: #1a2c41;
+  --focus-ring: #62abf5;
+  --success: #54b054;
+  --danger: #f87171;
+  --warning: #d4b830;
+  --shadow-2: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-4: 0 2px 4px rgba(0,0,0,0.5);
+  --shadow-8: 0 4px 8px rgba(0,0,0,0.55);
+  --shadow-16: 0 8px 16px rgba(0,0,0,0.6);
+}
+
+/* OS 자동 (사용자가 토글 안 한 경우만) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    --bg: #1f1f1f;
+    --bg-alt: #292929;
+    --fg: #f5f5f5;
+    --muted: #c7c7c7;
+    --muted-2: #999;
+    --border: #3b3b3b;
+    --border-strong: #525252;
+    --card: #2b2b2b;
+    --card-hover: #353535;
+    --accent: #62abf5;
+    --accent-hover: #82bcf7;
+    --accent-pressed: #4b9be8;
+    --accent-bg: #1a2c41;
+    --focus-ring: #62abf5;
+    --success: #54b054;
+    --danger: #f87171;
+    --warning: #d4b830;
+    --shadow-2: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-4: 0 2px 4px rgba(0,0,0,0.5);
+    --shadow-8: 0 4px 8px rgba(0,0,0,0.55);
+    --shadow-16: 0 8px 16px rgba(0,0,0,0.6);
+  }
 }
 
 @theme inline {
@@ -30,30 +96,7 @@
   --color-card: var(--card);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
-  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0a0a0a;
-    --fg: #f0f0f0;
-    --muted: #aaa;
-    --muted-2: #888;
-    --border: #2a2a2a;
-    --border-strong: #444;
-    --card: #161616;
-    --card-hover: #1f1f1f;
-    --accent: #4cc2ff;
-    --accent-hover: #76d6ff;
-    --accent-bg: #15293e;
-    --focus-ring: #4cc2ff;
-    --files: #34d399;
-    --files-bg: #0f2920;
-    --files-border: #1f5e44;
-    --insights: #a5b4fc;
-    --insights-bg: #1e1f3d;
-    --insights-border: #3f3f7e;
-  }
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -70,26 +113,114 @@ body {
   -webkit-font-smoothing: antialiased;
   word-break: keep-all;
   overflow-wrap: anywhere;
+  /* Fluent body typography: 14px / 1.4 */
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 a { color: inherit; text-decoration: none; }
 
-/* 키보드 포커스 강화 — 접근성 */
+/* Fluent focus-ring — 2px outline */
 *:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--r-sm);
 }
 
-/* 터치 영역 44px 최소 — 모바일 접근성 */
 button, a[role="button"], .touch-target {
-  min-height: 36px;
+  min-height: 32px;
 }
 
-/* 스크롤바 — 모바일 가로 캐러셀용 hide */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
 
-/* 텍스트 잘림 */
 .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Fluent card — elevation transition */
+.fc-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  transition: box-shadow 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+.fc-card:hover {
+  box-shadow: var(--shadow-4);
+  border-color: var(--border-strong);
+}
+.fc-card:active { transform: translateY(0.5px); }
+
+/* Fluent button (primary) */
+.fc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  transition: background 80ms ease, color 80ms ease;
+  cursor: pointer;
+  min-height: 32px;
+}
+.fc-btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.fc-btn-primary:hover { background: var(--accent-hover); }
+.fc-btn-primary:active { background: var(--accent-pressed); }
+.fc-btn-primary:disabled {
+  background: var(--card);
+  color: var(--muted-2);
+  cursor: not-allowed;
+}
+.fc-btn-subtle {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+.fc-btn-subtle:hover { background: var(--card); }
+.fc-btn-subtle:disabled { color: var(--muted-2); cursor: not-allowed; }
+
+/* Fluent input */
+.fc-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-bottom: 2px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  font-size: 14px;
+  min-height: 32px;
+}
+.fc-input:focus-within {
+  border-bottom-color: var(--accent);
+}
+.fc-input input,
+.fc-input textarea {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  outline: none;
+  border: none;
+}
+
+/* Fluent badge (subtle) */
+.fc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  background: var(--card);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}

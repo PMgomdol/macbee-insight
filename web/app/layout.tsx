@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { AuthStatus } from '@/components/AuthStatus';
 import { MobileNav } from '@/components/MobileNav';
 import { HeaderSearch } from '@/components/HeaderSearch';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -12,16 +13,23 @@ export const metadata: Metadata = {
 };
 
 const NAV = [
+  { href: '/', label: '홈' },
   { href: '/files', label: '자료실' },
   { href: '/insights', label: '인사이트' },
   { href: '/faq', label: 'FAQ' },
   { href: '/submit', label: '등록' },
 ];
 
+// FOUC 방지 — 첫 페인트 전 저장된 테마 적용
+const THEME_INIT = `
+(function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className="h-full antialiased">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
         <link
           rel="stylesheet"
@@ -29,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--fg)]">
-        <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)] z-50">
+        <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)] z-50 backdrop-blur supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--bg)_85%,transparent)]">
           <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 flex items-center gap-2 sm:gap-4">
             <Link href="/" className="font-bold text-base sm:text-lg tracking-tight shrink-0 mr-1">
               맥비기획
@@ -39,14 +47,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link
                   key={n.href}
                   href={n.href}
-                  className="px-2.5 py-1.5 rounded hover:bg-[var(--card)] text-[var(--muted)] hover:text-[var(--fg)] transition"
+                  className="px-2.5 py-1.5 rounded-[var(--r-sm)] hover:bg-[var(--card)] text-[var(--muted)] hover:text-[var(--fg)] transition"
                 >
                   {n.label}
                 </Link>
               ))}
             </nav>
-            <div className="flex-1 flex justify-end items-center gap-1.5 sm:gap-3">
+            <div className="flex-1 flex justify-end items-center gap-1.5 sm:gap-2">
               <Suspense fallback={null}><HeaderSearch /></Suspense>
+              <ThemeToggle />
               <Suspense fallback={null}><AuthStatus /></Suspense>
               <MobileNav />
             </div>
@@ -60,14 +69,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div>© 2026 맥비기획 자료실 운영팀</div>
             <div className="flex flex-wrap gap-3">
               <Link href="/admin" className="hover:text-[var(--fg)]">운영진</Link>
-              <a
-                href="https://script.google.com/macros/s/AKfycbx_X7ZhLbfXeJJllri3eqJBADelepPYoBGftsotm_64kmmU7X03y8qlSbBeiPMn_Ty1/exec"
-                className="hover:text-[var(--fg)]"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                레거시
-              </a>
             </div>
           </div>
         </footer>

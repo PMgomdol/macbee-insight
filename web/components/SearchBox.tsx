@@ -19,24 +19,19 @@ export function SearchBox({ initial }: { initial?: string }) {
       className="flex items-center gap-2 w-full"
       role="search"
     >
-      <div className="flex-1 min-w-0 flex items-center gap-2 px-3 py-2.5 rounded-md border border-[var(--border)] bg-[var(--card)] focus-within:border-[var(--accent)]">
+      <div className="flex-1 min-w-0 fc-input px-3 py-2.5">
         <Search size={16} className="text-[var(--muted)] shrink-0" aria-hidden />
         <input
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="자료·인사이트·FAQ 검색..."
-          className="flex-1 min-w-0 bg-transparent outline-none text-sm"
+          className="text-sm"
           aria-label="검색어"
           autoFocus
         />
       </div>
-      <button
-        type="submit"
-        className="px-4 py-2.5 rounded-md bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] text-sm font-medium shrink-0"
-      >
-        검색
-      </button>
+      <button type="submit" className="fc-btn fc-btn-primary shrink-0">검색</button>
     </form>
   );
 }
