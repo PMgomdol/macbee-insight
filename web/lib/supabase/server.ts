@@ -42,3 +42,16 @@ export function createAdminClient() {
     { auth: { persistSession: false } }
   );
 }
+
+/**
+ * 공개 데이터 전용 anon 클라이언트 — 쿠키 없음, 캐시 함수 안에서 사용 가능.
+ * RLS 정책에 의해 status='public'인 row만 노출됨.
+ */
+export function createPublicClient() {
+  const { createClient } = require('@supabase/supabase-js') as typeof import('@supabase/supabase-js');
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false } }
+  );
+}

@@ -1,4 +1,4 @@
-import { createClient } from './supabase/server';
+import { createPublicClient } from './supabase/server';
 import type { ArchiveItem, FAQItem } from '@/types/db';
 
 export async function searchAll(q: string): Promise<{ archives: ArchiveItem[]; faqs: FAQItem[] }> {
@@ -7,7 +7,7 @@ export async function searchAll(q: string): Promise<{ archives: ArchiveItem[]; f
   // PostgREST가 쓰는 PostgREST-or 문자 escape (%, , 를 제거)
   const safe = q.replace(/[%_,()]/g, '');
   const like = `%${safe}%`;
-  const sb = await createClient();
+  const sb = createPublicClient();
 
   // archive_item: 제목·요약·태그 검색
   const archP = sb

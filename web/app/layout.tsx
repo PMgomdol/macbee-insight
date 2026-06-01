@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { Search } from 'lucide-react';
 import { AuthStatus } from '@/components/AuthStatus';
+import { MobileNav } from '@/components/MobileNav';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" className="h-full antialiased">
       <head>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
@@ -29,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--fg)]">
         <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)]/85 backdrop-blur z-50">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-2">
             <Link href="/" className="font-bold text-base tracking-tight shrink-0">
               맥비기획 자료실
             </Link>
@@ -44,15 +46,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </Link>
               ))}
             </nav>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <Link href="/search" className="p-2 rounded hover:bg-[var(--card)] text-[var(--muted)] hover:text-[var(--fg)] transition">
                 <Search size={18} />
               </Link>
               <Suspense fallback={null}><AuthStatus /></Suspense>
+              <MobileNav />
             </div>
           </div>
         </header>
-        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-4 sm:py-10">
           {children}
         </main>
         <footer className="border-t border-[var(--border)] mt-8">
@@ -60,7 +63,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div>© 2026 맥비기획 자료실 운영팀</div>
             <div className="flex gap-3">
               <Link href="/admin" className="hover:text-[var(--fg)]">운영진</Link>
-              <a href="https://script.google.com/macros/s/AKfycbx_X7ZhLbfXeJJllri3eqJBADelepPYoBGftsotm_64kmmU7X03y8qlSbBeiPMn_Ty1/exec" className="hover:text-[var(--fg)]" target="_blank">레거시(Apps Script)</a>
+              <a
+                href="https://script.google.com/macros/s/AKfycbx_X7ZhLbfXeJJllri3eqJBADelepPYoBGftsotm_64kmmU7X03y8qlSbBeiPMn_Ty1/exec"
+                className="hover:text-[var(--fg)]"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                레거시(Apps Script)
+              </a>
             </div>
           </div>
         </footer>

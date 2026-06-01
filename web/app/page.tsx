@@ -9,8 +9,8 @@ export default async function Home() {
     getCategoryCounts(),
   ]);
 
-  const totalItems = Array.from(counts.values()).reduce((a, b) => a + b, 0);
-  const sortedCats = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+  const totalItems = Object.values(counts).reduce((a, b) => a + b, 0);
+  const sortedCats = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
   return (
     <div className="flex flex-col gap-12">
