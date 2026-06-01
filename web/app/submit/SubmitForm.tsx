@@ -104,50 +104,51 @@ export function SubmitForm({ categories }: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full min-w-0">
       {/* 모드 토글 */}
-      <div className="flex gap-1 p-1 rounded-md bg-[var(--card)] border border-[var(--border)] w-fit">
+      <div className="grid grid-cols-2 gap-1 p-1 rounded-md bg-[var(--card)] border border-[var(--border)]">
         <button
           type="button"
           onClick={() => setMode('url')}
-          className={`px-3 py-1.5 rounded text-sm ${mode === 'url' ? 'bg-[var(--bg)] shadow-sm font-medium' : 'text-[var(--muted)]'}`}
+          className={`px-3 py-2 rounded text-sm ${mode === 'url' ? 'bg-[var(--bg)] shadow-sm font-medium' : 'text-[var(--muted)]'}`}
         >
-          🔗 URL 등록
+          URL 등록
         </button>
         <button
           type="button"
           onClick={() => setMode('file')}
-          className={`px-3 py-1.5 rounded text-sm ${mode === 'file' ? 'bg-[var(--bg)] shadow-sm font-medium' : 'text-[var(--muted)]'}`}
+          className={`px-3 py-2 rounded text-sm ${mode === 'file' ? 'bg-[var(--bg)] shadow-sm font-medium' : 'text-[var(--muted)]'}`}
         >
-          📁 파일 업로드
+          파일 업로드
         </button>
       </div>
 
       {/* URL 입력 + 자동분석 */}
       {mode === 'url' && (
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium">
+          <label className="text-sm font-medium" htmlFor="url-input">
             URL <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <input
+              id="url-input"
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://..."
-              className="flex-1 px-3 py-2 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+              className="flex-1 min-w-0 px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
             />
             <button
               type="button"
               onClick={onAnalyze}
               disabled={analyzing || !url.trim()}
-              className="px-3 py-2 rounded bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] text-sm font-medium disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap"
+              className="px-3 py-2.5 rounded bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
             >
-              {analyzing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+              {analyzing ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Sparkles size={14} aria-hidden />}
               {analyzing ? '분석 중...' : '자동 분석'}
             </button>
           </div>
-          <p className="text-xs text-[var(--muted)]">URL 입력 후 "자동 분석" 누르면 제목·요약·카테고리·태그가 자동 채워짐. 수정 후 등록 가능.</p>
+          <p className="text-xs text-[var(--muted)]">URL 분석으로 제목·요약·카테고리·태그가 자동 채워짐. 수정 후 등록.</p>
         </div>
       )}
 
@@ -203,24 +204,24 @@ export function SubmitForm({ categories }: Props) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1.5 min-w-0">
           <label className="text-sm font-medium">대분류</label>
           <select
             value={main}
             onChange={(e) => { setMain(e.target.value); setSub(''); }}
-            className="px-3 py-2 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
           >
             <option value="">선택</option>
             {cats.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 min-w-0">
           <label className="text-sm font-medium">소분류</label>
           <select
             value={sub}
             onChange={(e) => setSub(e.target.value)}
-            className="px-3 py-2 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
           >
             <option value="">선택</option>
             {(subs[main] ?? []).map((s) => <option key={s} value={s}>{s}</option>)}
@@ -229,25 +230,25 @@ export function SubmitForm({ categories }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1.5 min-w-0">
           <label className="text-sm font-medium">자료 형식</label>
           <select
             value={format}
             onChange={(e) => setFormat(e.target.value)}
-            className="px-3 py-2 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
           >
             <option value="">선택</option>
             {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
           </select>
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 min-w-0">
           <label className="text-sm font-medium">발행일 (선택)</label>
           <input
             type="date"
             value={publishedAt}
             onChange={(e) => setPublishedAt(e.target.value)}
-            className="px-3 py-2 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
           />
         </div>
       </div>
@@ -262,24 +263,24 @@ export function SubmitForm({ categories }: Props) {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[var(--border)]">
-        <div className="flex flex-col gap-1.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[var(--border)]">
+        <div className="flex flex-col gap-1.5 min-w-0">
           <label className="text-sm font-medium">제안자 (선택)</label>
           <input
             value={proposer}
             onChange={(e) => setProposer(e.target.value)}
             placeholder="이름·닉네임"
-            className="px-3 py-2 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
           />
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 min-w-0">
           <label className="text-sm font-medium">이메일 (선택)</label>
           <input
             type="email"
             value={proposerEmail}
             onChange={(e) => setProposerEmail(e.target.value)}
             placeholder="검토 결과 알림용"
-            className="px-3 py-2 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
+            className="px-3 py-2.5 rounded border border-[var(--border)] bg-[var(--card)] text-sm focus:border-[var(--accent)] outline-none"
           />
         </div>
       </div>

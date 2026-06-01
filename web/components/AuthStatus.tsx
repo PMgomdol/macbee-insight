@@ -7,7 +7,10 @@ export async function AuthStatus() {
 
   if (!user) {
     return (
-      <Link href="/login" className="text-sm px-3 py-1.5 rounded border border-[var(--border)] hover:bg-[var(--card)]">
+      <Link
+        href="/login"
+        className="hidden sm:inline-flex text-xs px-3 py-1.5 rounded border border-[var(--border)] hover:bg-[var(--card)] whitespace-nowrap"
+      >
         로그인
       </Link>
     );
@@ -18,12 +21,12 @@ export async function AuthStatus() {
   const isReviewer = prof?.role === 'reviewer' || prof?.role === 'admin';
 
   return (
-    <div className="flex items-center gap-2 text-xs">
-      <span className="text-[var(--muted)]">
-        {name} {isReviewer && <span className="text-[var(--accent)]">·운영진</span>}
+    <div className="hidden sm:flex items-center gap-1.5 text-xs">
+      <span className="text-[var(--muted)] whitespace-nowrap">
+        {name}{isReviewer && <span className="text-[var(--accent)] ml-1">·운영진</span>}
       </span>
       <form action="/auth/signout" method="post">
-        <button type="submit" className="px-2 py-1 rounded border border-[var(--border)] hover:bg-[var(--card)] text-[var(--muted)]">
+        <button type="submit" className="px-2 py-1 rounded border border-[var(--border)] hover:bg-[var(--card)] text-[var(--muted)] whitespace-nowrap">
           로그아웃
         </button>
       </form>

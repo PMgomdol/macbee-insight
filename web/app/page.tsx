@@ -1,88 +1,85 @@
 import Link from 'next/link';
 import { ItemCard } from '@/components/ItemCard';
-import { getPopularItems, getRecentItems, getCategoryCounts } from '@/lib/queries';
+import { CategoryTabs } from '@/components/CategoryTabs';
+import { HorizontalScroll } from '@/components/HorizontalScroll';
+import { getPopularItems, getRecentItems, getCategoryCounts, getItemsByKind } from '@/lib/queries';
 
 export default async function Home() {
-  const [popular, recent, counts] = await Promise.all([
-    getPopularItems(8),
-    getRecentItems(8),
+  const [popular, recent, counts, allInsights, allFiles] = await Promise.all([
+    getPopularItems(10),
+    getRecentItems(6),
     getCategoryCounts(),
+    getItemsByKind('insights', { pageSize: 100 }),
+    getItemsByKind('files', { pageSize: 50 }),
   ]);
 
   const totalItems = Object.values(counts).reduce((a, b) => a + b, 0);
-  const sortedCats = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const categories = Object.entries(counts).map(([name, count]) => ({ name, count }));
+  const allItems = [...allInsights.items, ...allFiles.items];
 
   return (
-    <div className="flex flex-col gap-12">
-      {/* Hero */}
-      <section className="flex flex-col gap-3 py-4 sm:py-8">
-        <h1 className="text-2xl sm:text-4xl font-bold tracking-tight leading-tight">
-          기획자·PM·디자이너를 위한<br />
-          <span className="text-[var(--accent)]">맥비기획 자료실</span>
+    <div className="flex flex-col gap-8 sm:gap-10">
+      {/* Hero — 간결 */}
+      <section className="flex flex-col gap-2.5 pt-2 sm:pt-4">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
+          기획자·PM·디자이너를 위한
+          <br className="sm:hidden" />
+          <span className="text-[var(--accent)]"> 자료실</span>
         </h1>
-        <p className="text-sm sm:text-base text-[var(--muted)] max-w-xl">
-          정비된 자료 {totalItems}건과 FAQ를 한 곳에서 검색. 멤버 누구나 등록·제안 가능, 운영진 2인 승인 후 노출.
+        <p className="text-sm text-[var(--muted)]">
+          정비된 자료 {totalItems.toLocaleString()}건. 검색·카테고리로 빠르게 찾기.
         </p>
-        <div className="flex gap-2 mt-2">
-          <Link
-            href="/files"
-            className="px-4 py-2 rounded-md bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition text-sm font-medium"
-          >
-            자료실 보기
-          </Link>
-          <Link
-            href="/insights"
-            className="px-4 py-2 rounded-md border border-[var(--border)] hover:bg-[var(--card)] transition text-sm font-medium"
-          >
-            인사이트 보기
-          </Link>
-          <Link
-            href="/submit"
-            className="px-4 py-2 rounded-md border border-[var(--border)] hover:bg-[var(--card)] transition text-sm font-medium"
-          >
-            + 자료 등록
-          </Link>
-        </div>
       </section>
 
-      {/* 카테고리 nav */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-[var(--muted)]">카테고리</h2>
-        <div className="flex flex-wrap gap-2">
-          {sortedCats.map(([cat, n]) => (
-            <Link
-              key={cat}
-              href={`/insights?main=${encodeURIComponent(cat)}`}
-              className="text-sm px-3 py-1.5 rounded-md bg-[var(--card)] border border-[var(--border)] hover:border-[var(--accent)] transition"
-            >
-              {cat} <span className="text-[var(--muted)]">({n})</span>
+      {/* 인기 자료 — 가로 캐러셀 */}
+      {popular.length > 0 && (
+        <section className="flex flex-col gap-3" aria-label="인기 자료">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-base sm:text-lg font-semibold">인기 자료</h2>
+            <Link href="/insights?sort=popular" className="text-xs text-[var(--accent)] hover:underline">
+              더보기 →
             </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* 인기 */}
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">인기 자료 TOP 8</h2>
-        </div>
-        {popular.length === 0 ? (
-          <div className="text-sm text-[var(--muted)] py-8 text-center">아직 인기 자료가 없습니다</div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {popular.map((it) => <ItemCard key={it.id} item={it} />)}
           </div>
-        )}
-      </section>
+          <HorizontalScroll label="인기 자료 가로 스크롤">
+            {popular.map((it) => (
+              <div key={it.id} className="shrink-0 w-[220px] sm:w-[240px] snap-start">
+                <ItemCard item={it} />
+              </div>
+            ))}
+          </HorizontalScroll>
+        </section>
+      )}
 
-      {/* 최신 */}
-      <section className="flex flex-col gap-3">
+      {/* 카테고리 인터랙티브 필터 */}
+      <CategoryTabs items={allItems} categories={categories} />
+
+      {/* 최신 등록 */}
+      <section className="flex flex-col gap-3" aria-label="최신 등록">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">최신 등록</h2>
+          <h2 className="text-base sm:text-lg font-semibold">최신 등록</h2>
+          <Link href="/insights" className="text-xs text-[var(--accent)] hover:underline">
+            더보기 →
+          </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5">
           {recent.map((it) => <ItemCard key={it.id} item={it} />)}
         </div>
+      </section>
+
+      {/* CTA */}
+      <section className="flex flex-col sm:flex-row gap-2 py-4 border-t border-[var(--border)]">
+        <Link
+          href="/submit"
+          className="px-4 py-2.5 rounded-md bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition text-sm font-medium text-center"
+        >
+          + 자료 등록
+        </Link>
+        <Link
+          href="/faq"
+          className="px-4 py-2.5 rounded-md border border-[var(--border)] hover:bg-[var(--card)] transition text-sm font-medium text-center"
+        >
+          FAQ 보기
+        </Link>
       </section>
     </div>
   );

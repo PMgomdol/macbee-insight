@@ -3,11 +3,16 @@
 :root {
   --bg: #ffffff;
   --fg: #171717;
-  --muted: #5f5f5f;
+  --muted: #5a5a5a;
+  --muted-2: #777;
   --border: #e5e5e5;
-  --card: #fafafa;
-  --accent: #0078d4; /* Fluent blue */
+  --border-strong: #c4c4c4;
+  --card: #f6f6f6;
+  --card-hover: #efefef;
+  --accent: #0078d4;
   --accent-hover: #106ebe;
+  --accent-bg: #e7f1fb;
+  --focus-ring: #0078d4;
 }
 
 @theme inline {
@@ -24,16 +29,26 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0a0a0a;
-    --fg: #ededed;
-    --muted: #9a9a9a;
-    --border: #262626;
-    --card: #141414;
+    --fg: #f0f0f0;
+    --muted: #aaa;
+    --muted-2: #888;
+    --border: #2a2a2a;
+    --border-strong: #444;
+    --card: #161616;
+    --card-hover: #1f1f1f;
     --accent: #4cc2ff;
     --accent-hover: #76d6ff;
+    --accent-bg: #15293e;
+    --focus-ring: #4cc2ff;
   }
 }
 
 * { box-sizing: border-box; }
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
 
 body {
   background: var(--bg);
@@ -41,6 +56,27 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 a { color: inherit; text-decoration: none; }
+
+/* 키보드 포커스 강화 — 접근성 */
+*:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 터치 영역 44px 최소 — 모바일 접근성 */
+button, a[role="button"], .touch-target {
+  min-height: 36px;
+}
+
+/* 스크롤바 — 모바일 가로 캐러셀용 hide */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* 텍스트 잘림 */
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
