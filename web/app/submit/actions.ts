@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { fetchUrlMeta, isFileUrl } from '@/lib/url-meta';
 import { classify } from '@/lib/ai-classify';
 import { redirect } from 'next/navigation';
@@ -68,7 +68,7 @@ export async function submitProposal(formData: FormData) {
   if (!title) redirect('/submit?error=' + encodeURIComponent('제목 필수'));
   if (!url && !fileUrl) redirect('/submit?error=' + encodeURIComponent('URL 또는 파일 둘 중 하나 필수'));
 
-  const sb = await createClient();
+  const sb = createAdminClient();
   const { error } = await sb.from('staging_proposal').insert({
     external_url: url || null,
     file_url: fileUrl || null,
@@ -99,7 +99,7 @@ export async function uploadFile(formData: FormData): Promise<{ ok: boolean; url
   const safeName = file.name.replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ\.\-]/g, '_').slice(0, 80);
   const path = `${new Date().toISOString().slice(0, 10)}/${randomUUID()}-${safeName}`;
 
-  const sb = await createClient();
+  const sb = createAdminClient();
   const buf = Buffer.from(await file.arrayBuffer());
   const { error } = await sb.storage.from(BUCKET).upload(path, buf, {
     contentType: file.type || 'application/octet-stream',
