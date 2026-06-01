@@ -12,27 +12,50 @@ function formatIcon(format: string | null, size = 13) {
   }
 }
 
-/** 컴팩트 카드 — 그리드/캐러셀에서 공통 사용 */
+/** kind에 따라 색 분기 — 자료실(files) 초록 / 인사이트(insights) 인디고 */
+function kindStyles(kind: 'files' | 'insights') {
+  if (kind === 'files') {
+    return {
+      badgeBg: 'bg-[var(--files-bg)]',
+      badgeBorder: 'border-[var(--files-border)]',
+      badgeText: 'text-[var(--files)]',
+      hoverBorder: 'hover:border-[var(--files)]',
+      label: '자료실',
+    };
+  }
+  return {
+    badgeBg: 'bg-[var(--insights-bg)]',
+    badgeBorder: 'border-[var(--insights-border)]',
+    badgeText: 'text-[var(--insights)]',
+    hoverBorder: 'hover:border-[var(--insights)]',
+    label: '인사이트',
+  };
+}
+
 export function ItemCard({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
   const isFile = item.kind === 'files';
+  const styles = kindStyles(item.kind);
 
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex flex-col gap-1.5 p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] hover:border-[var(--accent)] hover:bg-[var(--card)] transition min-h-[120px]"
-      aria-label={`${item.title} - ${item.main_category}`}
+      className={`group flex flex-col gap-1.5 p-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] ${styles.hoverBorder} hover:bg-[var(--card)] transition min-h-[120px]`}
+      aria-label={`${styles.label}: ${item.title}`}
     >
-      <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--muted-2)]">
-        <div className="flex items-center gap-1.5 min-w-0">
-          {formatIcon(item.format)}
-          <span className="truncate">{item.main_category}{item.sub_category ? ` · ${item.sub_category}` : ''}</span>
-        </div>
-        {isFile ? <Download size={11} aria-hidden /> : <ExternalLink size={11} aria-hidden />}
+      <div className="flex items-center justify-between gap-2 text-[10px]">
+        <span className={`px-1.5 py-0.5 rounded-sm border ${styles.badgeBg} ${styles.badgeBorder} ${styles.badgeText} font-medium`}>
+          {styles.label}
+        </span>
+        {isFile ? <Download size={11} className={styles.badgeText} aria-hidden /> : <ExternalLink size={11} className={styles.badgeText} aria-hidden />}
       </div>
-      <h3 className="font-semibold text-[13px] leading-tight line-clamp-2 group-hover:text-[var(--accent)] transition">
+      <div className="flex items-center gap-1.5 text-[11px] text-[var(--muted-2)]">
+        {formatIcon(item.format)}
+        <span className="truncate">{item.main_category}{item.sub_category ? ` · ${item.sub_category}` : ''}</span>
+      </div>
+      <h3 className="font-semibold text-[13px] leading-tight line-clamp-2 group-hover:text-[var(--fg)] transition">
         {item.title}
       </h3>
       {item.summary && (
@@ -47,9 +70,9 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
   );
 }
 
-/** 리스트(라인) 형태 — 더 컴팩트 */
 export function ItemRow({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
+  const styles = kindStyles(item.kind);
   return (
     <a
       href={url}
@@ -57,15 +80,15 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
       rel="noopener noreferrer"
       className="group flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-[var(--card)] transition"
     >
-      <div className="text-[var(--muted-2)] shrink-0">{formatIcon(item.format, 14)}</div>
+      <span className={`shrink-0 w-1.5 h-12 rounded ${styles.badgeBg} ${styles.badgeBorder} border`} aria-hidden />
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <div className="flex items-center gap-2">
           <span className="font-medium text-sm truncate group-hover:text-[var(--accent)]">{item.title}</span>
         </div>
         <div className="flex items-center gap-2 text-[11px] text-[var(--muted-2)]">
+          <span className={`${styles.badgeText} font-medium`}>{styles.label}</span>
           <span className="truncate">{item.main_category}{item.sub_category ? ` · ${item.sub_category}` : ''}</span>
           {item.format && <span>· {item.format}</span>}
-          {item.views > 0 && <span>· 조회 {item.views}</span>}
         </div>
       </div>
     </a>

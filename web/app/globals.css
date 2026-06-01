@@ -13,6 +13,13 @@
   --accent-hover: #106ebe;
   --accent-bg: #e7f1fb;
   --focus-ring: #0078d4;
+  /* kind 색 — files 자료실(파일) / insights 인사이트(외부링크) */
+  --files: #16a34a;       /* green */
+  --files-bg: #ecfdf5;
+  --files-border: #bbf7d0;
+  --insights: #6366f1;    /* indigo */
+  --insights-bg: #eef2ff;
+  --insights-border: #c7d2fe;
 }
 
 @theme inline {
@@ -40,6 +47,12 @@
     --accent-hover: #76d6ff;
     --accent-bg: #15293e;
     --focus-ring: #4cc2ff;
+    --files: #34d399;
+    --files-bg: #0f2920;
+    --files-border: #1f5e44;
+    --insights: #a5b4fc;
+    --insights-bg: #1e1f3d;
+    --insights-border: #3f3f7e;
   }
 }
 
