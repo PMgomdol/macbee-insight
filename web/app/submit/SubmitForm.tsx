@@ -60,17 +60,47 @@ export function SubmitForm({ categories }: Props) {
     });
   }
 
+  const MAX_BYTES = 50 * 1024 * 1024;
+  function fmtMB(b: number) { return (b / 1024 / 1024).toFixed(1) + 'MB'; }
+
+  function switchMode(next: 'url' | 'file') {
+    setMode(next);
+    setAnalyzeMsg(null);  // 탭 전환 시 이전 알림 클리어
+  }
+
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
     setFileName(f.name);
+    setFileUrl('');  // 이전 업로드 URL 클리어
     setAnalyzeMsg(null);
+
+    // 사전 검증
+    if (f.size === 0) {
+      setAnalyzeMsg({ kind: 'error', text: `${f.name} — 빈 파일입니다. 다른 파일 선택.` });
+      return;
+    }
+    if (f.size > MAX_BYTES) {
+      setAnalyzeMsg({
+        kind: 'error',
+        text: `${f.name} — 크기 ${fmtMB(f.size)} (최대 50MB). PDF로 압축하거나 Google Drive 링크 + URL 등록 권장.`,
+      });
+      return;
+    }
+
     const fd = new FormData();
     fd.append('file', f);
     startUpload(async () => {
       const r = await uploadFile(fd);
       if (!r.ok) {
-        setAnalyzeMsg({ kind: 'error', text: '파일 업로드 실패: ' + r.error });
+        setAnalyzeMsg({
+          kind: 'error',
+          text: `파일 업로드 실패 — ${r.error ?? '서버 오류'}. ${
+            r.error?.includes('Body exceeded') || r.error?.includes('body size')
+              ? '크기 초과. Google Drive 링크 + URL 등록 권장.'
+              : '크기·확장자 확인 후 재시도.'
+          }`,
+        });
         return;
       }
       setFileUrl(r.url ?? '');
@@ -78,7 +108,7 @@ export function SubmitForm({ categories }: Props) {
         const base = f.name.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
         setTitle(base);
       }
-      setAnalyzeMsg({ kind: 'ok', text: '파일 업로드 완료' });
+      setAnalyzeMsg({ kind: 'ok', text: `파일 업로드 완료 (${fmtMB(f.size)})` });
     });
   }
 
@@ -107,7 +137,7 @@ export function SubmitForm({ categories }: Props) {
           type="button"
           role="tab"
           aria-selected={mode === 'url'}
-          onClick={() => setMode('url')}
+          onClick={() => switchMode('url')}
           className={`px-3 py-2 rounded-[var(--r-sm)] text-sm transition ${mode === 'url' ? 'bg-[var(--bg)] shadow-[var(--shadow-2)] font-semibold' : 'text-[var(--muted)]'}`}
         >
           URL 등록
@@ -116,7 +146,7 @@ export function SubmitForm({ categories }: Props) {
           type="button"
           role="tab"
           aria-selected={mode === 'file'}
-          onClick={() => setMode('file')}
+          onClick={() => switchMode('file')}
           className={`px-3 py-2 rounded-[var(--r-sm)] text-sm transition ${mode === 'file' ? 'bg-[var(--bg)] shadow-[var(--shadow-2)] font-semibold' : 'text-[var(--muted)]'}`}
         >
           파일 업로드

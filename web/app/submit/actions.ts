@@ -119,23 +119,67 @@ export async function submitProposal(formData: FormData) {
   redirect('/submit?ok=1' + (insertedId ? `&id=${insertedId}` : ''));
 }
 
+const MIME_FALLBACK: Record<string, string> = {
+  pdf: 'application/pdf',
+  ppt: 'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  hwp: 'application/x-hwp',
+  zip: 'application/zip',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  mp4: 'video/mp4',
+  txt: 'text/plain',
+};
+
 export async function uploadFile(formData: FormData): Promise<{ ok: boolean; url?: string; error?: string }> {
-  const file = formData.get('file');
-  if (!(file instanceof File)) return { ok: false, error: '파일이 없습니다' };
-  if (file.size === 0) return { ok: false, error: '빈 파일' };
-  if (file.size > 50 * 1024 * 1024) return { ok: false, error: '50MB 초과' };
+  try {
+    const file = formData.get('file');
+    if (!(file instanceof File)) return { ok: false, error: '파일이 첨부되지 않음' };
+    if (file.size === 0) return { ok: false, error: '빈 파일' };
+    if (file.size > 50 * 1024 * 1024) {
+      return { ok: false, error: `크기 ${(file.size / 1024 / 1024).toFixed(1)}MB — 50MB 한도 초과` };
+    }
 
-  const safeName = file.name.replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ\.\-]/g, '_').slice(0, 80);
-  const path = `${new Date().toISOString().slice(0, 10)}/${randomUUID()}-${safeName}`;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    const safeName = file.name.replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ\.\-]/g, '_').slice(0, 80);
+    const path = `${new Date().toISOString().slice(0, 10)}/${randomUUID()}-${safeName}`;
+    const contentType = file.type || MIME_FALLBACK[ext] || 'application/octet-stream';
 
-  const sb = createAdminClient();
-  const buf = Buffer.from(await file.arrayBuffer());
-  const { error } = await sb.storage.from(BUCKET).upload(path, buf, {
-    contentType: file.type || 'application/octet-stream',
-    upsert: false,
-  });
-  if (error) return { ok: false, error: error.message };
+    const sb = createAdminClient();
+    const buf = Buffer.from(await file.arrayBuffer());
+    const { error } = await sb.storage.from(BUCKET).upload(path, buf, {
+      contentType,
+      upsert: false,
+    });
+    if (error) {
+      const msg = error.message || '';
+      if (msg.toLowerCase().includes('exceeded') || msg.toLowerCase().includes('size')) {
+        return { ok: false, error: `Storage 용량 초과 — ${msg}` };
+      }
+      if (msg.toLowerCase().includes('mime') || msg.toLowerCase().includes('type')) {
+        return { ok: false, error: `허용되지 않은 파일 형식 (${ext}) — ${msg}` };
+      }
+      if (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('bucket')) {
+        return { ok: false, error: `Storage 버킷 오류 — ${msg}. 운영자 문의.` };
+      }
+      return { ok: false, error: msg };
+    }
 
-  const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
-  return { ok: true, url: data.publicUrl };
+    const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
+    return { ok: true, url: data.publicUrl };
+  } catch (e: any) {
+    // Server Action body size 초과는 throw로 옴
+    const msg = e?.message ?? String(e);
+    if (msg.toLowerCase().includes('body') && msg.toLowerCase().includes('size')) {
+      return { ok: false, error: `요청 크기 초과 — Body size limit. 파일을 줄이거나 운영자 문의.` };
+    }
+    return { ok: false, error: `서버 오류: ${msg.slice(0, 200)}` };
+  }
 }
