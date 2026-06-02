@@ -2,24 +2,22 @@ import { ItemCard } from '@/components/ItemCard';
 import { HeroSearch } from '@/components/HeroSearch';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
 import { AllItemsSection } from '@/components/AllItemsSection';
-import { getPopularItems, getCategoryCounts, getItemsByKind, getFAQs } from '@/lib/queries';
+import { getPopularItems, getCategoryCounts, getItemsByKind } from '@/lib/queries';
 
 export default async function Home() {
-  const [popular, counts, allInsights, allFiles, faqs] = await Promise.all([
+  const [popular, counts, allInsights, allFiles] = await Promise.all([
     getPopularItems(10),
     getCategoryCounts(),
     getItemsByKind('insights', { pageSize: 200 }),
     getItemsByKind('files', { pageSize: 50 }),
-    getFAQs(),
   ]);
 
-  const totalItems = Object.values(counts).reduce((a, b) => a + b, 0);
   const categories = Object.entries(counts).map(([name, count]) => ({ name, count }));
   const allItems = [...allInsights.items, ...allFiles.items];
 
   return (
     <div className="flex flex-col gap-9 sm:gap-12">
-      <HeroSearch total={totalItems} faqCount={faqs.length} />
+      <HeroSearch />
 
       {/* 인기 10건 — 가로 캐러셀 */}
       {popular.length > 0 && (

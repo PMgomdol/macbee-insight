@@ -12,8 +12,8 @@ type Props = {
 const FORMATS = ['아티클', '영상', '가이드', '템플릿', '기획서', '세미나'];
 const KINDS = [
   { v: 'all', label: '전체' },
-  { v: 'files', label: '자료실' },
-  { v: 'insights', label: '인사이트' },
+  { v: 'files', label: '양식·템플릿' },
+  { v: 'insights', label: '아티클·영상' },
 ] as const;
 const STEP = 24;
 

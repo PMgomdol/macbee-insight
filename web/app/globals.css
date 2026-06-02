@@ -224,3 +224,16 @@ button, a[role="button"], .touch-target {
   color: var(--muted);
   border: 1px solid var(--border);
 }
+
+/* kind 시각 구분 — files = accent 톤 / insights = neutral 톤 */
+.fc-badge-file {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+}
+.fc-badge-insight {
+  background: var(--card);
+  color: var(--muted);
+  border-color: var(--border-strong);
+}
+

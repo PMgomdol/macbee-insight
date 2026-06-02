@@ -9,7 +9,7 @@ export default async function InsightsPage({
   return (
     <ListPage
       kind="insights"
-      title="인사이트"
+      title="아티클·영상"
       desc="외부 아티클·영상·노션·블로그 등 큐레이션된 외부 콘텐츠."
       searchParams={sp}
     />

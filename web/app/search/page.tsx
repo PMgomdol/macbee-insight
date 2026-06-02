@@ -60,8 +60,8 @@ export default async function SearchPage({
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex gap-1 text-xs flex-wrap">
               <FilterLink href={buildHref({ kind: undefined })} active={!opts.kind}>전체</FilterLink>
-              <FilterLink href={buildHref({ kind: 'files' })} active={opts.kind === 'files'}>자료실</FilterLink>
-              <FilterLink href={buildHref({ kind: 'insights' })} active={opts.kind === 'insights'}>인사이트</FilterLink>
+              <FilterLink href={buildHref({ kind: 'files' })} active={opts.kind === 'files'}>양식·템플릿</FilterLink>
+              <FilterLink href={buildHref({ kind: 'insights' })} active={opts.kind === 'insights'}>아티클·영상</FilterLink>
               <span className="w-px bg-[var(--border)] mx-1" />
               <FilterLink href={buildHref({ format: undefined })} active={!opts.format}>모든 형식</FilterLink>
               {FORMATS.map((f) => (
@@ -79,7 +79,7 @@ export default async function SearchPage({
 
       {q && result.archives.length > 0 && (
         <section className="flex flex-col gap-2.5">
-          <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">자료·인사이트</h2>
+          <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">자료</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {result.archives.map((it) => <ItemCard key={it.id} item={it} />)}
           </div>

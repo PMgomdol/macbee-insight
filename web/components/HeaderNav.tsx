@@ -4,8 +4,8 @@ import { usePathname } from 'next/navigation';
 
 const NAV = [
   { href: '/', label: '홈' },
-  { href: '/files', label: '자료실' },
-  { href: '/insights', label: '인사이트' },
+  { href: '/files', label: '양식·템플릿' },
+  { href: '/insights', label: '아티클·영상' },
   { href: '/faq', label: 'FAQ' },
   { href: '/submit', label: '등록' },
 ];
