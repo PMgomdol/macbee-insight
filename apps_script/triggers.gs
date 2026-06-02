@@ -26,10 +26,16 @@ function weeklyLinkCheck() {
       sheet.getRange(i + 2, 13).setValue('점검필요');
       broken.push({ no: row[0], title: row[4], url: url, owner: row[14], code: status.code });
       log.appendRow([now, row[4], url, 'broken (' + status.code + ')', '']);
+      try { pushLinkCheckStatusToSupabase_(row[0], 'hidden', now); } catch (e) { Logger.log('supabase push fail: ' + e); }
     } else if (status.reason === 'blocked') {
       // 봇 차단 의심 — SSOT 상태 변경 안 함, 로그+_blocked_ 시트에만 누적
       blocked.push({ no: row[0], title: row[4], url: url, code: status.code });
       log.appendRow([now, row[4], url, 'blocked (' + status.code + ')', '봇 차단 의심, 자동 점검 제외']);
+      // last_checked_at만 갱신, status는 그대로
+      try { pushLinkCheckStatusToSupabase_(row[0], null, now); } catch (e) { Logger.log('supabase push fail: ' + e); }
+    } else {
+      // alive → last_checked_at 갱신, broken에서 회복된 경우 status=public 복원
+      try { pushLinkCheckStatusToSupabase_(row[0], 'public', now); } catch (e) { Logger.log('supabase push fail: ' + e); }
     }
   }
 

@@ -9,8 +9,10 @@
  */
 
 function setProperties() {
+  const required = ['SHEET_ID', 'DRIVE_ROOT_ID', 'GEMINI_API_KEY', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY'];
   const cur = PropertiesService.getScriptProperties().getProperties();
-  if (cur.SHEET_ID && cur.DRIVE_ROOT_ID && cur.GEMINI_API_KEY) {
+  const missing = required.filter(k => !cur[k]);
+  if (missing.length === 0) {
     Logger.log('Properties already set. Skipping. (편집은 Project Settings > Script Properties)');
     return;
   }
@@ -19,6 +21,8 @@ function setProperties() {
     SHEET_ID: 'PASTE_SPREADSHEET_ID_HERE',
     DRIVE_ROOT_ID: 'PASTE_DRIVE_FOLDER_ID_HERE',
     GEMINI_API_KEY: 'PASTE_GEMINI_KEY_HERE',
+    SUPABASE_URL: 'PASTE_SUPABASE_URL_HERE',           // https://<project>.supabase.co
+    SUPABASE_SERVICE_KEY: 'PASTE_SUPABASE_SERVICE_KEY_HERE',  // sb_secret_*
   };
   if (Object.values(props).some(v => String(v).startsWith('PASTE_'))) {
     throw new Error('Properties placeholders. setup.gs를 채운 뒤 다시 실행하세요.');
@@ -153,6 +157,14 @@ function installTriggers() {
   // 매주 일요일 03:00 - 백업 스냅샷
   ScriptApp.newTrigger('weeklyBackup').timeBased().onWeekDay(ScriptApp.WeekDay.SUNDAY).atHour(3).create();
 
+  // 시트 편집 시 Supabase 실시간 동기화
+  ScriptApp.newTrigger('onEditSyncToSupabase')
+    .forSpreadsheet(CONFIG.SHEET_ID)
+    .onEdit()
+    .create();
+  // 매일 03:00 - 안전망 풀싱크 (onEdit 누락 대비)
+  ScriptApp.newTrigger('dailySyncCron').timeBased().everyDays(1).atHour(3).create();
+
   Logger.log('Triggers installed.');
 }
 
@@ -166,10 +178,20 @@ function doctor() {
   const err = (m) => lines.push('❌ ' + m);
 
   const props = PropertiesService.getScriptProperties().getProperties();
-  ['SHEET_ID', 'DRIVE_ROOT_ID', 'GEMINI_API_KEY'].forEach(k => {
-    if (props[k]) ok('Property ' + k + ' set (' + (k === 'GEMINI_API_KEY' ? '***' : props[k].substring(0, 8) + '...') + ')');
+  ['SHEET_ID', 'DRIVE_ROOT_ID', 'GEMINI_API_KEY', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY'].forEach(k => {
+    const isSecret = k === 'GEMINI_API_KEY' || k === 'SUPABASE_SERVICE_KEY';
+    if (props[k]) ok('Property ' + k + ' set (' + (isSecret ? '***' : props[k].substring(0, 30) + '...') + ')');
     else err('Property ' + k + ' MISSING');
   });
+
+  // Supabase ping
+  try {
+    if (typeof supabasePing === 'function' && props.SUPABASE_URL && props.SUPABASE_SERVICE_KEY) {
+      const p = supabasePing();
+      if (p.ok) ok('Supabase ping OK (HTTP ' + p.code + ')');
+      else err('Supabase ping FAIL: ' + (p.code || '') + ' ' + (p.body || p.error || ''));
+    }
+  } catch (e) { warn('Supabase ping 호출 실패: ' + e); }
 
   try {
     const ss = SpreadsheetApp.openById(props.SHEET_ID);
