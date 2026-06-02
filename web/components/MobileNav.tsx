@@ -39,7 +39,7 @@ export function MobileNav() {
     <>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="md:hidden p-2 rounded-[var(--r-sm)] hover:bg-[var(--card)] text-[var(--muted)] hover:text-[var(--fg)]"
+        className="sm:hidden p-2 rounded-[var(--r-sm)] hover:bg-[var(--card)] text-[var(--fg)]"
         aria-label={open ? '메뉴 닫기' : '메뉴 열기'}
         aria-expanded={open}
       >
@@ -48,7 +48,7 @@ export function MobileNav() {
 
       {open && (
         <div
-          className="md:hidden fixed inset-0 top-14 z-40 bg-[var(--bg)] flex flex-col"
+          className="sm:hidden fixed inset-0 top-14 z-40 bg-[var(--bg)] flex flex-col"
           role="dialog"
           aria-label="모바일 메뉴"
         >

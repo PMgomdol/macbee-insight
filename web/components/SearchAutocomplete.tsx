@@ -130,7 +130,7 @@ export function SearchAutocomplete({
 
   const wrapCls =
     variant === 'header'
-      ? 'hidden sm:flex relative w-56 lg:w-72'
+      ? 'hidden sm:flex relative w-40 md:w-52 lg:w-64'
       : variant === 'page'
       ? 'flex relative w-full'
       : 'flex relative w-full';
