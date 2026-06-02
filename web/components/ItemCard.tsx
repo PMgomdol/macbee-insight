@@ -55,12 +55,8 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       <h3 className="font-semibold text-[14px] leading-snug line-clamp-2 text-[var(--fg)]">
         {item.title}
       </h3>
-      <p
-        className={`text-[12px] line-clamp-2 leading-relaxed min-h-[34px] ${
-          item.summary ? 'text-[var(--muted)]' : 'text-[var(--muted-2)] italic'
-        }`}
-      >
-        {item.summary || '한 줄 설명 없음'}
+      <p className="text-[12px] text-[var(--muted)] line-clamp-2 leading-relaxed min-h-[34px]">
+        {item.summary || ''}
       </p>
       <div className="flex items-center gap-3 text-[11px] text-[var(--muted-2)] mt-auto pt-1">
         {item.format && <span>{item.format}</span>}

@@ -17,7 +17,7 @@ export const getPopularItems = unstable_cache(
       .limit(limit);
     return (data ?? []) as ArchiveItem[];
   },
-  ['popular-items-v2'],
+  ['popular-items-v3'],
   { revalidate: HOUR, tags: ['archive'] }
 );
 
@@ -32,7 +32,7 @@ export const getRecentItems = unstable_cache(
       .limit(limit);
     return (data ?? []) as ArchiveItem[];
   },
-  ['recent-items-v2'],
+  ['recent-items-v3'],
   { revalidate: HOUR, tags: ['archive'] }
 );
 
@@ -58,7 +58,7 @@ export const getItemsByKind = unstable_cache(
     const { data, count } = await q.range(from, to);
     return { items: (data ?? []) as ArchiveItem[], total: count ?? 0 };
   },
-  ['items-by-kind-v2'],
+  ['items-by-kind-v3'],
   { revalidate: HOUR, tags: ['archive'] }
 );
 
@@ -101,6 +101,6 @@ export const getCategoryCounts = unstable_cache(
     }
     return counts;
   },
-  ['category-counts-v2'],
+  ['category-counts-v3'],
   { revalidate: HOUR, tags: ['archive'] }
 );
