@@ -18,6 +18,13 @@ function kindLabel(kind: 'files' | 'insights') {
   return kind === 'files' ? '양식·템플릿' : '아티클·영상';
 }
 
+function formatDate(s: string | null): string | null {
+  if (!s) return null;
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  return `${m[1]}.${m[2]}.${m[3]}`;
+}
+
 export function ItemCard({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
   const isFile = item.kind === 'files';
@@ -60,6 +67,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       </p>
       <div className="flex items-center gap-3 text-[11px] text-[var(--muted-2)] mt-auto pt-1">
         {item.format && <span>{item.format}</span>}
+        {formatDate(item.published_at) && <span>{formatDate(item.published_at)}</span>}
         {item.views > 0 && <span>조회 {item.views.toLocaleString()}</span>}
       </div>
     </a>

@@ -1,20 +1,14 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { visibleNav } from '@/lib/nav';
 
-const NAV = [
-  { href: '/', label: '홈' },
-  { href: '/files', label: '양식·템플릿' },
-  { href: '/insights', label: '아티클·영상' },
-  { href: '/faq', label: 'FAQ' },
-  { href: '/submit', label: '등록' },
-];
-
-export function HeaderNav() {
+export function HeaderNav({ isReviewer = false }: { isReviewer?: boolean }) {
   const pathname = usePathname();
+  const items = visibleNav(isReviewer);
   return (
     <nav className="hidden sm:flex items-center gap-0.5 text-sm" aria-label="주요 메뉴">
-      {NAV.map((n) => {
+      {items.map((n) => {
         const active = pathname === n.href || (n.href !== '/' && pathname.startsWith(n.href));
         return (
           <Link

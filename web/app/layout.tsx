@@ -6,6 +6,7 @@ import { MobileNav } from '@/components/MobileNav';
 import { HeaderSearch } from '@/components/HeaderSearch';
 import { HeaderNav } from '@/components/HeaderNav';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { createClient } from '@/lib/supabase/server';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -17,7 +18,20 @@ const THEME_INIT = `
 (function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();
 `;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+async function getIsReviewer(): Promise<boolean> {
+  try {
+    const sb = await createClient();
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return false;
+    const { data: prof } = await sb.from('profile').select('role').eq('id', user.id).maybeSingle();
+    return prof?.role === 'reviewer' || prof?.role === 'admin';
+  } catch {
+    return false;
+  }
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const isReviewer = await getIsReviewer();
   return (
     <html lang="ko" className="h-full antialiased">
       <head>
@@ -34,12 +48,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="font-bold text-base sm:text-lg tracking-tight shrink-0 mr-1">
               맥비기획
             </Link>
-            <Suspense fallback={null}><HeaderNav /></Suspense>
+            <Suspense fallback={null}><HeaderNav isReviewer={isReviewer} /></Suspense>
             <div className="flex-1 flex justify-end items-center gap-1.5 sm:gap-2">
               <Suspense fallback={null}><HeaderSearch /></Suspense>
               <ThemeToggle />
               <Suspense fallback={null}><AuthStatus /></Suspense>
-              <MobileNav />
+              <MobileNav isReviewer={isReviewer} />
             </div>
           </div>
         </header>
@@ -50,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="max-w-6xl mx-auto px-3 sm:px-6 py-5 text-xs text-[var(--muted)] flex flex-col sm:flex-row gap-1.5 sm:gap-4 justify-between">
             <div>© 2026 맥비기획 자료실 운영팀</div>
             <div className="flex flex-wrap gap-3">
-              <Link href="/admin" className="hover:text-[var(--fg)]">운영진</Link>
+              {isReviewer && <Link href="/admin" className="hover:text-[var(--fg)]">운영진</Link>}
             </div>
           </div>
         </footer>

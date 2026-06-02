@@ -3,21 +3,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Menu, X, Search } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
+import { visibleNav } from '@/lib/nav';
 
-const NAV = [
-  { href: '/', label: '홈' },
-  { href: '/files', label: '양식·템플릿' },
-  { href: '/insights', label: '아티클·영상' },
-  { href: '/faq', label: 'FAQ' },
-  { href: '/submit', label: '자료 등록' },
-  { href: '/admin', label: '운영진 검토' },
-];
-
-export function MobileNav() {
+export function MobileNav({ isReviewer = false }: { isReviewer?: boolean }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const pathname = usePathname();
   const router = useRouter();
+  const items = visibleNav(isReviewer);
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
@@ -66,7 +59,7 @@ export function MobileNav() {
             </div>
           </form>
           <nav className="flex flex-col px-2 py-2 gap-0.5 overflow-y-auto">
-            {NAV.map((n) => (
+            {items.map((n) => (
               <Link
                 key={n.href}
                 href={n.href}
