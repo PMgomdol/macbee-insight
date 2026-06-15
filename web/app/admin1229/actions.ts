@@ -15,8 +15,8 @@ export async function applyReviewer(
 ): Promise<{ ok: boolean; error?: string }> {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
-  if (!user || !user.email) return { ok: false, error: '로그인 필요' };
-  if (!displayName.trim()) return { ok: false, error: '이름 필수' };
+  if (!user || !user.email) return { ok: false, error: '로그인해주세요' };
+  if (!displayName.trim()) return { ok: false, error: '이름을 적어주세요' };
 
   // service_role로 안전하게 처리 (RLS profile_self_update 정책 활용 시도)
   const sba = createAdminClient();
@@ -27,10 +27,10 @@ export async function applyReviewer(
     .maybeSingle();
 
   if (existing?.role === 'reviewer' || existing?.role === 'admin') {
-    return { ok: false, error: '이미 운영진 권한 보유' };
+    return { ok: false, error: '이미 운영진이에요' };
   }
   if (existing?.role === 'pending') {
-    return { ok: false, error: '이미 신청 완료 — 승인 대기 중' };
+    return { ok: false, error: '이미 신청하셨어요. 승인을 기다리고 있어요.' };
   }
 
   const now = new Date().toISOString();
@@ -62,11 +62,11 @@ export async function applyReviewer(
 export async function approveReviewer(profileId: string): Promise<{ ok: boolean; error?: string }> {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) return { ok: false, error: '로그인 필요' };
-  if (user.id === profileId) return { ok: false, error: '본인 신청은 본인이 승인 불가' };
+  if (!user) return { ok: false, error: '로그인해주세요' };
+  if (user.id === profileId) return { ok: false, error: '본인 신청은 다른 운영진이 승인할 수 있어요' };
   const sba = createAdminClient();
   const { data: me } = await sba.from('profile').select('role').eq('id', user.id).maybeSingle();
-  if (me?.role !== 'admin' && me?.role !== 'reviewer') return { ok: false, error: '운영진 전용' };
+  if (me?.role !== 'admin' && me?.role !== 'reviewer') return { ok: false, error: '운영진만 할 수 있어요' };
 
   const { error } = await sba
     .from('profile')
@@ -84,11 +84,11 @@ export async function approveReviewer(profileId: string): Promise<{ ok: boolean;
 export async function rejectReviewer(profileId: string, reason: string): Promise<{ ok: boolean; error?: string }> {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
-  if (!user) return { ok: false, error: '로그인 필요' };
-  if (user.id === profileId) return { ok: false, error: '본인 신청은 본인이 처리 불가' };
+  if (!user) return { ok: false, error: '로그인해주세요' };
+  if (user.id === profileId) return { ok: false, error: '본인 신청은 다른 운영진이 처리할 수 있어요' };
   const sba = createAdminClient();
   const { data: me } = await sba.from('profile').select('role').eq('id', user.id).maybeSingle();
-  if (me?.role !== 'admin' && me?.role !== 'reviewer') return { ok: false, error: '운영진 전용' };
+  if (me?.role !== 'admin' && me?.role !== 'reviewer') return { ok: false, error: '운영진만 할 수 있어요' };
 
   const note = `reviewer-rejected:${new Date().toISOString()}` + (reason ? ` reason:${reason.slice(0, 200)}` : '');
   let r = await sba

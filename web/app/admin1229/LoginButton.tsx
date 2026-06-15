@@ -13,7 +13,7 @@ export function LoginButton() {
       options: { redirectTo: `${window.location.origin}/auth/callback?next=/admin1229` },
     });
     if (error) {
-      alert('로그인 실패: ' + error.message);
+      alert('로그인하지 못했어요 — ' + error.message);
       setLoading(false);
     }
   }

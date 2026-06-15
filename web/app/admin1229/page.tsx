@@ -27,8 +27,8 @@ function Guest() {
       <header className="flex flex-col gap-2 text-center">
         <h1 className="text-2xl font-bold tracking-tight">운영진 진입</h1>
         <p className="text-sm text-[var(--muted)]">
-          맥비기획 자료실 운영진 전용 진입점입니다.<br />
-          Google 계정으로 로그인 후 운영진 신청이 가능합니다.
+          맥비기획 자료실 운영진 전용 입구예요.<br />
+          Google 계정으로 로그인하면 운영진 신청을 할 수 있어요.
         </p>
       </header>
       <LoginButton />
@@ -45,7 +45,7 @@ function Logged({ user, displayName, role }: { user: { email?: string }; display
       <header className="flex flex-col gap-2 text-center">
         <h1 className="text-2xl font-bold tracking-tight">운영진 신청</h1>
         <p className="text-sm text-[var(--muted)]">
-          신청 후 기존 운영진이 검토합니다.
+          신청하면 기존 운영진이 확인해드려요.
         </p>
       </header>
 
@@ -65,11 +65,11 @@ function Logged({ user, displayName, role }: { user: { email?: string }; display
         <div className="flex flex-col gap-2 p-4 rounded-[var(--r-md)] border border-[var(--warning)]/40 bg-[var(--warning)]/10 text-sm">
           <div className="flex items-center gap-2 font-semibold">
             <Clock size={16} className="text-[var(--warning)]" aria-hidden />
-            신청 접수 — 승인 대기
+            승인을 기다리고 있어요
           </div>
           <p className="text-xs text-[var(--muted)]">
-            기존 운영진이 신청 내역을 확인 후 승인하면 자료 검토 페이지에 접근 가능합니다.
-            승인 즉시 이 페이지를 새로고침하면 자동으로 검토 페이지로 이동합니다.
+            기존 운영진이 신청을 확인하면 자료 검토 페이지로 들어갈 수 있어요.
+            승인되면 새로고침했을 때 검토 페이지로 바로 이동해요.
           </p>
           <Link href="/admin1229" className="self-start text-xs text-[var(--accent)] hover:underline mt-1">새로고침</Link>
         </div>
@@ -78,7 +78,7 @@ function Logged({ user, displayName, role }: { user: { email?: string }; display
       )}
 
       <p className="text-xs text-[var(--muted-2)] text-center">
-        이 URL은 외부 검색·NAV에 노출되지 않습니다. 다른 분께 공유 금지.
+        이 URL은 검색이나 NAV에 안 보여요. 다른 분께 공유하지 말아주세요.
       </p>
     </div>
   );

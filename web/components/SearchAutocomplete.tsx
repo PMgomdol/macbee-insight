@@ -156,7 +156,7 @@ export function SearchAutocomplete({
             onChange={(e) => { setQ(e.target.value); setOpen(true); setActiveIdx(-1); }}
             onFocus={() => { setOpen(true); fetchSuggest(q); }}
             onKeyDown={onKey}
-            placeholder={placeholder ?? '제목·태그·카테고리 검색...'}
+            placeholder={placeholder ?? '제목·태그·카테고리로 찾아보세요'}
             className={`flex-1 min-w-0 bg-transparent outline-none ${variant === 'header' ? 'text-sm' : 'text-sm sm:text-base'}`}
             aria-label="검색어"
             aria-autocomplete="list"
@@ -235,7 +235,7 @@ export function SearchAutocomplete({
             )}
 
             {q && (resp?.suggestions ?? []).length === 0 && (
-              <div className="px-3 py-4 text-xs text-[var(--muted)]">제안 없음 — Enter로 전체 검색</div>
+              <div className="px-3 py-4 text-xs text-[var(--muted)]">Enter를 누르면 전체 검색해드려요</div>
             )}
 
             {q && (resp?.suggestions ?? []).map((s, i) => {

@@ -166,7 +166,7 @@ export function AllItemsSection({ items, categories }: Props) {
       )}
 
       {filtered.length === 0 ? (
-        <div className="py-12 text-center text-sm text-[var(--muted)]">조건에 맞는 자료가 없습니다</div>
+        <div className="py-12 text-center text-sm text-[var(--muted)]">조건에 맞는 자료를 못 찾았어요</div>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

@@ -71,7 +71,7 @@ export function SubmitForm({ categories }: Props) {
 
   function applyAnalysis(r: AnalyzeResult) {
     if (!r.ok) {
-      setAnalyzeMsg({ kind: 'error', text: r.error ?? '분석 실패' });
+      setAnalyzeMsg({ kind: 'error', text: r.error ?? '분석하지 못했어요' });
       return;
     }
     if (r.title) setTitle(r.title);
@@ -88,12 +88,14 @@ export function SubmitForm({ categories }: Props) {
     setAnalyzed(true);
     setAnalyzeMsg({
       kind: 'ok',
-      text: r.aiUsed ? 'AI 분석 완료 — 내용 확인 후 등록' : '메타 추출 완료 — 내용 확인 후 등록',
+      text: r.aiUsed
+        ? 'AI가 자동으로 채워뒀어요. 내용을 확인하고 등록해주세요.'
+        : '메타 정보로 채워뒀어요. 내용을 확인하고 등록해주세요.',
     });
   }
 
   function onAnalyze() {
-    if (!url.trim()) { setAnalyzeMsg({ kind: 'error', text: 'URL을 먼저 입력' }); return; }
+    if (!url.trim()) { setAnalyzeMsg({ kind: 'error', text: 'URL을 먼저 입력해주세요' }); return; }
     setAnalyzeMsg(null);
     setDuplicate(null);
     startAnalyze(async () => {
@@ -126,13 +128,13 @@ export function SubmitForm({ categories }: Props) {
     setAnalyzeMsg(null);
 
     if (f.size === 0) {
-      setAnalyzeMsg({ kind: 'error', text: `${f.name} — 빈 파일입니다. 다른 파일 선택.` });
+      setAnalyzeMsg({ kind: 'error', text: `${f.name} — 비어있는 파일이에요. 다른 파일을 골라주세요.` });
       return;
     }
     if (f.size > MAX_BYTES) {
       setAnalyzeMsg({
         kind: 'error',
-        text: `${f.name} — 크기 ${fmtMB(f.size)} (최대 50MB). PDF로 압축하거나 Google Drive 링크 + URL 등록 권장.`,
+        text: `${f.name} — ${fmtMB(f.size)}로 너무 커요. 50MB까지 올릴 수 있어요. PDF로 압축하거나 Google Drive 링크를 URL로 등록해보세요.`,
       });
       return;
     }
@@ -144,10 +146,10 @@ export function SubmitForm({ categories }: Props) {
       if (!r.ok) {
         setAnalyzeMsg({
           kind: 'error',
-          text: `파일 업로드 실패 — ${r.error ?? '서버 오류'}. ${
+          text: `파일을 못 올렸어요 — ${r.error ?? '서버에 문제가 생겼어요'}. ${
             r.error?.includes('Body exceeded') || r.error?.includes('body size')
-              ? '크기 초과. Google Drive 링크 + URL 등록 권장.'
-              : '크기·확장자 확인 후 재시도.'
+              ? '크기가 너무 커요. Google Drive 링크를 URL로 등록해보세요.'
+              : '크기와 확장자를 확인하고 다시 시도해주세요.'
           }`,
         });
         return;
@@ -157,7 +159,7 @@ export function SubmitForm({ categories }: Props) {
         const base = f.name.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
         setTitle(base);
       }
-      setAnalyzeMsg({ kind: 'ok', text: `파일 업로드 완료 (${fmtMB(f.size)})` });
+      setAnalyzeMsg({ kind: 'ok', text: `파일을 올렸어요 (${fmtMB(f.size)})` });
     });
   }
 
@@ -185,7 +187,7 @@ export function SubmitForm({ categories }: Props) {
       }
       if ('duplicate' in r && r.duplicate) {
         setDuplicate(r.duplicate);
-        setSubmitError('이미 등록된 자료입니다. 아래 경고 확인 후 다시 시도하세요.');
+        setSubmitError('이미 등록된 자료예요. 아래 안내를 확인해주세요.');
         return;
       }
       setSubmitError((r as { error: string }).error);
@@ -243,11 +245,11 @@ export function SubmitForm({ categories }: Props) {
             </button>
           </div>
           <p className="text-xs text-[var(--muted)]">
-            URL만 붙여넣으면 제목·요약·카테고리·태그가 자동으로 채워져요. Enter로 바로 분석.
+            URL만 붙여넣으면 제목·요약·카테고리·태그를 알아서 채워드려요. Enter로 바로 분석할 수 있어요.
           </p>
           {finalUrl && finalUrl !== url && (
             <p className="text-[11px] text-[var(--muted-2)] break-all">
-              ↳ 최종 링크: <span className="text-[var(--fg)]">{finalUrl}</span>
+              ↳ 실제 링크: <span className="text-[var(--fg)]">{finalUrl}</span>
             </p>
           )}
         </div>
@@ -262,7 +264,7 @@ export function SubmitForm({ categories }: Props) {
             <input type="file" onChange={onFileChange} className="hidden" />
             {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
             <span className="text-sm">
-              {uploading ? '업로드 중...' : fileName ?? '파일 선택 (최대 50MB)'}
+              {uploading ? '올리고 있어요...' : fileName ?? '파일 고르기 (50MB까지)'}
             </span>
           </label>
           {fileUrl && (
@@ -296,12 +298,12 @@ export function SubmitForm({ categories }: Props) {
             <AlertTriangle size={16} className="text-[var(--warning)] shrink-0 mt-0.5" aria-hidden />
             <div className="flex-1 min-w-0">
               <p className="font-semibold">
-                이미 등록된 자료
+                이미 있는 자료예요
               </p>
               <p className="text-xs text-[var(--muted)] mt-0.5">
                 {duplicate.source === 'archive'
-                  ? `자료실에 이미 공개된 자료: "${duplicate.title}"`
-                  : `검토 큐에 이미 제안된 자료: "${duplicate.title}" (${dupStatusLabel(duplicate.status)})`}
+                  ? `자료실에 이미 올라가 있어요: "${duplicate.title}"`
+                  : `검토 큐에 이미 들어가 있어요: "${duplicate.title}" (${dupStatusLabel(duplicate.status)})`}
               </p>
             </div>
           </div>
@@ -312,7 +314,7 @@ export function SubmitForm({ categories }: Props) {
               onChange={(e) => setForceSubmit(e.target.checked)}
               className="accent-[var(--warning)]"
             />
-            중복임을 알면서도 등록 (운영진이 검토 시 판단)
+            그래도 등록할게요 (운영진이 다시 판단해요)
           </label>
         </div>
       )}
@@ -337,7 +339,7 @@ export function SubmitForm({ categories }: Props) {
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               rows={3}
-              placeholder="이 자료가 어떤 내용인지 한 줄로..."
+              placeholder="이 자료가 어떤 내용인지 한 줄로 적어주세요"
               className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none resize-y"
             />
           </div>
@@ -379,7 +381,7 @@ export function SubmitForm({ categories }: Props) {
               placeholder="YYYY-MM-DD"
               className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none w-full sm:max-w-xs"
             />
-            <span className="text-[11px] text-[var(--muted-2)]">원본 자료에 발행일 메타가 있으면 자동 입력. 없으면 비워둬도 OK.</span>
+            <span className="text-[11px] text-[var(--muted-2)]">원본에 발행일이 있으면 알아서 채워드려요. 없으면 비워둬도 괜찮아요.</span>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -408,7 +410,7 @@ export function SubmitForm({ categories }: Props) {
                 type="email"
                 value={proposerEmail}
                 onChange={(e) => setProposerEmail(e.target.value)}
-                placeholder="검토 결과 알림용"
+                placeholder="검토 결과를 알려드려요"
                 className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
               />
             </div>
@@ -427,7 +429,7 @@ export function SubmitForm({ categories }: Props) {
             className="fc-btn fc-btn-primary mt-4 px-4 py-3"
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}
-            {submitting ? '등록 중...' : '등록 신청'}
+            {submitting ? '보내고 있어요...' : '등록할게요'}
           </button>
         </>
       )}
@@ -447,7 +449,7 @@ export function SubmitForm({ categories }: Props) {
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={22} className="text-[var(--success)]" aria-hidden />
-                <h2 id="submit-done-title" className="text-lg font-bold tracking-tight">등록 완료</h2>
+                <h2 id="submit-done-title" className="text-lg font-bold tracking-tight">잘 보냈어요</h2>
               </div>
               <button
                 type="button"
@@ -459,15 +461,15 @@ export function SubmitForm({ categories }: Props) {
               </button>
             </div>
             <p className="text-sm text-[var(--muted)] leading-relaxed">
-              제안이 접수되었어요. 운영진 2명 검토 후 자료실로 이관됩니다.
-              {proposerEmail && ' 검토 결과는 이메일로 안내드려요.'}
+              자료를 잘 받았어요. 운영진 두 분이 확인한 뒤 자료실에 올라가요.
+              {proposerEmail && ' 결과는 이메일로 알려드릴게요.'}
             </p>
             <div className="flex gap-2 mt-1">
               <button type="button" onClick={resetForm} className="fc-btn fc-btn-primary flex-1 px-4 py-2.5">
-                추가 등록하기
+                하나 더 등록할래요
               </button>
               <Link href="/" className="fc-btn fc-btn-subtle flex-1 px-4 py-2.5 justify-center text-center">
-                홈으로 가기
+                홈으로 갈래요
               </Link>
             </div>
           </div>
@@ -479,9 +481,9 @@ export function SubmitForm({ categories }: Props) {
 
 function dupStatusLabel(status: string | null): string {
   switch (status) {
-    case 'pending': return '검토 대기';
-    case 'approved': return '승인됨';
-    case 'rejected': return '거절됨';
-    default: return status ?? '상태 불명';
+    case 'pending': return '검토 대기 중';
+    case 'approved': return '승인됐어요';
+    case 'rejected': return '거절됐어요';
+    default: return status ?? '상태를 모르겠어요';
   }
 }

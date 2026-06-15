@@ -11,7 +11,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: '맥비기획 자료실',
-  description: '기획자를 위한 자료실. 양식·템플릿·아티클·영상·실무 Q&A를 한 곳에서.',
+  description: '기획자에게 필요한 양식·템플릿·아티클·영상·실무 Q&A를 한 곳에 모았어요.',
 };
 
 const THEME_INIT = `

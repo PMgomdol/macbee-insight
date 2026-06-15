@@ -171,7 +171,7 @@ export default async function SearchPage({
 
       {q && result.archives.length === 0 && result.faqs.length === 0 && (
         <div className="flex flex-col gap-3 py-8 text-center">
-          <p className="text-sm text-[var(--muted)]">결과 없음. 다른 키워드 시도:</p>
+          <p className="text-sm text-[var(--muted)]">못 찾았어요. 이런 키워드는 어때요?</p>
           <div className="flex flex-wrap justify-center gap-1.5">
             {TRENDING.map((t) => (
               <Link

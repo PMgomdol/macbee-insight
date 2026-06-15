@@ -15,14 +15,14 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!name.trim()) { setError('이름·닉네임 필수'); return; }
+    if (!name.trim()) { setError('이름이나 닉네임을 적어주세요'); return; }
     startTransition(async () => {
       const r = await applyReviewer(name.trim(), reason.trim());
       if (r.ok) {
         setDone(true);
         router.refresh();
       } else {
-        setError(r.error ?? '신청 실패');
+        setError(r.error ?? '신청하지 못했어요');
       }
     });
   }
@@ -32,9 +32,9 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
       <div className="flex flex-col gap-2 p-4 rounded-[var(--r-md)] border border-[var(--success)]/40 bg-[var(--success)]/10 text-sm">
         <div className="flex items-center gap-2 font-semibold">
           <CheckCircle2 size={16} className="text-[var(--success)]" aria-hidden />
-          신청 완료
+          잘 보냈어요
         </div>
-        <p className="text-xs text-[var(--muted)]">기존 운영진 검토 대기 중. 승인 시 자료 검토 페이지에 접근 가능합니다.</p>
+        <p className="text-xs text-[var(--muted)]">기존 운영진이 확인하고 있어요. 승인되면 자료 검토 페이지로 들어갈 수 있어요.</p>
       </div>
     );
   }
@@ -51,7 +51,7 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          placeholder="실명 또는 카톡방 닉네임"
+          placeholder="실명이나 카톡방 닉네임"
           className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
         />
       </div>
@@ -65,7 +65,7 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           rows={3}
-          placeholder="어떤 부분을 도와줄 수 있는지 짧게..."
+          placeholder="어떻게 도와줄 수 있는지 짧게 적어주세요"
           className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none resize-y"
         />
       </div>
@@ -83,7 +83,7 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
         className="fc-btn fc-btn-primary mt-1"
       >
         {pending && <Loader2 size={14} className="animate-spin" aria-hidden />}
-        {pending ? '신청 중...' : '운영진 신청'}
+        {pending ? '보내고 있어요...' : '운영진 신청'}
       </button>
     </form>
   );

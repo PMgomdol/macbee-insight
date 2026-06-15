@@ -38,19 +38,19 @@ async function migrateToArchive(row: any, approvers: string[], extraNote?: strin
     exposure_grade: 'free',
     notes: note,
   });
-  if (insErr) throw new Error('이관 실패: ' + insErr.message);
+  if (insErr) throw new Error('자료실로 옮기지 못했어요 — ' + insErr.message);
 }
 
 export async function approveProposal(id: string) {
   const me = await getCurrentUser();
-  if (!me) throw new Error('로그인 필요');
+  if (!me) throw new Error('로그인해주세요');
   const role = await getRole();
-  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 가능');
+  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
 
   const sb = await createClient();
   const { data: row } = await sb.from('staging_proposal').select('*').eq('id', id).single();
-  if (!row) throw new Error('항목 없음');
-  if (row.status !== 'pending') throw new Error('이미 처리됨');
+  if (!row) throw new Error('자료를 찾지 못했어요');
+  if (row.status !== 'pending') throw new Error('이미 처리한 자료예요');
 
   const approvers = new Set<string>(row.approvers ?? []);
   approvers.add(me.email);
@@ -74,15 +74,15 @@ export async function approveProposal(id: string) {
  */
 export async function forceApproveProposal(id: string, reason: string) {
   const me = await getCurrentUser();
-  if (!me) throw new Error('로그인 필요');
+  if (!me) throw new Error('로그인해주세요');
   const role = await getRole();
-  if (role !== 'admin') throw new Error('admin 전용 — 단독 승인 권한 없음');
-  if (!reason.trim()) throw new Error('단독 승인 사유 필수');
+  if (role !== 'admin') throw new Error('단독 승인은 관리자만 할 수 있어요');
+  if (!reason.trim()) throw new Error('단독 승인 사유를 적어주세요');
 
   const sb = await createClient();
   const { data: row } = await sb.from('staging_proposal').select('*').eq('id', id).single();
-  if (!row) throw new Error('항목 없음');
-  if (row.status !== 'pending') throw new Error('이미 처리됨');
+  if (!row) throw new Error('자료를 찾지 못했어요');
+  if (row.status !== 'pending') throw new Error('이미 처리한 자료예요');
 
   const approvers = new Set<string>(row.approvers ?? []);
   approvers.add(me.email);
@@ -99,14 +99,14 @@ export async function forceApproveProposal(id: string, reason: string) {
 
 export async function rejectProposal(id: string, note: string) {
   const me = await getCurrentUser();
-  if (!me) throw new Error('로그인 필요');
+  if (!me) throw new Error('로그인해주세요');
   const role = await getRole();
-  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 가능');
+  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
 
   const sb = await createClient();
   await sb.from('staging_proposal').update({
     status: 'rejected',
-    reviewer_note: note || '거절 (사유 없음)',
+    reviewer_note: note || '거절 (사유를 적지 않았어요)',
     reviewed_at: new Date().toISOString(),
   }).eq('id', id);
   revalidatePath('/admin');

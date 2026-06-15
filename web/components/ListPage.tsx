@@ -49,13 +49,13 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
 
       {/* 페이지 내 검색 */}
       <Suspense fallback={null}>
-        <ListSearchBox basePath={basePath} placeholder={`${title} 내 검색 — 제목·설명`} />
+        <ListSearchBox basePath={basePath} placeholder={`${title}에서 제목·설명으로 찾아보세요`} />
       </Suspense>
 
       {q && (
         <p className="text-xs text-[var(--muted)]">
           <strong className="text-[var(--fg)]">{q}</strong> 결과 {total.toLocaleString()}건
-          <Link href={buildHref({ q: undefined, show: undefined })} className="ml-2 text-[var(--accent)] hover:underline">검색 지우기</Link>
+          <Link href={buildHref({ q: undefined, show: undefined })} className="ml-2 text-[var(--accent)] hover:underline">검색 지울게요</Link>
         </p>
       )}
 
@@ -129,7 +129,7 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
       </div>
 
       {items.length === 0 ? (
-        <div className="py-16 text-center text-sm text-[var(--muted)]">결과가 없습니다</div>
+        <div className="py-16 text-center text-sm text-[var(--muted)]">조건에 맞는 자료를 못 찾았어요</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {items.map((it) => <ItemCard key={it.id} item={it} />)}

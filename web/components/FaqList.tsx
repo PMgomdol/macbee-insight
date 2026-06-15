@@ -52,7 +52,7 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="실무 Q&A 검색 — 질문·답변·카테고리 (예: 면접, 피그마, 휴가)"
+          placeholder="질문·답변·카테고리로 찾아보세요 (예: 면접, 피그마, 휴가)"
           className="flex-1 min-w-0 bg-transparent outline-none text-sm sm:text-base"
           aria-label="실무 Q&A 검색"
         />
@@ -101,7 +101,7 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
       )}
 
       {filtered.length === 0 ? (
-        <div className="py-12 text-center text-sm text-[var(--muted)]">결과가 없습니다. 다른 키워드로 시도하세요.</div>
+        <div className="py-12 text-center text-sm text-[var(--muted)]">결과가 없어요. 다른 키워드로 찾아보세요.</div>
       ) : (
         // 카테고리 순서는 allCats 기준 (검색해도 그룹 순서 유지)
         allCats.map(([cat]) => {

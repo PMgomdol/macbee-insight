@@ -20,8 +20,8 @@ export default async function AdminPage() {
     return (
       <div className="flex flex-col gap-3 max-w-md py-8 mx-auto">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">운영진 검토</h1>
-        <p className="text-sm text-[var(--muted)]">검토 페이지는 운영진 로그인이 필요합니다.</p>
-        <Link href="/admin1229" className="fc-btn fc-btn-primary w-fit px-4 py-2.5">진입점으로</Link>
+        <p className="text-sm text-[var(--muted)]">검토 페이지를 보려면 운영진으로 로그인해주세요.</p>
+        <Link href="/admin1229" className="fc-btn fc-btn-primary w-fit px-4 py-2.5">진입점으로 가기</Link>
       </div>
     );
   }
@@ -31,9 +31,9 @@ export default async function AdminPage() {
       <div className="flex flex-col gap-3 max-w-md py-8 mx-auto">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">운영진 검토</h1>
         <p className="text-sm text-[var(--muted)]">
-          {user.email} 계정은 운영진 권한이 없습니다.
+          {user.email} 계정은 아직 운영진이 아니에요.
         </p>
-        <Link href="/admin1229" className="text-sm text-[var(--accent)] hover:underline">→ 운영진 신청 페이지</Link>
+        <Link href="/admin1229" className="text-sm text-[var(--accent)] hover:underline">→ 운영진 신청하러 가기</Link>
       </div>
     );
   }
@@ -92,14 +92,14 @@ export default async function AdminPage() {
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">운영진 영역</h1>
           <span className="text-xs text-[var(--muted-2)]">{displayName ?? user.email} · {roleLabel(role)}</span>
         </div>
-        <p className="text-sm text-[var(--muted)]">멤버 제안 자료 + 신규 운영진 신청을 검토합니다.</p>
+        <p className="text-sm text-[var(--muted)]">멤버가 제안한 자료와 새 운영진 신청을 확인해주세요.</p>
         {(reviewerCount ?? 0) < 2 && isAdmin && (
           <p className="text-xs text-[var(--warning)] mt-1">
-            현재 운영진 {reviewerCount ?? 0}명 — 2인 승인 충족 불가. admin은 사유 기록과 함께 <strong>단독 승인</strong> 가능.
+            지금 운영진이 {reviewerCount ?? 0}명이에요. 2명 승인이 필요한데 아직 부족해요. 관리자는 사유를 적고 <strong>단독 승인</strong>할 수 있어요.
           </p>
         )}
         <div className="text-[11px] text-[var(--muted-2)] mt-1">
-          신규 운영진 초대용 비공개 URL: <code className="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">/admin1229</code>
+          새 운영진 초대용 비공개 URL: <code className="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">/admin1229</code>
         </div>
       </section>
 
@@ -109,7 +109,7 @@ export default async function AdminPage() {
           <h2 className="text-base font-semibold tracking-tight inline-flex items-center gap-1.5">
             <UserPlus size={16} aria-hidden /> 운영진 신청 ({pendingApps.length})
           </h2>
-          <p className="text-xs text-[var(--muted)]">신청자는 본인 외 운영진이 승인할 수 있습니다.</p>
+          <p className="text-xs text-[var(--muted)]">본인 신청은 다른 운영진이 승인해요.</p>
           <div className="flex flex-col gap-2">
             {pendingApps.map((app) => {
               const m = (app.notes ?? '').match(/reviewer-applied:([\d\-T:.Z]+)/);
@@ -121,7 +121,7 @@ export default async function AdminPage() {
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="font-semibold text-sm">{app.display_name}</span>
                     <span className="text-[11px] text-[var(--muted)]">
-                      {at ? new Date(at).toLocaleString('ko-KR') : '신청 시각 미상'}
+                      {at ? new Date(at).toLocaleString('ko-KR') : '신청 시각을 모르겠어요'}
                     </span>
                   </div>
                   {reason && (
@@ -138,9 +138,9 @@ export default async function AdminPage() {
       {/* 자료 제안 검토 */}
       <section className="flex flex-col gap-2">
         <h2 className="text-base font-semibold tracking-tight">자료 검토 큐 ({items.length})</h2>
-        <p className="text-xs text-[var(--muted)]">멤버 제안 대기. 운영진 2명 승인 시 자료실로 자동 이관.</p>
+        <p className="text-xs text-[var(--muted)]">멤버가 제안한 자료를 기다리고 있어요. 운영진 2명이 승인하면 자료실로 옮겨가요.</p>
         {items.length === 0 ? (
-          <div className="py-10 text-center text-sm text-[var(--muted)]">대기 항목 없음</div>
+          <div className="py-10 text-center text-sm text-[var(--muted)]">대기 중인 자료가 없어요</div>
         ) : (
           <div className="flex flex-col gap-2.5">
             {items.map((p) => (

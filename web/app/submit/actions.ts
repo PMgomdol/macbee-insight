@@ -105,11 +105,11 @@ export type AnalyzeResult = {
 
 export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
   url = url.trim();
-  if (!url) return { ok: false, error: 'URL을 입력해주세요' };
-  if (!/^https?:\/\//i.test(url)) return { ok: false, error: 'http:// 또는 https://로 시작해야 합니다' };
+  if (!url) return { ok: false, error: 'URL을 먼저 입력해주세요' };
+  if (!/^https?:\/\//i.test(url)) return { ok: false, error: 'URL은 http:// 또는 https://로 시작해요' };
 
   const meta = await fetchUrlMeta(url);
-  if (!meta.ok) return { ok: false, error: `URL 분석 실패: ${meta.error ?? 'unknown'}` };
+  if (!meta.ok) return { ok: false, error: `URL을 못 가져왔어요 — ${meta.error ?? '잠시 후 다시 시도'}` };
 
   // 메타 추출·분류·중복 검사 병렬 — finalUrl로 검사 (리다이렉트 풀린 후 키)
   const [cls, duplicate] = await Promise.all([
@@ -153,8 +153,8 @@ export async function submitProposal(formData: FormData): Promise<SubmitResult |
   const proposer_email = String(formData.get('proposer_email') ?? '').trim();
   const force = String(formData.get('force') ?? '') === '1';
 
-  if (!title) return { ok: false, error: '제목 필수' };
-  if (!url && !fileUrl) return { ok: false, error: 'URL 또는 파일 둘 중 하나 필수' };
+  if (!title) return { ok: false, error: '제목을 입력해주세요' };
+  if (!url && !fileUrl) return { ok: false, error: 'URL이나 파일 중 하나는 있어야 해요' };
 
   // 최종 안전 검사 — 분석 단계 이후 다른 자료가 등록되었을 수 있어 한 번 더 확인.
   // force=1 이면 운영진이 의도적으로 중복 허용한 케이스
@@ -204,10 +204,10 @@ export async function submitProposal(formData: FormData): Promise<SubmitResult |
     try {
       const sbAdmin = createAdminClient();
       const r = await sbAdmin.from('staging_proposal').insert(row).select('id').single();
-      if (r.error) return { ok: false, error: '등록 실패: ' + r.error.message };
+      if (r.error) return { ok: false, error: '등록하지 못했어요 — ' + r.error.message };
       insertedId = r.data?.id ?? null;
     } catch (e: any) {
-      return { ok: false, error: '등록 실패: ' + (e?.message ?? lastErr ?? 'unknown') };
+      return { ok: false, error: '등록하지 못했어요 — ' + (e?.message ?? lastErr ?? '잠시 후 다시 시도해주세요') };
     }
   }
 
@@ -237,9 +237,9 @@ export async function uploadFile(formData: FormData): Promise<{ ok: boolean; url
   try {
     const file = formData.get('file');
     if (!(file instanceof File)) return { ok: false, error: '파일이 첨부되지 않음' };
-    if (file.size === 0) return { ok: false, error: '빈 파일' };
+    if (file.size === 0) return { ok: false, error: '비어있는 파일이에요' };
     if (file.size > 50 * 1024 * 1024) {
-      return { ok: false, error: `크기 ${(file.size / 1024 / 1024).toFixed(1)}MB — 50MB 한도 초과` };
+      return { ok: false, error: `파일이 ${(file.size / 1024 / 1024).toFixed(1)}MB예요. 50MB까지 올릴 수 있어요.` };
     }
 
     const ext = (file.name.split('.').pop() || '').toLowerCase();
@@ -256,13 +256,13 @@ export async function uploadFile(formData: FormData): Promise<{ ok: boolean; url
     if (error) {
       const msg = error.message || '';
       if (msg.toLowerCase().includes('exceeded') || msg.toLowerCase().includes('size')) {
-        return { ok: false, error: `Storage 용량 초과 — ${msg}` };
+        return { ok: false, error: `용량을 초과했어요 — ${msg}` };
       }
       if (msg.toLowerCase().includes('mime') || msg.toLowerCase().includes('type')) {
-        return { ok: false, error: `허용되지 않은 파일 형식 (${ext}) — ${msg}` };
+        return { ok: false, error: `못 올리는 파일 형식이에요 (${ext})` };
       }
       if (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('bucket')) {
-        return { ok: false, error: `Storage 버킷 오류 — ${msg}. 운영자 문의.` };
+        return { ok: false, error: `저장소에 문제가 있어요. 운영진에게 알려주세요.` };
       }
       return { ok: false, error: msg };
     }
@@ -273,8 +273,8 @@ export async function uploadFile(formData: FormData): Promise<{ ok: boolean; url
     // Server Action body size 초과는 throw로 옴
     const msg = e?.message ?? String(e);
     if (msg.toLowerCase().includes('body') && msg.toLowerCase().includes('size')) {
-      return { ok: false, error: `요청 크기 초과 — Body size limit. 파일을 줄이거나 운영자 문의.` };
+      return { ok: false, error: `요청 크기가 너무 커요. 파일을 줄이거나 운영진에게 알려주세요.` };
     }
-    return { ok: false, error: `서버 오류: ${msg.slice(0, 200)}` };
+    return { ok: false, error: `서버에 문제가 생겼어요: ${msg.slice(0, 200)}` };
   }
 }

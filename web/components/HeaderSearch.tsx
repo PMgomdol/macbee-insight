@@ -9,5 +9,5 @@ export function HeaderSearch() {
   // 홈에서는 Hero 검색이 있어 헤더 검색 숨김
   if (pathname === '/') return null;
 
-  return <SearchAutocomplete variant="header" initial={sp.get('q') ?? ''} placeholder="자료·Q&A 검색..." />;
+  return <SearchAutocomplete variant="header" initial={sp.get('q') ?? ''} placeholder="자료·Q&A 찾기" />;
 }
