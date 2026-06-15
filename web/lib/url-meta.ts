@@ -45,6 +45,32 @@ function decode(s: string | null): string {
     .trim();
 }
 
+const UA_CHROME = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const UA_GOOGLEBOT = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
+
+async function tryFetch(url: string, ua: string): Promise<{ ok: boolean; status: number; finalUrl: string; html?: string; error?: string }> {
+  try {
+    const resp = await fetch(url, {
+      headers: {
+        'User-Agent': ua,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!resp.ok) {
+      return { ok: false, status: resp.status, finalUrl: resp.url, error: `HTTP ${resp.status}` };
+    }
+    const html = (await resp.text()).slice(0, 200_000);
+    return { ok: true, status: resp.status, finalUrl: resp.url, html };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    const cause = e instanceof Error ? (e as Error & { cause?: { message?: string } }).cause?.message : undefined;
+    return { ok: false, status: 0, finalUrl: url, error: cause ? `${msg} (${cause})` : msg };
+  }
+}
+
 export async function fetchUrlMeta(url: string): Promise<UrlMeta> {
   const result: UrlMeta = {
     url,
@@ -58,23 +84,19 @@ export async function fetchUrlMeta(url: string): Promise<UrlMeta> {
     status: 0,
   };
 
+  // 1차: Chrome UA. 2차: 봇 차단·로그인 강제 사이트(브런치·Medium·노션 등)는 Googlebot UA fallback
+  let r = await tryFetch(url, UA_CHROME);
+  if (!r.ok && (r.error?.includes('redirect count') || r.status === 401 || r.status === 403)) {
+    r = await tryFetch(url, UA_GOOGLEBOT);
+  }
+  result.status = r.status;
+  result.finalUrl = r.finalUrl;
+  if (!r.ok || !r.html) {
+    result.error = r.error;
+    return result;
+  }
+  const html = r.html;
   try {
-    const resp = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
-      },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(10000),
-    });
-    result.status = resp.status;
-    result.finalUrl = resp.url;
-    if (!resp.ok) {
-      result.error = `HTTP ${resp.status}`;
-      return result;
-    }
-    const html = (await resp.text()).slice(0, 200_000); // 상위 200KB만
 
     const ogTitle = matchMeta(html, 'og:title');
     const tag = matchTitleTag(html);
