@@ -4,6 +4,12 @@ import { ExternalLink, UserPlus } from 'lucide-react';
 import { ApproveButton, ForceApproveButton, RejectButton } from './buttons';
 import { ReviewerApplyButtons } from './ReviewerApplyButtons';
 
+function roleLabel(r: string | null): string {
+  if (r === 'admin') return '관리자';
+  if (r === 'reviewer') return '운영진';
+  return r ?? '권한 없음';
+}
+
 export default async function AdminPage() {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
@@ -83,14 +89,17 @@ export default async function AdminPage() {
       <section className="flex flex-col gap-1">
         <div className="flex items-baseline justify-between gap-3 flex-wrap">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">운영진 영역</h1>
-          <span className="text-xs text-[var(--muted-2)]">{displayName ?? user.email} ({role})</span>
+          <span className="text-xs text-[var(--muted-2)]">{displayName ?? user.email} · {roleLabel(role)}</span>
         </div>
-        <p className="text-sm text-[var(--muted)]">멤버 제안 + 운영진 신청 검토.</p>
+        <p className="text-sm text-[var(--muted)]">멤버 제안 자료 + 신규 운영진 신청을 검토합니다.</p>
         {(reviewerCount ?? 0) < 2 && isAdmin && (
           <p className="text-xs text-[var(--warning)] mt-1">
             현재 운영진 {reviewerCount ?? 0}명 — 2인 승인 충족 불가. admin은 사유 기록과 함께 <strong>단독 승인</strong> 가능.
           </p>
         )}
+        <div className="text-[11px] text-[var(--muted-2)] mt-1">
+          신규 운영진 초대용 비공개 URL: <code className="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">/admin1229</code>
+        </div>
       </section>
 
       {/* 운영진(reviewer/admin) — 운영진 신청 큐 */}
@@ -109,18 +118,15 @@ export default async function AdminPage() {
               return (
                 <article key={app.id} className="fc-card flex flex-col gap-1.5 p-3 sm:p-4 bg-[var(--card)]">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-sm">{app.display_name}</span>
-                      <span className="text-[11px] text-[var(--muted-2)] font-mono break-all">{app.id}</span>
-                    </div>
+                    <span className="font-semibold text-sm">{app.display_name}</span>
                     <span className="text-[11px] text-[var(--muted)]">
-                      {at ? new Date(at).toLocaleString('ko-KR') : '시각 미상'}
+                      {at ? new Date(at).toLocaleString('ko-KR') : '신청 시각 미상'}
                     </span>
                   </div>
                   {reason && (
                     <p className="text-xs text-[var(--muted)] leading-relaxed">사유: {reason}</p>
                   )}
-                  <ReviewerApplyButtons profileId={app.id} />
+                  <ReviewerApplyButtons profileId={app.id} isSelf={app.id === user.id} />
                 </article>
               );
             })}

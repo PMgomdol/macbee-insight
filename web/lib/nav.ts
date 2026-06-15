@@ -6,7 +6,7 @@ export const NAV: NavItem[] = [
   { href: '/insights', label: '아티클·영상' },
   { href: '/faq', label: '실무 Q&A' },
   { href: '/submit', label: '자료 등록' },
-  { href: '/admin', label: '운영진 검토', reviewerOnly: true },
+  { href: '/admin', label: '운영진', reviewerOnly: true },
 ];
 
 export function visibleNav(isReviewer: boolean): NavItem[] {
