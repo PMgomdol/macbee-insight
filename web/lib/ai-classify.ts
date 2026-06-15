@@ -55,7 +55,7 @@ export async function classify(
                 tags: { type: 'array', items: { type: 'string' } },
                 format: { type: 'string', enum: FORMATS },
               },
-              required: ['title_ko', 'summary_ko', 'main_category', 'format'],
+              required: ['title_ko', 'summary_ko', 'main_category', 'format', 'tags'],
             },
             temperature: 0.2,
           },
@@ -101,6 +101,53 @@ URL: ${url}
 - format: ${FORMATS.join(' | ')} 중 1개`;
 }
 
+/** 키워드 사전 기반 태그 추출 — heuristic용. 본 사전은 자료실 실제 태그 빈도 기준 */
+const TAG_DICT: Array<{ pat: RegExp; tag: string }> = [
+  { pat: /피그마|figma/i, tag: '피그마' },
+  { pat: /스케치|sketch/i, tag: '스케치' },
+  { pat: /adobe xd|어도비 xd|adobexd|\bxd\b/i, tag: 'Adobe XD' },
+  { pat: /노션|notion/i, tag: '노션' },
+  { pat: /프로토타입|prototyp/i, tag: '프로토타이핑' },
+  { pat: /디자인 시스템|design system/i, tag: '디자인시스템' },
+  { pat: /와이어프레임|wireframe/i, tag: '와이어프레임' },
+  { pat: /기획서|화면설계|스토리보드/i, tag: '기획서' },
+  { pat: /UX 라이팅|ux writing|마이크로카피/i, tag: 'UX 라이팅' },
+  { pat: /UX 리서치|user research|사용자 인터뷰|사용성/i, tag: '리서치' },
+  { pat: /UI 패턴|ui pattern/i, tag: 'UI 패턴' },
+  { pat: /브랜딩|브랜드|branding|\bbx\b/i, tag: '브랜딩' },
+  { pat: /면접|interview|면접관/i, tag: '면접' },
+  { pat: /채용|이직|hiring|recruit/i, tag: '채용' },
+  { pat: /자기소개서|이력서|포트폴리오|커리어/i, tag: '커리어' },
+  { pat: /PM 면접|프로덕트 매니저 면접/i, tag: 'PM면접' },
+  { pat: /\bpm\b|프로덕트 매니저|제품 기획자/i, tag: 'PM' },
+  { pat: /서비스 기획|service planning/i, tag: '서비스 기획' },
+  { pat: /RFP|제안서|제안요청서/i, tag: 'RFP' },
+  { pat: /마케팅|marketing/i, tag: '마케팅' },
+  { pat: /콘텐츠 마케팅|content marketing/i, tag: '콘텐츠마케팅' },
+  { pat: /광고|advertis/i, tag: '광고' },
+  { pat: /\bAI\b|인공지능|머신러닝|GPT|LLM|챗GPT/i, tag: 'AI' },
+  { pat: /데이터 분석|data analy|시각화|BI|대시보드/i, tag: '데이터 분석' },
+  { pat: /개인정보|약관|법규|컴플라이언스/i, tag: '정책법규' },
+  { pat: /트렌드|trend/i, tag: '트렌드' },
+  { pat: /튜토리얼|tutorial|how to|how-to/i, tag: '튜토리얼' },
+  { pat: /가이드|guide|매뉴얼/i, tag: '가이드' },
+  { pat: /템플릿|template|샘플|양식/i, tag: '템플릿' },
+  { pat: /플러그인|plugin/i, tag: '플러그인' },
+  { pat: /협업|collaborat/i, tag: '협업' },
+  { pat: /성장|성장 단계|growth/i, tag: '성장' },
+];
+
+function extractTags(blob: string, max = 6): string[] {
+  const found: string[] = [];
+  for (const { pat, tag } of TAG_DICT) {
+    if (pat.test(blob) && !found.includes(tag)) {
+      found.push(tag);
+      if (found.length >= max) break;
+    }
+  }
+  return found;
+}
+
 function heuristic(url: string, meta: { title: string; description: string }): Omit<ClassifyResult, 'aiUsed'> {
   const t = meta.title.toLowerCase();
   const d = meta.description.toLowerCase();
@@ -113,6 +160,7 @@ function heuristic(url: string, meta: { title: string; description: string }): O
     if (/figma|피그마|sketch|스케치|xd|axure/.test(blob)) sub = '디자인 툴';
     else if (/리서치|research/.test(blob)) sub = '리서치';
     else if (/브랜드|brand/.test(blob)) sub = '브랜딩';
+    else if (/라이팅|writing|카피/.test(blob)) sub = 'UX 라이팅';
     else sub = 'UI 패턴';
   } else if (/면접|채용|이직|interview|hiring/.test(blob)) {
     main = '면접/채용/이직';
@@ -133,7 +181,7 @@ function heuristic(url: string, meta: { title: string; description: string }): O
     summary: meta.description,
     mainCategory: main,
     subCategory: sub,
-    tags: [],
+    tags: extractTags(blob),
     format: guessFormat(url),
   };
 }
