@@ -236,4 +236,10 @@ button, a[role="button"], .touch-target {
   color: var(--muted);
   border-color: var(--border-strong);
 }
+.fc-badge-video {
+  background: color-mix(in srgb, var(--danger) 12%, var(--bg));
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 30%, var(--border));
+  font-weight: 600;
+}
 
