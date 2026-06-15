@@ -51,9 +51,9 @@ export default async function AdminPage() {
     .eq('status', 'pending')
     .order('proposed_at', { ascending: true });
 
-  // admin 전용 — pending 신청 조회 (service_role)
+  // 운영진(reviewer/admin) — pending 신청 조회 (service_role)
   let pendingApps: Array<{ id: string; display_name: string; notes: string | null; created_at: string }> = [];
-  if (isAdmin) {
+  if (isReviewer) {
     const sba = createAdminClient();
     const { data } = await sba
       .from('profile')
@@ -93,12 +93,13 @@ export default async function AdminPage() {
         )}
       </section>
 
-      {/* admin 전용 — 운영진 신청 큐 */}
-      {isAdmin && pendingApps.length > 0 && (
+      {/* 운영진(reviewer/admin) — 운영진 신청 큐 */}
+      {isReviewer && pendingApps.length > 0 && (
         <section className="flex flex-col gap-2">
           <h2 className="text-base font-semibold tracking-tight inline-flex items-center gap-1.5">
             <UserPlus size={16} aria-hidden /> 운영진 신청 ({pendingApps.length})
           </h2>
+          <p className="text-xs text-[var(--muted)]">신청자는 본인 외 운영진이 승인할 수 있습니다.</p>
           <div className="flex flex-col gap-2">
             {pendingApps.map((app) => {
               const m = (app.notes ?? '').match(/reviewer-applied:([\d\-T:.Z]+)/);
