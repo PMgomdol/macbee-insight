@@ -36,18 +36,22 @@ export async function applyReviewer(
   const now = new Date().toISOString();
   const note = `reviewer-applied:${now}` + (reason ? ` reason:${reason.slice(0, 200)}` : '');
 
-  if (existing) {
-    const { error } = await sba
-      .from('profile')
-      .update({ role: 'pending', display_name: displayName, notes: note })
-      .eq('id', user.id);
-    if (error) return { ok: false, error: error.message };
-  } else {
-    const { error } = await sba
-      .from('profile')
-      .insert({ id: user.id, display_name: displayName, role: 'pending', notes: note });
-    if (error) return { ok: false, error: error.message };
+  const uid = user.id;
+  async function tryWrite(withNotes: boolean) {
+    const base = { role: 'pending' as const, display_name: displayName };
+    const payload: Record<string, unknown> = withNotes ? { ...base, notes: note } : base;
+    if (existing) {
+      return await sba.from('profile').update(payload).eq('id', uid);
+    }
+    return await sba.from('profile').insert({ id: uid, ...payload });
   }
+
+  // 1차: notes 포함. 컬럼 없으면 fallback (스키마 마이그레이션 안 된 환경)
+  let r = await tryWrite(true);
+  if (r.error && /notes/.test(r.error.message)) {
+    r = await tryWrite(false);
+  }
+  if (r.error) return { ok: false, error: r.error.message };
 
   revalidatePath('/admin1229');
   revalidatePath('/admin');
@@ -85,12 +89,19 @@ export async function rejectReviewer(profileId: string, reason: string): Promise
   if (me?.role !== 'admin') return { ok: false, error: 'admin 전용' };
 
   const note = `reviewer-rejected:${new Date().toISOString()}` + (reason ? ` reason:${reason.slice(0, 200)}` : '');
-  const { error } = await sba
+  let r = await sba
     .from('profile')
     .update({ role: 'member', notes: note })
     .eq('id', profileId)
     .eq('role', 'pending');
-  if (error) return { ok: false, error: error.message };
+  if (r.error && /notes/.test(r.error.message)) {
+    r = await sba
+      .from('profile')
+      .update({ role: 'member' })
+      .eq('id', profileId)
+      .eq('role', 'pending');
+  }
+  if (r.error) return { ok: false, error: r.error.message };
 
   revalidatePath('/admin');
   revalidatePath('/admin1229');
