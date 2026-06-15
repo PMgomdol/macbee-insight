@@ -52,7 +52,7 @@ export function MobileNav({ isReviewer = false }: { isReviewer?: boolean }) {
                 type="search"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="자료·FAQ 검색..."
+                placeholder="자료·Q&A 검색..."
                 className="text-sm"
                 aria-label="검색어"
               />

@@ -39,7 +39,7 @@ export default async function SearchPage({
       {q && (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-[var(--muted)]">
-            <strong className="text-[var(--fg)]">{q}</strong> 결과 — 자료 {result.archives.length} · FAQ {result.faqs.length}
+            <strong className="text-[var(--fg)]">{q}</strong> 결과 — 자료 {result.archives.length} · 실무 Q&A {result.faqs.length}
           </p>
 
           {result.synonymCanonical && result.expanded.length > 1 && (
@@ -88,7 +88,7 @@ export default async function SearchPage({
 
       {q && result.faqs.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">FAQ</h2>
+          <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">실무 Q&A</h2>
           <div className="flex flex-col">
             {result.faqs.map((f) => (
               <details key={f.id} className="border-b border-[var(--border)]">
