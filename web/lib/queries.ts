@@ -39,9 +39,9 @@ export const getRecentItems = unstable_cache(
 export const getItemsByKind = unstable_cache(
   async (
     kind: 'files' | 'insights',
-    opts: { page?: number; pageSize?: number; main?: string; sub?: string; format?: string; sort?: 'recent' | 'popular' | 'views' } = {}
+    opts: { page?: number; pageSize?: number; main?: string; sub?: string; format?: string; sort?: 'recent' | 'popular' | 'views'; q?: string } = {}
   ) => {
-    const { page = 1, pageSize = 24, main, sub, format, sort = 'recent' } = opts;
+    const { page = 1, pageSize = 24, main, sub, format, sort = 'recent', q: qRaw } = opts;
     const sb = createPublicClient();
     let q = sb
       .from('archive_item')
@@ -51,6 +51,11 @@ export const getItemsByKind = unstable_cache(
     if (main) q = q.eq('main_category', main);
     if (sub) q = q.eq('sub_category', sub);
     if (format) q = q.eq('format', format);
+    if (qRaw && qRaw.trim()) {
+      const safe = qRaw.trim().replace(/[%_,()]/g, '');
+      const like = `%${safe}%`;
+      q = q.or(`title.ilike.${like},summary.ilike.${like}`);
+    }
     if (sort === 'popular' || sort === 'views') q = q.order('views', { ascending: false });
     q = q.order('registered_at', { ascending: false });
     const from = (page - 1) * pageSize;
@@ -58,7 +63,7 @@ export const getItemsByKind = unstable_cache(
     const { data, count } = await q.range(from, to);
     return { items: (data ?? []) as ArchiveItem[], total: count ?? 0 };
   },
-  ['items-by-kind-v4'],
+  ['items-by-kind-v5'],
   { revalidate: HOUR, tags: ['archive'] }
 );
 

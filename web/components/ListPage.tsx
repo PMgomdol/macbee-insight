@@ -1,12 +1,14 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { ItemCard } from './ItemCard';
+import { ListSearchBox } from './ListSearchBox';
 import { getItemsByKind, getCategoryCounts, getSubCategoryCounts } from '@/lib/queries';
 
 type Props = {
   kind: 'files' | 'insights';
   title: string;
   desc: string;
-  searchParams: { main?: string; sub?: string; sort?: string; show?: string };
+  searchParams: { main?: string; sub?: string; sort?: string; show?: string; q?: string };
 };
 
 const STEP = 24;
@@ -14,6 +16,7 @@ const STEP = 24;
 export async function ListPage({ kind, title, desc, searchParams }: Props) {
   const show = parseInt(searchParams.show ?? String(STEP)) || STEP;
   const sort = (searchParams.sort as 'recent' | 'popular') || 'recent';
+  const q = (searchParams.q ?? '').trim();
   const [{ items, total }, counts, subCounts] = await Promise.all([
     getItemsByKind(kind, {
       page: 1,
@@ -21,6 +24,7 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
       main: searchParams.main,
       sub: searchParams.sub,
       sort,
+      q: q || undefined,
     }),
     getCategoryCounts(kind),
     searchParams.main ? getSubCategoryCounts(searchParams.main, kind) : Promise.resolve({} as Record<string, number>),
@@ -28,11 +32,12 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
   const sortedCats = Object.entries(counts).sort((a, b) => b[1] - a[1]);
   const sortedSubs = (Object.entries(subCounts) as [string, number][]).sort((a, b) => b[1] - a[1]);
 
+  const basePath = kind === 'files' ? '/files' : '/insights';
   const buildHref = (params: Partial<typeof searchParams>) => {
     const u = new URLSearchParams();
     const all = { ...searchParams, ...params };
     Object.entries(all).forEach(([k, v]) => { if (v) u.set(k, v); });
-    return `/${kind === 'files' ? 'files' : 'insights'}${u.toString() ? `?${u.toString()}` : ''}`;
+    return `${basePath}${u.toString() ? `?${u.toString()}` : ''}`;
   };
 
   return (
@@ -41,6 +46,18 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h1>
         <p className="text-sm text-[var(--muted)]">{desc} <span className="text-[var(--muted-2)]">· 총 {total.toLocaleString()}건</span></p>
       </section>
+
+      {/* 페이지 내 검색 */}
+      <Suspense fallback={null}>
+        <ListSearchBox basePath={basePath} placeholder={`${title} 내 검색 — 제목·설명`} />
+      </Suspense>
+
+      {q && (
+        <p className="text-xs text-[var(--muted)]">
+          <strong className="text-[var(--fg)]">{q}</strong> 결과 {total.toLocaleString()}건
+          <Link href={buildHref({ q: undefined, show: undefined })} className="ml-2 text-[var(--accent)] hover:underline">검색 지우기</Link>
+        </p>
+      )}
 
       {/* 대분류 chips */}
       <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap">
@@ -69,7 +86,7 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
         ))}
       </div>
 
-      {/* 소분류 chips — 대분류 선택 시 노출 */}
+      {/* 소분류 chips */}
       {searchParams.main && sortedSubs.length > 0 && (
         <div className="flex gap-1 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap items-center">
           <span className="text-[11px] text-[var(--muted-2)] mr-1 shrink-0">소분류</span>
@@ -111,7 +128,6 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
         </Link>
       </div>
 
-      {/* 리스트 */}
       {items.length === 0 ? (
         <div className="py-16 text-center text-sm text-[var(--muted)]">결과가 없습니다</div>
       ) : (
@@ -120,7 +136,6 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
         </div>
       )}
 
-      {/* 더 보기 */}
       {items.length < total && (
         <Link
           href={buildHref({ show: String(show + STEP) })}
