@@ -2,6 +2,7 @@ import { unstable_cache } from 'next/cache';
 import { createPublicClient } from './supabase/server';
 import type { ArchiveItem, FAQItem, Category } from '@/types/db';
 
+const MINUTE = 60;
 const HOUR = 60 * 60;
 const DAY = 24 * HOUR;
 
@@ -17,8 +18,8 @@ export const getPopularItems = unstable_cache(
       .limit(limit);
     return (data ?? []) as ArchiveItem[];
   },
-  ['popular-items-v4'],
-  { revalidate: HOUR, tags: ['archive'] }
+  ['popular-items-v5'],
+  { revalidate: 5 * MINUTE, tags: ['archive', 'popular'] }
 );
 
 export const getRecentItems = unstable_cache(
