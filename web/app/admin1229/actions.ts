@@ -1,0 +1,98 @@
+'use server';
+
+import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
+
+/**
+ * 운영진 신청 — 로그인된 사용자가 본인 profile에 role='pending' 기록.
+ * - 기존 profile이 없으면 생성
+ * - 이미 reviewer/admin이면 거부
+ * - notes에 신청 시각·사유 기록
+ */
+export async function applyReviewer(
+  displayName: string,
+  reason: string
+): Promise<{ ok: boolean; error?: string }> {
+  const sb = await createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user || !user.email) return { ok: false, error: '로그인 필요' };
+  if (!displayName.trim()) return { ok: false, error: '이름 필수' };
+
+  // service_role로 안전하게 처리 (RLS profile_self_update 정책 활용 시도)
+  const sba = createAdminClient();
+  const { data: existing } = await sba
+    .from('profile')
+    .select('id, role')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (existing?.role === 'reviewer' || existing?.role === 'admin') {
+    return { ok: false, error: '이미 운영진 권한 보유' };
+  }
+  if (existing?.role === 'pending') {
+    return { ok: false, error: '이미 신청 완료 — 승인 대기 중' };
+  }
+
+  const now = new Date().toISOString();
+  const note = `reviewer-applied:${now}` + (reason ? ` reason:${reason.slice(0, 200)}` : '');
+
+  if (existing) {
+    const { error } = await sba
+      .from('profile')
+      .update({ role: 'pending', display_name: displayName, notes: note })
+      .eq('id', user.id);
+    if (error) return { ok: false, error: error.message };
+  } else {
+    const { error } = await sba
+      .from('profile')
+      .insert({ id: user.id, display_name: displayName, role: 'pending', notes: note });
+    if (error) return { ok: false, error: error.message };
+  }
+
+  revalidatePath('/admin1229');
+  revalidatePath('/admin');
+  return { ok: true };
+}
+
+/** admin 전용 — 신청 승인 (pending → reviewer) */
+export async function approveReviewer(profileId: string): Promise<{ ok: boolean; error?: string }> {
+  const sb = await createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return { ok: false, error: '로그인 필요' };
+  const sba = createAdminClient();
+  const { data: me } = await sba.from('profile').select('role').eq('id', user.id).maybeSingle();
+  if (me?.role !== 'admin') return { ok: false, error: 'admin 전용' };
+
+  const { error } = await sba
+    .from('profile')
+    .update({ role: 'reviewer' })
+    .eq('id', profileId)
+    .eq('role', 'pending');
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath('/admin');
+  revalidatePath('/admin1229');
+  return { ok: true };
+}
+
+/** admin 전용 — 신청 거절 (pending → member) */
+export async function rejectReviewer(profileId: string, reason: string): Promise<{ ok: boolean; error?: string }> {
+  const sb = await createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return { ok: false, error: '로그인 필요' };
+  const sba = createAdminClient();
+  const { data: me } = await sba.from('profile').select('role').eq('id', user.id).maybeSingle();
+  if (me?.role !== 'admin') return { ok: false, error: 'admin 전용' };
+
+  const note = `reviewer-rejected:${new Date().toISOString()}` + (reason ? ` reason:${reason.slice(0, 200)}` : '');
+  const { error } = await sba
+    .from('profile')
+    .update({ role: 'member', notes: note })
+    .eq('id', profileId)
+    .eq('role', 'pending');
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath('/admin');
+  revalidatePath('/admin1229');
+  return { ok: true };
+}

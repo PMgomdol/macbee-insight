@@ -139,6 +139,7 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
       {items.length < total && (
         <Link
           href={buildHref({ show: String(show + STEP) })}
+          scroll={false}
           className="self-center mt-2 px-5 py-2.5 rounded-[var(--r-sm)] border border-[var(--border-strong)] hover:bg-[var(--card)] text-sm font-medium"
         >
           더 보기 ({(total - items.length).toLocaleString()}건)

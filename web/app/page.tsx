@@ -22,10 +22,7 @@ export default async function Home() {
       {/* 인기 10건 — 가로 캐러셀 */}
       {popular.length > 0 && (
         <section className="flex flex-col gap-3" aria-label="인기 자료">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-lg sm:text-xl font-semibold tracking-tight">인기 자료 TOP {popular.length}</h2>
-            <span className="text-xs text-[var(--muted-2)] hidden sm:inline">← 드래그·스와이프</span>
-          </div>
+          <h2 className="text-lg sm:text-xl font-semibold tracking-tight">인기 자료 TOP {popular.length}</h2>
           <HorizontalScroll label="인기 자료 가로 스크롤">
             {popular.map((it) => (
               <div key={it.id} data-card className="shrink-0 w-[240px] sm:w-[260px]">
