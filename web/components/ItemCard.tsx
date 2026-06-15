@@ -33,26 +33,13 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       }`}
       aria-label={`${video ? '영상' : kindLabel(item.kind)}: ${item.title}`}
     >
-      {/* 좌측 컬러 액센트 바 */}
+      {/* 좌측 액센트 바 */}
       <span
         aria-hidden
         className={`absolute left-0 top-2 bottom-2 w-1 rounded-r ${
           video ? 'bg-[var(--danger)]' : isFile ? 'bg-[var(--accent)]' : 'bg-[var(--muted-2)]'
         }`}
       />
-
-      {/* 영상 카드 — 상단 검정 hero stripe + 재생 아이콘 */}
-      {video && (
-        <div
-          aria-hidden
-          className="-mx-3.5 -mt-3.5 -ml-4 mb-1 h-14 bg-gradient-to-br from-[#1a1a1a] to-[#3a1414] flex items-center justify-center relative"
-        >
-          <PlayCircle size={32} className="text-white drop-shadow-md" strokeWidth={1.5} />
-          <span className="absolute top-1.5 right-2 text-[10px] font-semibold tracking-wide text-white/90 uppercase">
-            ▶ 영상
-          </span>
-        </div>
-      )}
 
       <div className="flex items-center justify-between gap-2">
         <span
