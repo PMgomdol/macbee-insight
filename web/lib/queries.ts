@@ -104,3 +104,27 @@ export const getCategoryCounts = unstable_cache(
   ['category-counts-v4'],
   { revalidate: HOUR, tags: ['archive'] }
 );
+
+/** 특정 대분류 안의 소분류별 자료 수 */
+export const getSubCategoryCounts = unstable_cache(
+  async (main: string, kind?: 'files' | 'insights') => {
+    if (!main) return {} as Record<string, number>;
+    const sb = createPublicClient();
+    let q = sb
+      .from('archive_item')
+      .select('sub_category')
+      .eq('status', 'public')
+      .eq('main_category', main);
+    if (kind) q = q.eq('kind', kind);
+    const { data } = await q;
+    const counts: Record<string, number> = {};
+    for (const r of data ?? []) {
+      const s = r.sub_category;
+      if (!s) continue;
+      counts[s] = (counts[s] ?? 0) + 1;
+    }
+    return counts;
+  },
+  ['sub-category-counts-v1'],
+  { revalidate: HOUR, tags: ['archive'] }
+);

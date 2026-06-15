@@ -5,18 +5,15 @@ import { SearchAutocomplete } from '@/components/SearchAutocomplete';
 import { searchAll, type SearchOpts } from '@/lib/search';
 import { TRENDING } from '@/lib/synonyms';
 
-const FORMATS = ['아티클', '영상', '가이드', '템플릿', '기획서', '세미나'];
-
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; kind?: string; format?: string; sort?: string }>;
+  searchParams: Promise<{ q?: string; kind?: string; sort?: string }>;
 }) {
   const sp = await searchParams;
   const q = (sp.q ?? '').trim();
   const opts: SearchOpts = {
     kind: sp.kind === 'files' || sp.kind === 'insights' ? sp.kind : undefined,
-    format: sp.format,
     sort: (sp.sort as SearchOpts['sort']) || 'relevance',
   };
 
@@ -56,17 +53,12 @@ export default async function SearchPage({
             </div>
           )}
 
-          {/* 필터: kind + 형식 + 정렬 */}
+          {/* 필터: kind + 정렬 */}
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex gap-1 text-xs flex-wrap">
               <FilterLink href={buildHref({ kind: undefined })} active={!opts.kind}>전체</FilterLink>
               <FilterLink href={buildHref({ kind: 'files' })} active={opts.kind === 'files'}>양식·템플릿</FilterLink>
               <FilterLink href={buildHref({ kind: 'insights' })} active={opts.kind === 'insights'}>아티클·영상</FilterLink>
-              <span className="w-px bg-[var(--border)] mx-1" />
-              <FilterLink href={buildHref({ format: undefined })} active={!opts.format}>모든 형식</FilterLink>
-              {FORMATS.map((f) => (
-                <FilterLink key={f} href={buildHref({ format: f })} active={opts.format === f}>{f}</FilterLink>
-              ))}
             </div>
             <div className="flex gap-1 text-xs">
               <FilterLink href={buildHref({ sort: 'relevance' })} active={opts.sort === 'relevance'}>관련도</FilterLink>

@@ -9,7 +9,6 @@ type Props = {
   categories: { name: string; count: number }[];
 };
 
-const FORMATS = ['아티클', '영상', '가이드', '템플릿', '기획서', '세미나'];
 const KINDS = [
   { v: 'all', label: '전체' },
   { v: 'files', label: '양식·템플릿' },
@@ -20,7 +19,7 @@ const STEP = 24;
 export function AllItemsSection({ items, categories }: Props) {
   const [kind, setKind] = useState<'all' | 'files' | 'insights'>('all');
   const [main, setMain] = useState<string | null>(null);
-  const [format, setFormat] = useState<string | null>(null);
+  const [sub, setSub] = useState<string | null>(null);
   const [sort, setSort] = useState<'recent' | 'popular'>('recent');
   const [showCount, setShowCount] = useState(STEP);
 
@@ -28,16 +27,37 @@ export function AllItemsSection({ items, categories }: Props) {
     let r = items;
     if (kind !== 'all') r = r.filter((it) => it.kind === kind);
     if (main) r = r.filter((it) => it.main_category === main);
-    if (format) r = r.filter((it) => it.format === format);
+    if (sub) r = r.filter((it) => it.sub_category === sub);
     if (sort === 'popular') r = [...r].sort((a, b) => b.views - a.views);
     return r;
-  }, [items, kind, main, format, sort]);
+  }, [items, kind, main, sub, sort]);
 
   const sortedCats = useMemo(() => [...categories].sort((a, b) => b.count - a.count), [categories]);
-  const hasFilter = kind !== 'all' || main || format || sort !== 'recent';
+
+  // 대분류 선택 시 그 안의 소분류 카운트 (현재 kind 필터 반영)
+  const sortedSubs = useMemo(() => {
+    if (!main) return [] as { name: string; count: number }[];
+    const counts = new Map<string, number>();
+    for (const it of items) {
+      if (kind !== 'all' && it.kind !== kind) continue;
+      if (it.main_category !== main) continue;
+      const s = it.sub_category;
+      if (!s) continue;
+      counts.set(s, (counts.get(s) ?? 0) + 1);
+    }
+    return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+  }, [items, kind, main]);
+
+  const hasFilter = kind !== 'all' || main || sub || sort !== 'recent';
 
   function reset() {
-    setKind('all'); setMain(null); setFormat(null); setSort('recent');
+    setKind('all'); setMain(null); setSub(null); setSort('recent');
+  }
+
+  function pickMain(name: string | null) {
+    setMain(name);
+    setSub(null);
+    setShowCount(STEP);
   }
 
   return (
@@ -47,7 +67,7 @@ export function AllItemsSection({ items, categories }: Props) {
         <span className="text-xs text-[var(--muted)]">{filtered.length.toLocaleString()}건</span>
       </div>
 
-      {/* kind segmented control (그레이) */}
+      {/* kind segmented control */}
       <div role="tablist" aria-label="자료 종류" className="inline-flex p-0.5 rounded-[var(--r-sm)] bg-[var(--card)] border border-[var(--border)] self-start">
         {KINDS.map((k) => {
           const active = kind === k.v;
@@ -56,7 +76,7 @@ export function AllItemsSection({ items, categories }: Props) {
               key={k.v}
               role="tab"
               aria-selected={active}
-              onClick={() => setKind(k.v)}
+              onClick={() => { setKind(k.v); setSub(null); }}
               className={`px-3 py-1.5 rounded-[var(--r-sm)] text-sm transition ${
                 active
                   ? 'bg-[var(--bg)] text-[var(--fg)] font-semibold shadow-[var(--shadow-2)]'
@@ -69,10 +89,10 @@ export function AllItemsSection({ items, categories }: Props) {
         })}
       </div>
 
-      {/* 카테고리 chips */}
+      {/* 대분류 chips */}
       <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap">
         <button
-          onClick={() => setMain(null)}
+          onClick={() => pickMain(null)}
           className={`shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm border whitespace-nowrap transition ${
             !main ? 'bg-[var(--accent)] text-white border-[var(--accent)]' : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
           }`}
@@ -82,7 +102,7 @@ export function AllItemsSection({ items, categories }: Props) {
         {sortedCats.map((c) => (
           <button
             key={c.name}
-            onClick={() => setMain(main === c.name ? null : c.name)}
+            onClick={() => pickMain(main === c.name ? null : c.name)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm border whitespace-nowrap transition ${
               main === c.name
                 ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
@@ -94,39 +114,46 @@ export function AllItemsSection({ items, categories }: Props) {
         ))}
       </div>
 
-      {/* 형식 + 정렬 */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex gap-1 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0">
+      {/* 소분류 chips — 대분류 선택 시 */}
+      {main && sortedSubs.length > 0 && (
+        <div className="flex gap-1 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap items-center">
+          <span className="text-[11px] text-[var(--muted-2)] mr-1 shrink-0">소분류</span>
           <button
-            onClick={() => setFormat(null)}
-            className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${!format ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+            onClick={() => { setSub(null); setShowCount(STEP); }}
+            className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${
+              !sub ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
+            }`}
           >
-            모든 형식
+            전체
           </button>
-          {FORMATS.map((f) => (
+          {sortedSubs.map((s) => (
             <button
-              key={f}
-              onClick={() => setFormat(format === f ? null : f)}
-              className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${format === f ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+              key={s.name}
+              onClick={() => { setSub(sub === s.name ? null : s.name); setShowCount(STEP); }}
+              className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${
+                sub === s.name ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
+              }`}
             >
-              {f}
+              {s.name} <span className="opacity-60">({s.count})</span>
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-1 text-xs shrink-0">
-          <button
-            onClick={() => setSort('recent')}
-            className={`px-2.5 py-1 rounded-[var(--r-sm)] ${sort === 'recent' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
-          >
-            최신순
-          </button>
-          <button
-            onClick={() => setSort('popular')}
-            className={`px-2.5 py-1 rounded-[var(--r-sm)] ${sort === 'popular' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
-          >
-            인기순
-          </button>
-        </div>
+      )}
+
+      {/* 정렬 */}
+      <div className="flex items-center justify-end gap-1 text-xs">
+        <button
+          onClick={() => setSort('recent')}
+          className={`px-2.5 py-1 rounded-[var(--r-sm)] ${sort === 'recent' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+        >
+          최신순
+        </button>
+        <button
+          onClick={() => setSort('popular')}
+          className={`px-2.5 py-1 rounded-[var(--r-sm)] ${sort === 'popular' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+        >
+          인기순
+        </button>
       </div>
 
       {hasFilter && (
@@ -138,7 +165,6 @@ export function AllItemsSection({ items, categories }: Props) {
         </button>
       )}
 
-      {/* 카드 그리드 */}
       {filtered.length === 0 ? (
         <div className="py-12 text-center text-sm text-[var(--muted)]">조건에 맞는 자료가 없습니다</div>
       ) : (

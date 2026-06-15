@@ -1,32 +1,32 @@
 import Link from 'next/link';
 import { ItemCard } from './ItemCard';
-import { getItemsByKind, getCategoryCounts } from '@/lib/queries';
+import { getItemsByKind, getCategoryCounts, getSubCategoryCounts } from '@/lib/queries';
 
 type Props = {
   kind: 'files' | 'insights';
   title: string;
   desc: string;
-  searchParams: { main?: string; sub?: string; format?: string; sort?: string; show?: string };
+  searchParams: { main?: string; sub?: string; sort?: string; show?: string };
 };
 
-const FORMATS = ['아티클', '영상', '가이드', '템플릿', '기획서', '세미나'];
 const STEP = 24;
 
 export async function ListPage({ kind, title, desc, searchParams }: Props) {
   const show = parseInt(searchParams.show ?? String(STEP)) || STEP;
   const sort = (searchParams.sort as 'recent' | 'popular') || 'recent';
-  const [{ items, total }, counts] = await Promise.all([
+  const [{ items, total }, counts, subCounts] = await Promise.all([
     getItemsByKind(kind, {
       page: 1,
       pageSize: show,
       main: searchParams.main,
       sub: searchParams.sub,
-      format: searchParams.format,
       sort,
     }),
     getCategoryCounts(kind),
+    searchParams.main ? getSubCategoryCounts(searchParams.main, kind) : Promise.resolve({} as Record<string, number>),
   ]);
   const sortedCats = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const sortedSubs = (Object.entries(subCounts) as [string, number][]).sort((a, b) => b[1] - a[1]);
 
   const buildHref = (params: Partial<typeof searchParams>) => {
     const u = new URLSearchParams();
@@ -42,10 +42,10 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
         <p className="text-sm text-[var(--muted)]">{desc} <span className="text-[var(--muted-2)]">· 총 {total.toLocaleString()}건</span></p>
       </section>
 
-      {/* 카테고리 chips */}
+      {/* 대분류 chips */}
       <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap">
         <Link
-          href={buildHref({ main: undefined, show: undefined })}
+          href={buildHref({ main: undefined, sub: undefined, show: undefined })}
           className={`shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm border whitespace-nowrap transition ${
             !searchParams.main
               ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
@@ -57,7 +57,7 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
         {sortedCats.map(([cat, n]) => (
           <Link
             key={cat}
-            href={buildHref({ main: cat, show: undefined })}
+            href={buildHref({ main: cat, sub: undefined, show: undefined })}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm border whitespace-nowrap transition ${
               searchParams.main === cat
                 ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
@@ -69,39 +69,46 @@ export async function ListPage({ kind, title, desc, searchParams }: Props) {
         ))}
       </div>
 
-      {/* 형식·정렬 */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex gap-1 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0">
+      {/* 소분류 chips — 대분류 선택 시 노출 */}
+      {searchParams.main && sortedSubs.length > 0 && (
+        <div className="flex gap-1 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap items-center">
+          <span className="text-[11px] text-[var(--muted-2)] mr-1 shrink-0">소분류</span>
           <Link
-            href={buildHref({ format: undefined, show: undefined })}
-            className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${!searchParams.format ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+            href={buildHref({ sub: undefined, show: undefined })}
+            className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${
+              !searchParams.sub ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
+            }`}
           >
-            모든 형식
+            전체
           </Link>
-          {FORMATS.map((f) => (
+          {sortedSubs.map(([s, n]) => (
             <Link
-              key={f}
-              href={buildHref({ format: f, show: undefined })}
-              className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${searchParams.format === f ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+              key={s}
+              href={buildHref({ sub: s, show: undefined })}
+              className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${
+                searchParams.sub === s ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
+              }`}
             >
-              {f}
+              {s} <span className="opacity-60">({n})</span>
             </Link>
           ))}
         </div>
-        <div className="flex gap-1 text-xs shrink-0">
-          <Link
-            href={buildHref({ sort: 'recent', show: undefined })}
-            className={`px-2.5 py-1 rounded-[var(--r-sm)] ${sort === 'recent' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
-          >
-            최신순
-          </Link>
-          <Link
-            href={buildHref({ sort: 'popular', show: undefined })}
-            className={`px-2.5 py-1 rounded-[var(--r-sm)] ${sort === 'popular' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
-          >
-            인기순
-          </Link>
-        </div>
+      )}
+
+      {/* 정렬 */}
+      <div className="flex items-center justify-end gap-1 text-xs">
+        <Link
+          href={buildHref({ sort: 'recent', show: undefined })}
+          className={`px-2.5 py-1 rounded-[var(--r-sm)] ${sort === 'recent' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+        >
+          최신순
+        </Link>
+        <Link
+          href={buildHref({ sort: 'popular', show: undefined })}
+          className={`px-2.5 py-1 rounded-[var(--r-sm)] ${sort === 'popular' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+        >
+          인기순
+        </Link>
       </div>
 
       {/* 리스트 */}
