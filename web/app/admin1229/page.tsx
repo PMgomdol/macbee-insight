@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { CheckCircle2, Clock } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { LoginButton } from './LoginButton';
 import { ApplyReviewerForm } from './ApplyReviewerForm';
 
@@ -14,9 +14,12 @@ export default async function Admin1229Page() {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
 
-  // 이미 운영진이면 검토 페이지로 즉시 이동
+  // 이미 운영진이면 검토 페이지로 즉시 이동.
+  // RLS profile_self_select는 auth.uid()=id 만 통과시키지만, Next 15 Server Component
+  // cookie context 분리 이슈로 가끔 prof를 가져오지 못함 → admin client(RLS 우회)로 안전 조회
   if (user) {
-    const { data: prof } = await sb
+    const sba = createAdminClient();
+    const { data: prof } = await sba
       .from('profile')
       .select('display_name, role')
       .eq('id', user.id)

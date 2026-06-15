@@ -17,7 +17,9 @@ export default async function AdminPage() {
   let role: string | null = null;
   let displayName: string | null = null;
   if (user) {
-    const { data } = await sb.from('profile').select('role, display_name').eq('id', user.id).maybeSingle();
+    // service_role 사용 — Server Component cookie context RLS 일관성 보장
+    const sba = createAdminClient();
+    const { data } = await sba.from('profile').select('role, display_name').eq('id', user.id).maybeSingle();
     role = data?.role ?? null;
     displayName = data?.display_name ?? null;
   }
