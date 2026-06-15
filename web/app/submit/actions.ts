@@ -3,8 +3,9 @@
 import { createClient, createAdminClient, createPublicClient } from '@/lib/supabase/server';
 import { fetchUrlMeta, isFileUrl } from '@/lib/url-meta';
 import { classify } from '@/lib/ai-classify';
-import { redirect } from 'next/navigation';
 import { randomUUID } from 'crypto';
+
+export type SubmitResult = { ok: true; id: string | null } | { ok: false; error: string };
 
 const BUCKET = 'archive-files';
 
@@ -52,7 +53,7 @@ export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
  * 멤버 제안 등록 — anon publishable 키 우선, 실패시 service_role 폴백.
  * 정상 RLS 정책(staging_anyone_insert)이 적용되면 1·2차에서 성공해야 함.
  */
-export async function submitProposal(formData: FormData) {
+export async function submitProposal(formData: FormData): Promise<SubmitResult> {
   const url = String(formData.get('url') ?? '').trim();
   const fileUrl = String(formData.get('file_url') ?? '').trim();
   const title = String(formData.get('title') ?? '').trim();
@@ -65,8 +66,8 @@ export async function submitProposal(formData: FormData) {
   const proposer = String(formData.get('proposer') ?? '').trim();
   const proposer_email = String(formData.get('proposer_email') ?? '').trim();
 
-  if (!title) redirect('/submit?error=' + encodeURIComponent('제목 필수'));
-  if (!url && !fileUrl) redirect('/submit?error=' + encodeURIComponent('URL 또는 파일 둘 중 하나 필수'));
+  if (!title) return { ok: false, error: '제목 필수' };
+  if (!url && !fileUrl) return { ok: false, error: 'URL 또는 파일 둘 중 하나 필수' };
 
   const row = {
     external_url: url || null,
@@ -109,14 +110,14 @@ export async function submitProposal(formData: FormData) {
     try {
       const sbAdmin = createAdminClient();
       const r = await sbAdmin.from('staging_proposal').insert(row).select('id').single();
-      if (r.error) redirect('/submit?error=' + encodeURIComponent('등록 실패: ' + r.error.message));
+      if (r.error) return { ok: false, error: '등록 실패: ' + r.error.message };
       insertedId = r.data?.id ?? null;
     } catch (e: any) {
-      redirect('/submit?error=' + encodeURIComponent('등록 실패: ' + (e?.message ?? lastErr ?? 'unknown')));
+      return { ok: false, error: '등록 실패: ' + (e?.message ?? lastErr ?? 'unknown') };
     }
   }
 
-  redirect('/submit?ok=1' + (insertedId ? `&id=${insertedId}` : ''));
+  return { ok: true, id: insertedId };
 }
 
 const MIME_FALLBACK: Record<string, string> = {

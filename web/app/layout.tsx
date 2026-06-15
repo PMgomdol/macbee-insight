@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)] z-50 backdrop-blur supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--bg)_85%,transparent)]">
           <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 flex items-center gap-2 sm:gap-3">
             <Link href="/" className="font-bold text-base sm:text-lg tracking-tight shrink-0 mr-1">
-              맥비기획
+              맥비기획 자료실
             </Link>
             <Suspense fallback={null}><HeaderNav isReviewer={isReviewer} /></Suspense>
             <div className="flex-1 flex justify-end items-center gap-1.5 sm:gap-2">

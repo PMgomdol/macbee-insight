@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Sparkles, Upload, Loader2, CheckCircle2, AlertCircle, FileCheck2 } from 'lucide-react';
+import Link from 'next/link';
+import { Sparkles, Upload, Loader2, CheckCircle2, AlertCircle, FileCheck2, X } from 'lucide-react';
 import { analyzeUrl, submitProposal, uploadFile, type AnalyzeResult } from './actions';
-
-const FORMATS = ['아티클', '영상', '가이드', '템플릿', '기획서', '세미나'];
 
 type Props = { categories: { main_category: string; sub_category: string | null }[] };
 
@@ -12,6 +11,7 @@ export function SubmitForm({ categories }: Props) {
   const [mode, setMode] = useState<'url' | 'file'>('url');
   const [url, setUrl] = useState('');
   const [fileUrl, setFileUrl] = useState('');
+  const [finalUrl, setFinalUrl] = useState('');
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
   const [main, setMain] = useState('');
@@ -26,6 +26,27 @@ export function SubmitForm({ categories }: Props) {
   const [submitting, startSubmit] = useTransition();
   const [analyzeMsg, setAnalyzeMsg] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [analyzed, setAnalyzed] = useState(false);
+  const [submitDone, setSubmitDone] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  function resetForm() {
+    setUrl('');
+    setFileUrl('');
+    setFinalUrl('');
+    setTitle('');
+    setSummary('');
+    setMain('');
+    setSub('');
+    setTags('');
+    setFormat('');
+    setPublishedAt('');
+    setFileName(null);
+    setAnalyzeMsg(null);
+    setAnalyzed(false);
+    setSubmitDone(false);
+    setSubmitError(null);
+  }
 
   const cats = Array.from(new Set(categories.map((c) => c.main_category)));
   const subs: Record<string, string[]> = {};
@@ -48,6 +69,10 @@ export function SubmitForm({ categories }: Props) {
     if (r.tags) setTags(r.tags.join(', '));
     if (r.format) setFormat(r.format);
     if (r.publishedAt) setPublishedAt(r.publishedAt);
+    // bit.ly·네이버 리다이렉트 자동 펼치기 — 최종 URL을 저장 대상으로 사용
+    if (r.finalUrl && r.finalUrl !== url) setFinalUrl(r.finalUrl);
+    else setFinalUrl('');
+    setAnalyzed(true);
     setAnalyzeMsg({ kind: 'ok', text: r.aiUsed ? 'AI 분석 완료 — 내용 확인 후 등록' : '메타 추출 완료 — 내용 확인 후 등록' });
   }
 
@@ -58,6 +83,13 @@ export function SubmitForm({ categories }: Props) {
       const r = await analyzeUrl(url);
       applyAnalysis(r);
     });
+  }
+
+  function onUrlKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      onAnalyze();
+    }
   }
 
   const MAX_BYTES = 50 * 1024 * 1024;
@@ -115,7 +147,8 @@ export function SubmitForm({ categories }: Props) {
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    fd.set('url', url);
+    // finalUrl이 있으면 리다이렉트가 풀린 최종 URL 저장 — bit.ly 등 단축 링크 자동 펼치기
+    fd.set('url', finalUrl || url);
     fd.set('file_url', fileUrl);
     fd.set('title', title);
     fd.set('summary', summary);
@@ -126,7 +159,12 @@ export function SubmitForm({ categories }: Props) {
     fd.set('published_at', publishedAt);
     fd.set('proposer', proposer);
     fd.set('proposer_email', proposerEmail);
-    startSubmit(() => submitProposal(fd));
+    setSubmitError(null);
+    startSubmit(async () => {
+      const r = await submitProposal(fd);
+      if (r.ok) setSubmitDone(true);
+      else setSubmitError(r.error);
+    });
   }
 
   return (
@@ -165,7 +203,9 @@ export function SubmitForm({ categories }: Props) {
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={onUrlKeyDown}
               placeholder="https://..."
+              autoFocus
               className="flex-1 min-w-0 px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
             />
             <button
@@ -178,7 +218,14 @@ export function SubmitForm({ categories }: Props) {
               {analyzing ? '분석 중...' : '자동 분석'}
             </button>
           </div>
-          <p className="text-xs text-[var(--muted)]">URL 분석으로 제목·요약·카테고리·태그가 자동 채워짐. 수정 후 등록.</p>
+          <p className="text-xs text-[var(--muted)]">
+            URL만 붙여넣으면 제목·요약·카테고리·태그가 자동으로 채워져요. Enter로 바로 분석.
+          </p>
+          {finalUrl && finalUrl !== url && (
+            <p className="text-[11px] text-[var(--muted-2)] break-all">
+              ↳ 최종 링크: <span className="text-[var(--fg)]">{finalUrl}</span>
+            </p>
+          )}
         </div>
       )}
 
@@ -268,31 +315,18 @@ export function SubmitForm({ categories }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5 min-w-0">
-          <label className="text-sm font-medium">자료 형식</label>
-          <select
-            value={format}
-            onChange={(e) => setFormat(e.target.value)}
-            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
-          >
-            <option value="">선택</option>
-            {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
-          </select>
-        </div>
-        <div className="flex flex-col gap-1.5 min-w-0">
-          <label className="text-sm font-medium" htmlFor="published-at">발행일 <span className="text-[var(--muted-2)] font-normal">(선택)</span></label>
-          <input
-            id="published-at"
-            type="date"
-            value={publishedAt}
-            onChange={(e) => setPublishedAt(e.target.value)}
-            lang="ko-KR"
-            placeholder="YYYY-MM-DD"
-            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
-          />
-          <span className="text-[11px] text-[var(--muted-2)]">예: 2026-05-12 (원본 자료 발행일)</span>
-        </div>
+      <div className="flex flex-col gap-1.5 min-w-0">
+        <label className="text-sm font-medium" htmlFor="published-at">발행일 <span className="text-[var(--muted-2)] font-normal">(선택 · 자동 추출)</span></label>
+        <input
+          id="published-at"
+          type="date"
+          value={publishedAt}
+          onChange={(e) => setPublishedAt(e.target.value)}
+          lang="ko-KR"
+          placeholder="YYYY-MM-DD"
+          className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none w-full sm:max-w-xs"
+        />
+        <span className="text-[11px] text-[var(--muted-2)]">원본 자료에 발행일 메타가 있으면 자동 입력. 없으면 비워둬도 OK.</span>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -327,6 +361,13 @@ export function SubmitForm({ categories }: Props) {
         </div>
       </div>
 
+      {submitError && (
+        <div role="alert" className="flex items-start gap-2 p-3 rounded-[var(--r-sm)] border border-[var(--danger)]/40 bg-[var(--danger)]/10 text-sm">
+          <AlertCircle size={16} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
+          <span>{submitError}</span>
+        </div>
+      )}
+
       <button
         type="submit"
         disabled={submitting || !title || (!url && !fileUrl)}
@@ -335,6 +376,48 @@ export function SubmitForm({ categories }: Props) {
         {submitting && <Loader2 size={14} className="animate-spin" />}
         {submitting ? '등록 중...' : '등록 신청'}
       </button>
+
+      {submitDone && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="submit-done-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          onClick={resetForm}
+        >
+          <div
+            className="bg-[var(--bg)] border border-[var(--border)] rounded-[var(--r-md)] shadow-[var(--shadow-3)] max-w-md w-full p-6 flex flex-col gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={22} className="text-[var(--success)]" aria-hidden />
+                <h2 id="submit-done-title" className="text-lg font-bold tracking-tight">등록 완료</h2>
+              </div>
+              <button
+                type="button"
+                onClick={resetForm}
+                aria-label="닫기"
+                className="p-1 -m-1 text-[var(--muted)] hover:text-[var(--fg)]"
+              >
+                <X size={18} aria-hidden />
+              </button>
+            </div>
+            <p className="text-sm text-[var(--muted)] leading-relaxed">
+              제안이 접수되었어요. 운영진 2명 검토 후 자료실로 이관됩니다.
+              {proposerEmail && ' 검토 결과는 이메일로 안내드려요.'}
+            </p>
+            <div className="flex gap-2 mt-1">
+              <button type="button" onClick={resetForm} className="fc-btn fc-btn-primary flex-1 px-4 py-2.5">
+                추가 등록하기
+              </button>
+              <Link href="/" className="fc-btn fc-btn-subtle flex-1 px-4 py-2.5 justify-center text-center">
+                홈으로 가기
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

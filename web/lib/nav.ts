@@ -1,7 +1,6 @@
 export type NavItem = { href: string; label: string; reviewerOnly?: boolean };
 
 export const NAV: NavItem[] = [
-  { href: '/', label: '홈' },
   { href: '/files', label: '양식·템플릿' },
   { href: '/insights', label: '아티클·영상' },
   { href: '/faq', label: '실무 Q&A' },

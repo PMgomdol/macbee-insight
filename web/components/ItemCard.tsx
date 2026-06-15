@@ -31,10 +31,29 @@ function isVideo(item: ArchiveItem): boolean {
   return /youtube\.com|youtu\.be|vimeo\.com|tv\.naver\.com/.test(url);
 }
 
+/** 파일 확장자 배지 — PDF / 워드 / PPT / 엑셀 / 한글 등. file_url 또는 external_url 기준 */
+function fileExtBadge(item: ArchiveItem): string | null {
+  const u = (item.file_url || item.external_url || '').toLowerCase();
+  if (!u) return null;
+  // 구글 docs/drive — 형식 추정 불가, 일반 라벨
+  if (/docs\.google\.com\/document/.test(u)) return '구글 문서';
+  if (/docs\.google\.com\/spreadsheets/.test(u)) return '구글 시트';
+  if (/docs\.google\.com\/presentation/.test(u)) return '구글 슬라이드';
+  if (/drive\.google\.com/.test(u)) return '구글 드라이브';
+  if (/\.pdf($|[?#])/.test(u)) return 'PDF';
+  if (/\.(docx?|odt)($|[?#])/.test(u)) return '워드';
+  if (/\.(pptx?|key|odp)($|[?#])/.test(u)) return 'PPT';
+  if (/\.(xlsx?|csv|ods)($|[?#])/.test(u)) return '엑셀';
+  if (/\.hwpx?($|[?#])/.test(u)) return '한글';
+  if (/\.zip($|[?#])/.test(u)) return 'ZIP';
+  return null;
+}
+
 export function ItemCard({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
   const isFile = item.kind === 'files';
   const video = isVideo(item);
+  const fileExt = fileExtBadge(item);
 
   return (
     <a
@@ -57,24 +76,27 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       />
 
       <div className="flex items-center justify-between gap-2">
-        <span
-          className={`fc-badge ${
-            video
-              ? 'fc-badge-video'
-              : isFile
-              ? 'fc-badge-file'
-              : 'fc-badge-insight'
-          }`}
-        >
-          {video ? (
-            <PlayCircle size={11} aria-hidden />
-          ) : isFile ? (
-            <Download size={11} aria-hidden />
-          ) : (
-            <ExternalLink size={11} aria-hidden />
-          )}
-          {video ? '영상' : kindLabel(item.kind)}
-        </span>
+        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+          <span
+            className={`fc-badge ${
+              video
+                ? 'fc-badge-video'
+                : isFile
+                ? 'fc-badge-file'
+                : 'fc-badge-insight'
+            }`}
+          >
+            {video ? (
+              <PlayCircle size={11} aria-hidden />
+            ) : isFile ? (
+              <Download size={11} aria-hidden />
+            ) : (
+              <ExternalLink size={11} aria-hidden />
+            )}
+            {video ? '영상' : kindLabel(item.kind)}
+          </span>
+          {fileExt && !video && <span className="fc-badge">{fileExt}</span>}
+        </div>
         <span className="text-[var(--muted-2)] opacity-0 group-hover:opacity-100 transition" aria-hidden>
           {isFile ? <Download size={14} /> : <ExternalLink size={14} />}
         </span>
@@ -104,6 +126,7 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
   const isFile = item.kind === 'files';
   const video = isVideo(item);
+  const fileExt = fileExtBadge(item);
   return (
     <a
       href={url}
@@ -126,6 +149,7 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
           >
             {video ? '영상' : kindLabel(item.kind)}
           </span>
+          {fileExt && !video && <span className="fc-badge">{fileExt}</span>}
           <span className="truncate">{item.main_category}{item.sub_category ? ` · ${item.sub_category}` : ''}</span>
         </div>
       </div>
