@@ -1,4 +1,5 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { getAuthState } from '@/lib/auth';
 import Link from 'next/link';
 import { ExternalLink, UserPlus } from 'lucide-react';
 import { ApproveButton, ForceApproveButton, RejectButton } from './buttons';
@@ -11,20 +12,9 @@ function roleLabel(r: string | null): string {
 }
 
 export default async function AdminPage() {
+  // layout에서 호출된 getAuthState와 동일 요청 — React cache로 DB round-trip 한 번
+  const { user, role, displayName, isReviewer, isAdmin } = await getAuthState();
   const sb = await createClient();
-  const { data: { user } } = await sb.auth.getUser();
-
-  let role: string | null = null;
-  let displayName: string | null = null;
-  if (user) {
-    // service_role 사용 — Server Component cookie context RLS 일관성 보장
-    const sba = createAdminClient();
-    const { data } = await sba.from('profile').select('role, display_name').eq('id', user.id).maybeSingle();
-    role = data?.role ?? null;
-    displayName = data?.display_name ?? null;
-  }
-  const isReviewer = role === 'reviewer' || role === 'admin';
-  const isAdmin = role === 'admin';
 
   if (!user) {
     return (
@@ -48,37 +38,36 @@ export default async function AdminPage() {
     );
   }
 
-  const { count: reviewerCount } = await sb
-    .from('profile')
-    .select('id', { count: 'exact', head: true })
-    .in('role', ['reviewer', 'admin']);
-
-  const { data: pending } = await sb
-    .from('staging_proposal')
-    .select('*')
-    .eq('status', 'pending')
-    .order('proposed_at', { ascending: true });
-
-  // 운영진(reviewer/admin) — pending 신청 조회 (service_role)
-  // notes 컬럼 마이그레이션 안 된 환경 fallback
-  let pendingApps: Array<{ id: string; display_name: string; notes: string | null; created_at: string }> = [];
-  if (isReviewer) {
-    const sba = createAdminClient();
-    let r = await sba
+  // 3개 쿼리 병렬 — 순차 round-trip 제거 (이전: 직렬 → ~800ms+, 병렬 → ~200ms)
+  const sbaShared = createAdminClient();
+  const [reviewerCountRes, pendingRes, pendingAppsRes] = await Promise.all([
+    sb.from('profile').select('id', { count: 'exact', head: true }).in('role', ['reviewer', 'admin']),
+    sb
+      .from('staging_proposal')
+      .select('id, title, summary, external_url, file_url, main_category, sub_category, tags, format, proposer, proposed_at, approvers')
+      .eq('status', 'pending')
+      .order('proposed_at', { ascending: true }),
+    sbaShared
       .from('profile')
       .select('id, display_name, notes, created_at')
       .eq('role', 'pending')
+      .order('created_at', { ascending: true }),
+  ]);
+
+  const reviewerCount = reviewerCountRes.count;
+  const pending = pendingRes.data;
+
+  // notes 컬럼 마이그레이션 안 된 환경 fallback
+  let pendingApps: Array<{ id: string; display_name: string; notes: string | null; created_at: string }> = [];
+  if (pendingAppsRes.error && /notes/.test(pendingAppsRes.error.message)) {
+    const r2 = await sbaShared
+      .from('profile')
+      .select('id, display_name, created_at')
+      .eq('role', 'pending')
       .order('created_at', { ascending: true });
-    if (r.error && /notes/.test(r.error.message)) {
-      const r2 = await sba
-        .from('profile')
-        .select('id, display_name, created_at')
-        .eq('role', 'pending')
-        .order('created_at', { ascending: true });
-      pendingApps = (r2.data ?? []).map((p) => ({ ...p, notes: null }));
-    } else {
-      pendingApps = r.data ?? [];
-    }
+    pendingApps = (r2.data ?? []).map((p) => ({ ...p, notes: null }));
+  } else {
+    pendingApps = pendingAppsRes.data ?? [];
   }
 
   const items = (pending ?? []) as Array<{

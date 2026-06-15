@@ -1,11 +1,89 @@
 'use server';
 
 import { createClient, createAdminClient, createPublicClient } from '@/lib/supabase/server';
-import { fetchUrlMeta, isFileUrl } from '@/lib/url-meta';
+import { fetchUrlMeta, isFileUrl, normalizeUrl } from '@/lib/url-meta';
 import { classify } from '@/lib/ai-classify';
 import { randomUUID } from 'crypto';
 
 export type SubmitResult = { ok: true; id: string | null } | { ok: false; error: string };
+
+export type DuplicateMatch = {
+  source: 'archive' | 'staging';
+  id: string | number;
+  title: string;
+  status: string | null;
+  kind?: string | null;
+};
+
+/**
+ * 동일 URL이 archive_item(공개) 또는 staging_proposal(대기/거절 포함) 안에 있는지 검사.
+ * normalizeUrl로 트래킹 파라미터·트래일링 슬래시·도메인 prefix 제거 후 비교.
+ * 외부 URL 또는 파일 URL 둘 다 검사.
+ */
+async function findDuplicate(externalUrl: string, fileUrl: string): Promise<DuplicateMatch | null> {
+  const sb = createAdminClient();
+  const targetExt = externalUrl ? normalizeUrl(externalUrl) : '';
+  const targetFile = fileUrl ? normalizeUrl(fileUrl) : '';
+  if (!targetExt && !targetFile) return null;
+
+  // 1) archive_item — public 게시본
+  const arch = await sb
+    .from('archive_item')
+    .select('id, title, status, kind, external_url, file_url')
+    .or(
+      [
+        targetExt ? `external_url.ilike.${escapeIlike(externalUrl)}` : '',
+        targetFile ? `file_url.ilike.${escapeIlike(fileUrl)}` : '',
+      ].filter(Boolean).join(',')
+    )
+    .limit(20);
+  for (const r of arch.data ?? []) {
+    const ext = (r as any).external_url as string | null;
+    const fp = (r as any).file_url as string | null;
+    if (targetExt && ext && normalizeUrl(ext) === targetExt) {
+      return { source: 'archive', id: r.id, title: r.title, status: r.status, kind: (r as any).kind ?? null };
+    }
+    if (targetFile && fp && normalizeUrl(fp) === targetFile) {
+      return { source: 'archive', id: r.id, title: r.title, status: r.status, kind: (r as any).kind ?? null };
+    }
+  }
+
+  // 2) staging_proposal — pending / approved / rejected 모두 포함
+  const st = await sb
+    .from('staging_proposal')
+    .select('id, title, status, external_url, file_url')
+    .in('status', ['pending', 'approved', 'rejected'])
+    .or(
+      [
+        targetExt ? `external_url.ilike.${escapeIlike(externalUrl)}` : '',
+        targetFile ? `file_url.ilike.${escapeIlike(fileUrl)}` : '',
+      ].filter(Boolean).join(',')
+    )
+    .limit(20);
+  for (const r of st.data ?? []) {
+    const ext = (r as any).external_url as string | null;
+    const fp = (r as any).file_url as string | null;
+    if (targetExt && ext && normalizeUrl(ext) === targetExt) {
+      return { source: 'staging', id: r.id, title: r.title, status: r.status };
+    }
+    if (targetFile && fp && normalizeUrl(fp) === targetFile) {
+      return { source: 'staging', id: r.id, title: r.title, status: r.status };
+    }
+  }
+
+  return null;
+}
+
+function escapeIlike(s: string): string {
+  // PostgREST .or() ilike 값에 % _ , ( ) 들어가면 깨짐 — 보수적으로 제거 + 와일드카드 감싸기
+  const safe = s.replace(/[%_,()]/g, '');
+  return `%${safe}%`;
+}
+
+/** 외부에서 사용 — 자료 등록 폼이 분석 직후 호출하여 미리 중복 알림 */
+export async function checkDuplicate(externalUrl: string, fileUrl: string): Promise<DuplicateMatch | null> {
+  return findDuplicate(externalUrl.trim(), fileUrl.trim());
+}
 
 const BUCKET = 'archive-files';
 
@@ -22,6 +100,7 @@ export type AnalyzeResult = {
   publishedAt?: string | null;
   finalUrl?: string;
   aiUsed?: boolean;
+  duplicate?: DuplicateMatch | null;
 };
 
 export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
@@ -32,7 +111,11 @@ export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
   const meta = await fetchUrlMeta(url);
   if (!meta.ok) return { ok: false, error: `URL 분석 실패: ${meta.error ?? 'unknown'}` };
 
-  const cls = await classify(url, { title: meta.title, description: meta.description });
+  // 메타 추출·분류·중복 검사 병렬 — finalUrl로 검사 (리다이렉트 풀린 후 키)
+  const [cls, duplicate] = await Promise.all([
+    classify(url, { title: meta.title, description: meta.description }),
+    findDuplicate(meta.finalUrl, ''),
+  ]);
 
   return {
     ok: true,
@@ -46,6 +129,7 @@ export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
     publishedAt: meta.publishedAt,
     finalUrl: meta.finalUrl,
     aiUsed: cls.aiUsed,
+    duplicate,
   };
 }
 
@@ -53,7 +137,9 @@ export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
  * 멤버 제안 등록 — anon publishable 키 우선, 실패시 service_role 폴백.
  * 정상 RLS 정책(staging_anyone_insert)이 적용되면 1·2차에서 성공해야 함.
  */
-export async function submitProposal(formData: FormData): Promise<SubmitResult> {
+export type SubmitDuplicateResult = { ok: false; duplicate: DuplicateMatch };
+
+export async function submitProposal(formData: FormData): Promise<SubmitResult | SubmitDuplicateResult> {
   const url = String(formData.get('url') ?? '').trim();
   const fileUrl = String(formData.get('file_url') ?? '').trim();
   const title = String(formData.get('title') ?? '').trim();
@@ -65,9 +151,17 @@ export async function submitProposal(formData: FormData): Promise<SubmitResult> 
   const publishedAt = String(formData.get('published_at') ?? '').trim();
   const proposer = String(formData.get('proposer') ?? '').trim();
   const proposer_email = String(formData.get('proposer_email') ?? '').trim();
+  const force = String(formData.get('force') ?? '') === '1';
 
   if (!title) return { ok: false, error: '제목 필수' };
   if (!url && !fileUrl) return { ok: false, error: 'URL 또는 파일 둘 중 하나 필수' };
+
+  // 최종 안전 검사 — 분석 단계 이후 다른 자료가 등록되었을 수 있어 한 번 더 확인.
+  // force=1 이면 운영진이 의도적으로 중복 허용한 케이스
+  if (!force) {
+    const dup = await findDuplicate(url, fileUrl);
+    if (dup) return { ok: false, duplicate: dup } as SubmitDuplicateResult;
+  }
 
   const row = {
     external_url: url || null,

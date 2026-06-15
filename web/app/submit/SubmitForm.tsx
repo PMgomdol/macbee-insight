@@ -2,8 +2,13 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { Sparkles, Upload, Loader2, CheckCircle2, AlertCircle, FileCheck2, X } from 'lucide-react';
-import { analyzeUrl, submitProposal, uploadFile, type AnalyzeResult } from './actions';
+import {
+  Sparkles, Upload, Loader2, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle,
+} from 'lucide-react';
+import {
+  analyzeUrl, submitProposal, uploadFile,
+  type AnalyzeResult, type DuplicateMatch,
+} from './actions';
 
 type Props = { categories: { main_category: string; sub_category: string | null }[] };
 
@@ -27,8 +32,13 @@ export function SubmitForm({ categories }: Props) {
   const [analyzeMsg, setAnalyzeMsg] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [analyzed, setAnalyzed] = useState(false);
+  const [duplicate, setDuplicate] = useState<DuplicateMatch | null>(null);
+  const [forceSubmit, setForceSubmit] = useState(false);
   const [submitDone, setSubmitDone] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // 점진적 노출 — URL 분석 성공 또는 파일 업로드 완료 시점부터 상세 필드 노출
+  const showDetails = analyzed || !!fileUrl;
 
   function resetForm() {
     setUrl('');
@@ -44,6 +54,8 @@ export function SubmitForm({ categories }: Props) {
     setFileName(null);
     setAnalyzeMsg(null);
     setAnalyzed(false);
+    setDuplicate(null);
+    setForceSubmit(false);
     setSubmitDone(false);
     setSubmitError(null);
   }
@@ -69,16 +81,21 @@ export function SubmitForm({ categories }: Props) {
     if (r.tags) setTags(r.tags.join(', '));
     if (r.format) setFormat(r.format);
     if (r.publishedAt) setPublishedAt(r.publishedAt);
-    // bit.ly·네이버 리다이렉트 자동 펼치기 — 최종 URL을 저장 대상으로 사용
     if (r.finalUrl && r.finalUrl !== url) setFinalUrl(r.finalUrl);
     else setFinalUrl('');
+    setDuplicate(r.duplicate ?? null);
+    setForceSubmit(false);
     setAnalyzed(true);
-    setAnalyzeMsg({ kind: 'ok', text: r.aiUsed ? 'AI 분석 완료 — 내용 확인 후 등록' : '메타 추출 완료 — 내용 확인 후 등록' });
+    setAnalyzeMsg({
+      kind: 'ok',
+      text: r.aiUsed ? 'AI 분석 완료 — 내용 확인 후 등록' : '메타 추출 완료 — 내용 확인 후 등록',
+    });
   }
 
   function onAnalyze() {
     if (!url.trim()) { setAnalyzeMsg({ kind: 'error', text: 'URL을 먼저 입력' }); return; }
     setAnalyzeMsg(null);
+    setDuplicate(null);
     startAnalyze(async () => {
       const r = await analyzeUrl(url);
       applyAnalysis(r);
@@ -97,17 +114,17 @@ export function SubmitForm({ categories }: Props) {
 
   function switchMode(next: 'url' | 'file') {
     setMode(next);
-    setAnalyzeMsg(null);  // 탭 전환 시 이전 알림 클리어
+    setAnalyzeMsg(null);
+    setDuplicate(null);
   }
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
     setFileName(f.name);
-    setFileUrl('');  // 이전 업로드 URL 클리어
+    setFileUrl('');
     setAnalyzeMsg(null);
 
-    // 사전 검증
     if (f.size === 0) {
       setAnalyzeMsg({ kind: 'error', text: `${f.name} — 빈 파일입니다. 다른 파일 선택.` });
       return;
@@ -147,7 +164,6 @@ export function SubmitForm({ categories }: Props) {
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    // finalUrl이 있으면 리다이렉트가 풀린 최종 URL 저장 — bit.ly 등 단축 링크 자동 펼치기
     fd.set('url', finalUrl || url);
     fd.set('file_url', fileUrl);
     fd.set('title', title);
@@ -159,17 +175,25 @@ export function SubmitForm({ categories }: Props) {
     fd.set('published_at', publishedAt);
     fd.set('proposer', proposer);
     fd.set('proposer_email', proposerEmail);
+    if (forceSubmit) fd.set('force', '1');
     setSubmitError(null);
     startSubmit(async () => {
       const r = await submitProposal(fd);
-      if (r.ok) setSubmitDone(true);
-      else setSubmitError(r.error);
+      if ('ok' in r && r.ok) {
+        setSubmitDone(true);
+        return;
+      }
+      if ('duplicate' in r && r.duplicate) {
+        setDuplicate(r.duplicate);
+        setSubmitError('이미 등록된 자료입니다. 아래 경고 확인 후 다시 시도하세요.');
+        return;
+      }
+      setSubmitError((r as { error: string }).error);
     });
   }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full min-w-0">
-      {/* 모드 토글 — segmented */}
       <div role="tablist" aria-label="등록 방식" className="grid grid-cols-2 gap-1 p-0.5 rounded-[var(--r-sm)] bg-[var(--card)] border border-[var(--border)]">
         <button
           type="button"
@@ -191,7 +215,7 @@ export function SubmitForm({ categories }: Props) {
         </button>
       </div>
 
-      {/* URL 입력 + 자동분석 */}
+      {/* URL 입력 + 자동분석 — 첫 단계 */}
       {mode === 'url' && (
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium" htmlFor="url-input">
@@ -202,7 +226,7 @@ export function SubmitForm({ categories }: Props) {
               id="url-input"
               type="url"
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={(e) => { setUrl(e.target.value); if (analyzed) setAnalyzed(false); }}
               onKeyDown={onUrlKeyDown}
               placeholder="https://..."
               autoFocus
@@ -229,7 +253,6 @@ export function SubmitForm({ categories }: Props) {
         </div>
       )}
 
-      {/* 파일 업로드 */}
       {mode === 'file' && (
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium">
@@ -267,115 +290,147 @@ export function SubmitForm({ categories }: Props) {
         </div>
       )}
 
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">제목 <span className="text-[var(--danger)]">*</span></label>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          placeholder="자료 제목"
-          className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">한 줄 설명</label>
-        <textarea
-          value={summary}
-          onChange={(e) => setSummary(e.target.value)}
-          rows={3}
-          placeholder="이 자료가 어떤 내용인지 한 줄로..."
-          className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none resize-y"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1.5 min-w-0">
-          <label className="text-sm font-medium">대분류</label>
-          <select
-            value={main}
-            onChange={(e) => { setMain(e.target.value); setSub(''); }}
-            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
-          >
-            <option value="">선택</option>
-            {cats.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-        <div className="flex flex-col gap-1.5 min-w-0">
-          <label className="text-sm font-medium">소분류</label>
-          <select
-            value={sub}
-            onChange={(e) => setSub(e.target.value)}
-            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
-          >
-            <option value="">선택</option>
-            {(subs[main] ?? []).map((s) => <option key={s} value={s}>{s}</option>)}
-            {sub && !(subs[main] ?? []).includes(sub) && <option value={sub}>{sub} (신규)</option>}
-          </select>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1.5 min-w-0">
-        <label className="text-sm font-medium" htmlFor="published-at">발행일 <span className="text-[var(--muted-2)] font-normal">(선택 · 자동 추출)</span></label>
-        <input
-          id="published-at"
-          type="date"
-          value={publishedAt}
-          onChange={(e) => setPublishedAt(e.target.value)}
-          lang="ko-KR"
-          placeholder="YYYY-MM-DD"
-          className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none w-full sm:max-w-xs"
-        />
-        <span className="text-[11px] text-[var(--muted-2)]">원본 자료에 발행일 메타가 있으면 자동 입력. 없으면 비워둬도 OK.</span>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium">태그 <span className="text-[var(--muted-2)] font-normal">(쉼표 구분)</span></label>
-        <input
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-          placeholder="피그마, Figma, 디자인툴"
-          className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[var(--border)]">
-        <div className="flex flex-col gap-1.5 min-w-0">
-          <label className="text-sm font-medium">제안자 <span className="text-[var(--muted-2)] font-normal">(선택)</span></label>
-          <input
-            value={proposer}
-            onChange={(e) => setProposer(e.target.value)}
-            placeholder="이름·닉네임"
-            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
-          />
-        </div>
-        <div className="flex flex-col gap-1.5 min-w-0">
-          <label className="text-sm font-medium">이메일 <span className="text-[var(--muted-2)] font-normal">(선택)</span></label>
-          <input
-            type="email"
-            value={proposerEmail}
-            onChange={(e) => setProposerEmail(e.target.value)}
-            placeholder="검토 결과 알림용"
-            className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
-          />
-        </div>
-      </div>
-
-      {submitError && (
-        <div role="alert" className="flex items-start gap-2 p-3 rounded-[var(--r-sm)] border border-[var(--danger)]/40 bg-[var(--danger)]/10 text-sm">
-          <AlertCircle size={16} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
-          <span>{submitError}</span>
+      {duplicate && (
+        <div role="alert" className="flex flex-col gap-2 p-3 rounded-[var(--r-sm)] border border-[var(--warning)]/50 bg-[var(--warning)]/10 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle size={16} className="text-[var(--warning)] shrink-0 mt-0.5" aria-hidden />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold">
+                이미 등록된 자료
+              </p>
+              <p className="text-xs text-[var(--muted)] mt-0.5">
+                {duplicate.source === 'archive'
+                  ? `자료실에 이미 공개된 자료: "${duplicate.title}"`
+                  : `검토 큐에 이미 제안된 자료: "${duplicate.title}" (${dupStatusLabel(duplicate.status)})`}
+              </p>
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-xs text-[var(--muted)] cursor-pointer pl-6">
+            <input
+              type="checkbox"
+              checked={forceSubmit}
+              onChange={(e) => setForceSubmit(e.target.checked)}
+              className="accent-[var(--warning)]"
+            />
+            중복임을 알면서도 등록 (운영진이 검토 시 판단)
+          </label>
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={submitting || !title || (!url && !fileUrl)}
-        className="fc-btn fc-btn-primary mt-4 px-4 py-3"
-      >
-        {submitting && <Loader2 size={14} className="animate-spin" />}
-        {submitting ? '등록 중...' : '등록 신청'}
-      </button>
+      {/* 점진 노출 — 분석/업로드 완료 후 상세 필드 + 등록 버튼 */}
+      {showDetails && (
+        <>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">제목 <span className="text-[var(--danger)]">*</span></label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              placeholder="자료 제목"
+              className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">한 줄 설명</label>
+            <textarea
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              rows={3}
+              placeholder="이 자료가 어떤 내용인지 한 줄로..."
+              className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none resize-y"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5 min-w-0">
+              <label className="text-sm font-medium">대분류</label>
+              <select
+                value={main}
+                onChange={(e) => { setMain(e.target.value); setSub(''); }}
+                className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
+              >
+                <option value="">선택</option>
+                {cats.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5 min-w-0">
+              <label className="text-sm font-medium">소분류</label>
+              <select
+                value={sub}
+                onChange={(e) => setSub(e.target.value)}
+                className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
+              >
+                <option value="">선택</option>
+                {(subs[main] ?? []).map((s) => <option key={s} value={s}>{s}</option>)}
+                {sub && !(subs[main] ?? []).includes(sub) && <option value={sub}>{sub} (신규)</option>}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <label className="text-sm font-medium" htmlFor="published-at">발행일 <span className="text-[var(--muted-2)] font-normal">(선택 · 자동 추출)</span></label>
+            <input
+              id="published-at"
+              type="date"
+              value={publishedAt}
+              onChange={(e) => setPublishedAt(e.target.value)}
+              lang="ko-KR"
+              placeholder="YYYY-MM-DD"
+              className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none w-full sm:max-w-xs"
+            />
+            <span className="text-[11px] text-[var(--muted-2)]">원본 자료에 발행일 메타가 있으면 자동 입력. 없으면 비워둬도 OK.</span>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">태그 <span className="text-[var(--muted-2)] font-normal">(쉼표 구분)</span></label>
+            <input
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="피그마, Figma, 디자인툴"
+              className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[var(--border)]">
+            <div className="flex flex-col gap-1.5 min-w-0">
+              <label className="text-sm font-medium">제안자 <span className="text-[var(--muted-2)] font-normal">(선택)</span></label>
+              <input
+                value={proposer}
+                onChange={(e) => setProposer(e.target.value)}
+                placeholder="이름·닉네임"
+                className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5 min-w-0">
+              <label className="text-sm font-medium">이메일 <span className="text-[var(--muted-2)] font-normal">(선택)</span></label>
+              <input
+                type="email"
+                value={proposerEmail}
+                onChange={(e) => setProposerEmail(e.target.value)}
+                placeholder="검토 결과 알림용"
+                className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
+              />
+            </div>
+          </div>
+
+          {submitError && (
+            <div role="alert" className="flex items-start gap-2 p-3 rounded-[var(--r-sm)] border border-[var(--danger)]/40 bg-[var(--danger)]/10 text-sm">
+              <AlertCircle size={16} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
+              <span>{submitError}</span>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={submitting || !title || (!url && !fileUrl) || (!!duplicate && !forceSubmit)}
+            className="fc-btn fc-btn-primary mt-4 px-4 py-3"
+          >
+            {submitting && <Loader2 size={14} className="animate-spin" />}
+            {submitting ? '등록 중...' : '등록 신청'}
+          </button>
+        </>
+      )}
 
       {submitDone && (
         <div
@@ -420,4 +475,13 @@ export function SubmitForm({ categories }: Props) {
       )}
     </form>
   );
+}
+
+function dupStatusLabel(status: string | null): string {
+  switch (status) {
+    case 'pending': return '검토 대기';
+    case 'approved': return '승인됨';
+    case 'rejected': return '거절됨';
+    default: return status ?? '상태 불명';
+  }
 }

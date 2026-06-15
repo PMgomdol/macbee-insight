@@ -6,7 +6,7 @@ import { MobileNav } from '@/components/MobileNav';
 import { HeaderSearch } from '@/components/HeaderSearch';
 import { HeaderNav } from '@/components/HeaderNav';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { createClient } from '@/lib/supabase/server';
+import { getAuthState } from '@/lib/auth';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -18,20 +18,8 @@ const THEME_INIT = `
 (function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();
 `;
 
-async function getIsReviewer(): Promise<boolean> {
-  try {
-    const sb = await createClient();
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) return false;
-    const { data: prof } = await sb.from('profile').select('role').eq('id', user.id).maybeSingle();
-    return prof?.role === 'reviewer' || prof?.role === 'admin';
-  } catch {
-    return false;
-  }
-}
-
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const isReviewer = await getIsReviewer();
+  const { isReviewer } = await getAuthState();
   return (
     <html lang="ko" className="h-full antialiased">
       <head>

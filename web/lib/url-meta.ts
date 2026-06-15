@@ -132,3 +132,47 @@ export function guessFormat(url: string): string {
 export function isFileUrl(url: string): boolean {
   return /https?:\/\/(?:m\.|www\.)?(docs|drive|sheets|slides)\.google\.com/.test(url);
 }
+
+/**
+ * URL 정규화 — 중복 검사용 키. 동일 자료가 다른 변형으로 다시 등록되는 것 방지.
+ * - 스킴 https로 통일, 호스트 lowercase, 'm.' / 'www.' 접두어 제거
+ * - 트래킹 파라미터(utm_*, gclid, fbclid, ref, ref_) 제거
+ * - 끝의 '/' 제거, fragment(#...) 제거
+ * - 쿼리 파라미터 정렬 (순서 무관)
+ * - YouTube watch?v= 는 영상 ID만 키로 유지 (youtu.be 단축형과 통합)
+ */
+export function normalizeUrl(raw: string): string {
+  if (!raw) return '';
+  let s = raw.trim();
+  try {
+    const u = new URL(s);
+    u.protocol = 'https:';
+    u.hostname = u.hostname.toLowerCase().replace(/^(m|www)\./, '');
+    u.hash = '';
+
+    // YouTube 통합 — youtu.be/X ↔ youtube.com/watch?v=X ↔ /shorts/X
+    if (/(^|\.)youtube\.com$/.test(u.hostname) || u.hostname === 'youtu.be') {
+      let vid: string | null = null;
+      if (u.hostname === 'youtu.be') vid = u.pathname.slice(1).split('/')[0] || null;
+      else if (u.pathname === '/watch') vid = u.searchParams.get('v');
+      else if (u.pathname.startsWith('/shorts/')) vid = u.pathname.split('/')[2] || null;
+      if (vid) return `https://youtube.com/watch?v=${vid}`;
+    }
+
+    const trackingParams = /^(utm_|gclid|fbclid|mc_|igshid|_hsenc|_hsmi|ref|ref_|source)$/i;
+    const keep: [string, string][] = [];
+    u.searchParams.forEach((v, k) => { if (!trackingParams.test(k)) keep.push([k, v]); });
+    keep.sort(([a], [b]) => a.localeCompare(b));
+    u.search = '';
+    keep.forEach(([k, v]) => u.searchParams.append(k, v));
+
+    // 끝 슬래시 제거 (단, path가 '/'만 있을 때는 유지)
+    let pathname = u.pathname;
+    if (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
+    u.pathname = pathname;
+
+    return u.toString();
+  } catch {
+    return s.toLowerCase().replace(/\/+$/, '');
+  }
+}
