@@ -5,6 +5,8 @@ import type { ArchiveItem, FAQItem } from '@/types/db';
 export type SearchOpts = {
   kind?: 'files' | 'insights';
   format?: string;
+  main?: string;
+  sub?: string;
   sort?: 'relevance' | 'recent' | 'popular';
 };
 
@@ -40,6 +42,8 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
         .or(`title.ilike.${like},summary.ilike.${like}`);
       if (opts.kind) q1 = q1.eq('kind', opts.kind);
       if (opts.format) q1 = q1.eq('format', opts.format);
+      if (opts.main) q1 = q1.eq('main_category', opts.main);
+      if (opts.sub) q1 = q1.eq('sub_category', opts.sub);
       const r1 = await q1.limit(40);
 
       let q2 = sb
@@ -49,6 +53,8 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
         .contains('tags', [t]);
       if (opts.kind) q2 = q2.eq('kind', opts.kind);
       if (opts.format) q2 = q2.eq('format', opts.format);
+      if (opts.main) q2 = q2.eq('main_category', opts.main);
+      if (opts.sub) q2 = q2.eq('sub_category', opts.sub);
       const r2 = await q2.limit(20);
       return [...(r1.data ?? []), ...(r2.data ?? [])];
     })

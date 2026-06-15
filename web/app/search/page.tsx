@@ -8,16 +8,35 @@ import { TRENDING } from '@/lib/synonyms';
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; kind?: string; sort?: string }>;
+  searchParams: Promise<{ q?: string; kind?: string; main?: string; sub?: string; sort?: string }>;
 }) {
   const sp = await searchParams;
   const q = (sp.q ?? '').trim();
   const opts: SearchOpts = {
     kind: sp.kind === 'files' || sp.kind === 'insights' ? sp.kind : undefined,
+    main: sp.main,
+    sub: sp.sub,
     sort: (sp.sort as SearchOpts['sort']) || 'relevance',
   };
 
   const result = q ? await searchAll(q, opts) : { archives: [], faqs: [], expanded: [] as string[], synonymCanonical: undefined as string | undefined };
+
+  // 검색 결과 안에서 대분류·소분류 분포 (필터 없이 한 번 더 검색해야 정확하지만 비용 큼 — 현재 결과 기준)
+  const mainCounts = new Map<string, number>();
+  for (const it of result.archives) {
+    mainCounts.set(it.main_category, (mainCounts.get(it.main_category) ?? 0) + 1);
+  }
+  const subCounts = new Map<string, number>();
+  if (sp.main) {
+    for (const it of result.archives) {
+      if (it.main_category !== sp.main) continue;
+      const s = it.sub_category;
+      if (!s) continue;
+      subCounts.set(s, (subCounts.get(s) ?? 0) + 1);
+    }
+  }
+  const sortedMains = [...mainCounts.entries()].sort((a, b) => b[1] - a[1]);
+  const sortedSubs = [...subCounts.entries()].sort((a, b) => b[1] - a[1]);
 
   const buildHref = (overrides: Partial<typeof sp>) => {
     const u = new URLSearchParams();
@@ -53,7 +72,7 @@ export default async function SearchPage({
             </div>
           )}
 
-          {/* 필터: kind + 정렬 */}
+          {/* kind + 정렬 */}
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex gap-1 text-xs flex-wrap">
               <FilterLink href={buildHref({ kind: undefined })} active={!opts.kind}>전체</FilterLink>
@@ -66,6 +85,61 @@ export default async function SearchPage({
               <FilterLink href={buildHref({ sort: 'recent' })} active={opts.sort === 'recent'}>최신순</FilterLink>
             </div>
           </div>
+
+          {/* 대분류 chips — 검색 결과 안 분포 */}
+          {sortedMains.length > 1 && (
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap">
+              <Link
+                href={buildHref({ main: undefined, sub: undefined })}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs border whitespace-nowrap transition ${
+                  !sp.main
+                    ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                    : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
+                }`}
+              >
+                전체 카테고리
+              </Link>
+              {sortedMains.map(([cat, n]) => (
+                <Link
+                  key={cat}
+                  href={buildHref({ main: cat, sub: undefined })}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs border whitespace-nowrap transition ${
+                    sp.main === cat
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
+                  }`}
+                >
+                  {cat} <span className="opacity-70">({n})</span>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* 소분류 chips */}
+          {sp.main && sortedSubs.length > 0 && (
+            <div className="flex gap-1 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap items-center">
+              <span className="text-[11px] text-[var(--muted-2)] mr-1 shrink-0">소분류</span>
+              <Link
+                href={buildHref({ sub: undefined })}
+                className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${
+                  !sp.sub ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
+                }`}
+              >
+                전체
+              </Link>
+              {sortedSubs.map(([s, n]) => (
+                <Link
+                  key={s}
+                  href={buildHref({ sub: s })}
+                  className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${
+                    sp.sub === s ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
+                  }`}
+                >
+                  {s} <span className="opacity-60">({n})</span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
