@@ -60,15 +60,25 @@ export default async function AdminPage() {
     .order('proposed_at', { ascending: true });
 
   // 운영진(reviewer/admin) — pending 신청 조회 (service_role)
+  // notes 컬럼 마이그레이션 안 된 환경 fallback
   let pendingApps: Array<{ id: string; display_name: string; notes: string | null; created_at: string }> = [];
   if (isReviewer) {
     const sba = createAdminClient();
-    const { data } = await sba
+    let r = await sba
       .from('profile')
       .select('id, display_name, notes, created_at')
       .eq('role', 'pending')
       .order('created_at', { ascending: true });
-    pendingApps = data ?? [];
+    if (r.error && /notes/.test(r.error.message)) {
+      const r2 = await sba
+        .from('profile')
+        .select('id, display_name, created_at')
+        .eq('role', 'pending')
+        .order('created_at', { ascending: true });
+      pendingApps = (r2.data ?? []).map((p) => ({ ...p, notes: null }));
+    } else {
+      pendingApps = r.data ?? [];
+    }
   }
 
   const items = (pending ?? []) as Array<{
@@ -114,7 +124,7 @@ export default async function AdminPage() {
           <div className="flex flex-col gap-2">
             {pendingApps.map((app) => {
               const m = (app.notes ?? '').match(/reviewer-applied:([\d\-T:.Z]+)/);
-              const at = m?.[1];
+              const at = m?.[1] ?? app.created_at;  // notes 없으면 profile 생성 시각 사용
               const reasonM = (app.notes ?? '').match(/reason:(.+)$/);
               const reason = reasonM?.[1]?.trim();
               return (
