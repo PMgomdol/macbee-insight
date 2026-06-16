@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 
 /**
  * 운영진 신청 — 로그인된 사용자가 본인 profile에 role='pending' 기록.
@@ -53,6 +53,7 @@ export async function applyReviewer(
   }
   if (r.error) return { ok: false, error: r.error.message };
 
+  updateTag('profile');
   revalidatePath('/admin1229');
   revalidatePath('/admin');
   return { ok: true };
@@ -75,6 +76,7 @@ export async function approveReviewer(profileId: string): Promise<{ ok: boolean;
     .eq('role', 'pending');
   if (error) return { ok: false, error: error.message };
 
+  updateTag('profile');
   revalidatePath('/admin');
   revalidatePath('/admin1229');
   return { ok: true };
@@ -105,6 +107,7 @@ export async function rejectReviewer(profileId: string, reason: string): Promise
   }
   if (r.error) return { ok: false, error: r.error.message };
 
+  updateTag('profile');
   revalidatePath('/admin');
   revalidatePath('/admin1229');
   return { ok: true };

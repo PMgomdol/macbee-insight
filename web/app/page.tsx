@@ -5,11 +5,12 @@ import { AllItemsSection } from '@/components/AllItemsSection';
 import { getPopularItems, getCategoryCounts, getItemsByKind } from '@/lib/queries';
 
 export default async function Home() {
+  // 전체 자료를 한 번에 받아 client-side 필터 — 카테고리/소분류 클릭 시 서버 round-trip 제거
   const [popular, counts, allInsights, allFiles] = await Promise.all([
     getPopularItems(10),
     getCategoryCounts(),
-    getItemsByKind('insights', { pageSize: 200 }),
-    getItemsByKind('files', { pageSize: 50 }),
+    getItemsByKind('insights', { pageSize: 1500 }),
+    getItemsByKind('files', { pageSize: 500 }),
   ]);
 
   const categories = Object.entries(counts).map(([name, count]) => ({ name, count }));
