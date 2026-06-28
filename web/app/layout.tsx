@@ -5,10 +5,10 @@ import { AuthStatus } from '@/components/AuthStatus';
 import { MobileNavServer } from '@/components/MobileNavServer';
 import { HeaderSearch } from '@/components/HeaderSearch';
 import { HeaderNavServer } from '@/components/HeaderNavServer';
-import { FooterAdminLink } from '@/components/FooterAdminLink';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CardClickTracker } from '@/components/CardClickTracker';
 import { NavProgress } from '@/components/NavProgress';
+import { SiteFooter } from '@/components/SiteFooter';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -51,14 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">
           {children}
         </main>
-        <footer className="border-t border-[var(--border)] mt-6">
-          <div className="max-w-6xl mx-auto px-3 sm:px-6 py-5 text-xs text-[var(--muted)] flex flex-col sm:flex-row gap-1.5 sm:gap-4 justify-between">
-            <div>© 2026 맥비기획 자료실 운영팀</div>
-            <div className="flex flex-wrap gap-3">
-              <Suspense fallback={null}><FooterAdminLink /></Suspense>
-            </div>
-          </div>
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   );
