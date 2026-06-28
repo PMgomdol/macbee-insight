@@ -41,8 +41,34 @@
   --r-lg: 8px;
 }
 
+/* 사용자 수동 다크 (ThemeToggle로 설정) */
+:root[data-theme="dark"] {
+  --bg: #181818;
+  --bg-alt: #1a1b1e;
+  --fg: #f3f3f3;
+  --muted: #c9c9c9;
+  --muted-2: #939393;
+  --border: #2e2e2e;
+  --border-strong: #444444;
+  --card: #232323;
+  --card-hover: #2e2e2e;
+  --accent: #57a3fd;
+  --accent-hover: #78b0fd;
+  --accent-pressed: #1b96ff;
+  --accent-bg: #03234d;
+  --focus-ring: #57a3fd;
+  --success: #45c65a;
+  --danger: #fe8f7d;
+  --warning: #ffba90;
+  --shadow-2: 0 1px 2px rgba(0,0,0,0.5);
+  --shadow-4: 0 2px 4px rgba(0,0,0,0.55);
+  --shadow-8: 0 4px 8px rgba(0,0,0,0.60);
+  --shadow-16: 0 16px 32px rgba(0,0,0,0.65);
+}
+
+/* OS 다크 — 사용자가 토글로 light/dark 강제 안 한 경우만 */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
     --bg: #181818;
     --bg-alt: #1a1b1e;
     --fg: #f3f3f3;

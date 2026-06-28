@@ -48,17 +48,9 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       target="_blank"
       rel="noopener noreferrer"
       data-card-id={item.id}
-      className="app-card group relative flex flex-col gap-2 p-3.5 pl-4 min-h-[140px] overflow-hidden"
+      className="app-card group relative flex flex-col gap-2 p-3.5 min-h-[140px] overflow-hidden"
       aria-label={`${video ? '영상' : kindLabel(item.kind)}: ${item.title} (새 탭에서 열어요)`}
     >
-      {/* 좌측 액센트 바 */}
-      <span
-        aria-hidden
-        className={`absolute left-0 top-2 bottom-2 w-1 rounded-r ${
-          video ? 'bg-[var(--danger)]' : isFile ? 'bg-[var(--accent)]' : 'bg-[var(--muted-2)]'
-        }`}
-      />
-
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
           <span
