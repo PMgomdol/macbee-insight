@@ -28,8 +28,93 @@ function matchMetaName(html: string, name: string): string | null {
   return html.match(re)?.[1] || html.match(re2)?.[1] || null;
 }
 
+function matchMetaItemprop(html: string, prop: string): string | null {
+  const re = new RegExp(`<meta[^>]+itemprop=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i');
+  const re2 = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+itemprop=["']${prop}["']`, 'i');
+  return html.match(re)?.[1] || html.match(re2)?.[1] || null;
+}
+
 function matchTitleTag(html: string): string | null {
   return html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim() ?? null;
+}
+
+/** <time datetime="..."> 첫 매치. */
+function matchTimeTag(html: string): string | null {
+  return html.match(/<time[^>]+datetime=["']([^"']+)["']/i)?.[1] ?? null;
+}
+
+/**
+ * <script type="application/ld+json">…</script> 안에서 datePublished / dateCreated 추출.
+ * NewsArticle / Article / BlogPosting 등 schema.org 표준.
+ */
+function matchJsonLdDate(html: string): string | null {
+  const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null) {
+    try {
+      const obj = JSON.parse(m[1].trim());
+      const found = findDateInLdObject(obj);
+      if (found) return found;
+    } catch {
+      // 부분 매치 — 정규식 폴백
+      const k = m[1].match(/"date[A-Za-z]*":\s*"([^"]+)"/);
+      if (k) return k[1];
+    }
+  }
+  return null;
+}
+
+function findDateInLdObject(obj: unknown): string | null {
+  if (!obj) return null;
+  if (Array.isArray(obj)) {
+    for (const v of obj) {
+      const r = findDateInLdObject(v);
+      if (r) return r;
+    }
+    return null;
+  }
+  if (typeof obj !== 'object') return null;
+  const o = obj as Record<string, unknown>;
+  for (const k of ['datePublished', 'dateCreated', 'uploadDate', 'dateModified']) {
+    if (typeof o[k] === 'string') return o[k] as string;
+  }
+  // @graph 등 중첩 처리
+  for (const v of Object.values(o)) {
+    if (v && typeof v === 'object') {
+      const r = findDateInLdObject(v);
+      if (r) return r;
+    }
+  }
+  return null;
+}
+
+/**
+ * 본문 평문에서 발행일 추출. og·time·json-ld가 모두 없는 한국 블로그·매거진
+ * (eopla, 노션 임베드 일부, 자체 CMS) 대비.
+ * URL·이미지 src·script·style을 먼저 제거해서 S3 파일명 등의 노이즈 차단.
+ */
+function extractDateFromText(html: string): string | null {
+  const cleaned = html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/(href|src|srcset|style|content|action|data-[\w-]+)\s*=\s*"[^"]*"/gi, ' ')
+    .replace(/(href|src|srcset|style|content|action|data-[\w-]+)\s*=\s*'[^']*'/gi, ' ')
+    .replace(/<[^>]+>/g, ' ');
+  const patterns: RegExp[] = [
+    /(20\d{2})\.\s*(\d{1,2})\.\s*(\d{1,2})/,        // 2026. 06. 24
+    /(20\d{2})년\s*(\d{1,2})월\s*(\d{1,2})일/,       // 2026년 6월 24일
+    /(20\d{2})-(\d{1,2})-(\d{1,2})/,                  // 2026-06-24
+    /(20\d{2})\/(\d{1,2})\/(\d{1,2})/,                // 2026/06/24
+  ];
+  for (const re of patterns) {
+    const m = cleaned.match(re);
+    if (!m) continue;
+    const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) continue;
+    if (y < 2000 || y > 2099) continue;
+    return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+  return null;
 }
 
 function decode(s: string | null): string {
@@ -104,19 +189,51 @@ export async function fetchUrlMeta(url: string): Promise<UrlMeta> {
     const ogImage = matchMeta(html, 'og:image');
     const siteName = matchMeta(html, 'og:site_name');
     const pub = matchMeta(html, 'article:published_time')
+      || matchMeta(html, 'article:published')
+      || matchMeta(html, 'og:published_time')
+      || matchMeta(html, 'og:updated_time')
+      || matchMetaName(html, 'article:published_time')
       || matchMetaName(html, 'date')
-      || matchMetaName(html, 'pubdate');
+      || matchMetaName(html, 'pubdate')
+      || matchMetaName(html, 'parsely-pub-date')
+      || matchMetaName(html, 'sailthru.date')
+      || matchMetaName(html, 'publication_date')
+      || matchMetaName(html, 'DC.date.issued')
+      || matchMetaName(html, 'dc.date.issued')
+      || matchMetaItemprop(html, 'datePublished')
+      || matchMetaItemprop(html, 'dateCreated')
+      || matchTimeTag(html)
+      || matchJsonLdDate(html);
 
     result.title = decode(ogTitle || tag);
     result.description = decode(ogDesc);
     result.image = ogImage ? decode(ogImage) : null;
     result.siteName = siteName ? decode(siteName) : null;
-    result.publishedAt = pub ? decode(pub).split('T')[0] : null;
+    result.publishedAt = normalizePublishedDate(pub) || extractDateFromText(html);
     result.ok = true;
   } catch (e: unknown) {
     result.error = e instanceof Error ? e.message : String(e);
   }
   return result;
+}
+
+/**
+ * 다양한 날짜 입력을 yyyy-MM-dd로 정규화. ISO·yyyy/mm/dd·yyyy.mm.dd·yyyy년 mm월 dd일 지원.
+ * 실패 시 null.
+ */
+function normalizePublishedDate(raw: string | null): string | null {
+  if (!raw) return null;
+  const s = decode(raw).trim();
+  if (!s) return null;
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const dot = s.match(/^(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
+  if (dot) return `${dot[1]}-${String(+dot[2]).padStart(2, '0')}-${String(+dot[3]).padStart(2, '0')}`;
+  const slash = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+  if (slash) return `${slash[1]}-${String(+slash[2]).padStart(2, '0')}-${String(+slash[3]).padStart(2, '0')}`;
+  const ko = s.match(/^(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+  if (ko) return `${ko[1]}-${String(+ko[2]).padStart(2, '0')}-${String(+ko[3]).padStart(2, '0')}`;
+  return null;
 }
 
 /** 도메인 기반 형식 추정 */
