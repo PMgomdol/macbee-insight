@@ -104,8 +104,48 @@ export type AnalyzeResult = {
 };
 
 /**
- * 업로드된 파일 자동 분석 — 파일명·확장자를 단서로 classify().
- * PDF 본문 추출은 무거워서 1차는 파일명 기반. AI 분류기가 한글 파일명도 잘 추론.
+ * 업로드된 파일의 실제 본문 텍스트 추출.
+ * - PDF: pdf-parse, 첫 10페이지
+ * - DOCX: mammoth
+ * - TXT/MD/CSV: 그대로 utf-8 디코드
+ * - 그 외 (PPTX/XLSX/HWP/이미지): 빈 문자열 반환 → 파일명만으로 분류
+ */
+async function extractFileText(fileUrl: string, ext: string): Promise<string> {
+  const SUPPORTED = ['pdf', 'docx', 'txt', 'md', 'csv'];
+  if (!SUPPORTED.includes(ext)) return '';
+  try {
+    const resp = await fetch(fileUrl, { signal: AbortSignal.timeout(20000) });
+    if (!resp.ok) return '';
+    const buf = Buffer.from(await resp.arrayBuffer());
+
+    if (ext === 'pdf') {
+      const { PDFParse } = await import('pdf-parse');
+      const parser = new PDFParse({ data: new Uint8Array(buf) });
+      try {
+        const r = await parser.getText({ first: 10 });
+        return (r.text || '').replace(/\s+/g, ' ').trim().slice(0, 4000);
+      } finally {
+        await parser.destroy().catch(() => {});
+      }
+    }
+
+    if (ext === 'docx') {
+      const mammoth = await import('mammoth');
+      const r = await mammoth.extractRawText({ buffer: buf });
+      return (r.value || '').replace(/\s+/g, ' ').trim().slice(0, 4000);
+    }
+
+    // txt / md / csv
+    return buf.toString('utf-8').replace(/\s+/g, ' ').trim().slice(0, 4000);
+  } catch (e) {
+    console.error('extractFileText error:', e);
+    return '';
+  }
+}
+
+/**
+ * 업로드된 파일 자동 분석 — 본문 텍스트 + 파일명을 classify()에 투입.
+ * PDF·DOCX·TXT는 실제 본문, 그 외 형식은 파일명만 사용.
  */
 export async function analyzeFile(fileUrl: string, fileName: string): Promise<AnalyzeResult> {
   fileUrl = fileUrl.trim();
@@ -119,14 +159,20 @@ export async function analyzeFile(fileUrl: string, fileName: string): Promise<An
     .replace(/[_\-]+/g, ' ')
     .trim();
 
-  // classify는 url + (title/description) 받음. 파일명을 title처럼 넘기고 description은 확장자 힌트
-  const description = `업로드 파일 (${ext.toUpperCase() || '?'}) — 파일명 기반 분류`;
-  const [cls, duplicate] = await Promise.all([
-    classify(fileUrl, { title: base, description }),
+  // 본문 추출 + 중복 검사 병렬
+  const [bodyText, duplicate] = await Promise.all([
+    extractFileText(fileUrl, ext),
     findDuplicate('', fileUrl),
   ]);
 
-  // format은 확장자로 강제 보정 (ppt/docx 같은 건 '템플릿' 또는 '기획서'로)
+  // classify는 (url, { title, description }) 받음 — 파일명을 title, 본문을 description으로 투입
+  // 본문이 있으면 본문 우선, 없으면 확장자 힌트만
+  const description = bodyText
+    ? bodyText
+    : `업로드 파일 (${ext.toUpperCase() || '?'}) — 본문 추출 불가, 파일명만 기반 분류`;
+  const cls = await classify(fileUrl, { title: base, description });
+
+  // format은 확장자로 강제 보정 (AI가 파일명·본문 보고 잘못 추정하는 케이스 방지)
   const fmtByExt: Record<string, string> = {
     pdf: '가이드',
     pptx: '템플릿', ppt: '템플릿',
