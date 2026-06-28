@@ -104,6 +104,17 @@ a { color: inherit; text-decoration: none; }
   border-radius: var(--r-sm);
 }
 
+/* input/textarea/select은 모두 래퍼가 focus 표시 담당 — 글로벌 outline 이중 표시 방지 */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
 
@@ -252,6 +263,14 @@ input[type="search"]::-webkit-search-results-decoration {
   background: transparent;
   outline: none;
   border: none;
+}
+/* 래퍼가 focus 표시 담당 — 내부 input의 글로벌 :focus-visible 이중 outline 제거 */
+.app-input input:focus,
+.app-input input:focus-visible,
+.app-input textarea:focus,
+.app-input textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 }
 
