@@ -86,7 +86,14 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
         {item.title}
       </h3>
 
-      {/* ③ 카테고리 */}
+      {/* ③ 요약 — 있으면 */}
+      {item.summary && (
+        <p className="text-[12px] text-[var(--muted)] line-clamp-2 leading-relaxed">
+          {item.summary}
+        </p>
+      )}
+
+      {/* ④ 카테고리 */}
       <div className="flex items-center gap-1.5 text-[11px] text-[var(--muted-2)]">
         <FileText size={12} aria-hidden />
         <span className="truncate">
@@ -94,13 +101,6 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
           {item.sub_category ? ` · ${item.sub_category}` : ''}
         </span>
       </div>
-
-      {/* ④ 요약 — 있으면 */}
-      {item.summary && (
-        <p className="text-[12px] text-[var(--muted)] line-clamp-2 leading-relaxed">
-          {item.summary}
-        </p>
-      )}
 
       {/* ⑤ 푸터 메타 */}
       <div className="flex items-center justify-between gap-3 text-[11px] text-[var(--muted-2)] mt-auto pt-1">
