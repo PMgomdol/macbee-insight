@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { visibleNav } from '@/lib/nav';
 
-export function HeaderNav({ isReviewer = false }: { isReviewer?: boolean }) {
+export function HeaderNavClient({ isReviewer = false }: { isReviewer?: boolean }) {
   const pathname = usePathname();
   const items = visibleNav(isReviewer);
   return (

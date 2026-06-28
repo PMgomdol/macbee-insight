@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 
 const MIN_APPROVALS = 2;
 
@@ -62,6 +62,7 @@ export async function approveProposal(id: string) {
       approvers: Array.from(approvers),
       reviewed_at: new Date().toISOString(),
     }).eq('id', id);
+    updateTag('archive');
   } else {
     await sb.from('staging_proposal').update({ approvers: Array.from(approvers) }).eq('id', id);
   }
@@ -94,6 +95,7 @@ export async function forceApproveProposal(id: string, reason: string) {
     reviewer_note: `[단독승인] ${reason.trim()}`,
     reviewed_at: new Date().toISOString(),
   }).eq('id', id);
+  updateTag('archive');
   revalidatePath('/admin');
 }
 

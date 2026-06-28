@@ -2,11 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { AuthStatus } from '@/components/AuthStatus';
-import { MobileNav } from '@/components/MobileNav';
+import { MobileNavServer } from '@/components/MobileNavServer';
 import { HeaderSearch } from '@/components/HeaderSearch';
-import { HeaderNav } from '@/components/HeaderNav';
+import { HeaderNavServer } from '@/components/HeaderNavServer';
+import { FooterAdminLink } from '@/components/FooterAdminLink';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { getAuthState } from '@/lib/auth';
+import { CardClickTracker } from '@/components/CardClickTracker';
+import { NavProgress } from '@/components/NavProgress';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -18,8 +20,7 @@ const THEME_INIT = `
 (function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();
 `;
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { isReviewer } = await getAuthState();
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className="h-full antialiased">
       <head>
@@ -31,17 +32,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--fg)]">
-        <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)] z-50 backdrop-blur supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--bg)_85%,transparent)]">
+        <NavProgress />
+        <CardClickTracker />
+        <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)] z-50">
           <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 flex items-center gap-2 sm:gap-3">
             <Link href="/" className="font-bold text-base sm:text-lg tracking-tight shrink-0 mr-1">
               맥비기획 자료실
             </Link>
-            <Suspense fallback={null}><HeaderNav isReviewer={isReviewer} /></Suspense>
+            <Suspense fallback={null}><HeaderNavServer /></Suspense>
             <div className="flex-1 flex justify-end items-center gap-1.5 sm:gap-2">
               <Suspense fallback={null}><HeaderSearch /></Suspense>
               <ThemeToggle />
               <Suspense fallback={null}><AuthStatus /></Suspense>
-              <MobileNav isReviewer={isReviewer} />
+              <Suspense fallback={null}><MobileNavServer /></Suspense>
             </div>
           </div>
         </header>
@@ -52,7 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="max-w-6xl mx-auto px-3 sm:px-6 py-5 text-xs text-[var(--muted)] flex flex-col sm:flex-row gap-1.5 sm:gap-4 justify-between">
             <div>© 2026 맥비기획 자료실 운영팀</div>
             <div className="flex flex-wrap gap-3">
-              {isReviewer && <Link href="/admin" className="hover:text-[var(--fg)]">운영진</Link>}
+              <Suspense fallback={null}><FooterAdminLink /></Suspense>
             </div>
           </div>
         </footer>

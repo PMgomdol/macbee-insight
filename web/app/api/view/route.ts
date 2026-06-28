@@ -8,7 +8,6 @@ import { createAdminClient } from '@/lib/supabase/server';
  * - 새 ID면 archive_item.views += 1 (service_role atomic)
  * - 쿠키 24h 만료. 익일 새 카운트
  */
-export const runtime = 'nodejs';
 
 const COOKIE = 'vw_seen';
 const TTL_SEC = 24 * 60 * 60;

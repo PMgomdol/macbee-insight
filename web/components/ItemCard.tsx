@@ -1,21 +1,8 @@
-'use client';
 import type { ArchiveItem } from '@/types/db';
 import { ExternalLink, Download, PlayCircle, FileText } from 'lucide-react';
 
 function kindLabel(kind: 'files' | 'insights') {
   return kind === 'files' ? '양식·템플릿' : '아티클·영상';
-}
-
-/** 카드 클릭 시 fire-and-forget view ping. 일별 UV 카운트 */
-function pingView(id: number) {
-  try {
-    const body = JSON.stringify({ id });
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon('/api/view', new Blob([body], { type: 'application/json' }));
-    } else {
-      fetch('/api/view', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true });
-    }
-  } catch {}
 }
 
 function formatDate(s: string | null): string | null {
@@ -60,12 +47,11 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={() => pingView(item.id)}
-      onAuxClick={() => pingView(item.id)}
+      data-card-id={item.id}
       className={`fc-card group relative flex flex-col gap-2 p-3.5 pl-4 min-h-[140px] overflow-hidden ${
         isFile ? 'fc-kind-file' : 'fc-kind-insight'
       }`}
-      aria-label={`${video ? '영상' : kindLabel(item.kind)}: ${item.title}`}
+      aria-label={`${video ? '영상' : kindLabel(item.kind)}: ${item.title} (새 탭에서 열어요)`}
     >
       {/* 좌측 액센트 바 */}
       <span
@@ -132,8 +118,7 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={() => pingView(item.id)}
-      onAuxClick={() => pingView(item.id)}
+      data-card-id={item.id}
       className="group flex items-center gap-3 px-3 py-2.5 rounded-[var(--r-sm)] hover:bg-[var(--card)] transition"
     >
       <span className={video ? 'text-[var(--danger)] shrink-0' : 'text-[var(--muted-2)] shrink-0'}>

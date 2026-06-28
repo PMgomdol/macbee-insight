@@ -6,12 +6,17 @@ const MINUTE = 60;
 const HOUR = 60 * 60;
 const DAY = 24 * HOUR;
 
+// 카드/리스트 렌더에 실제 쓰는 컬럼만 — RSC 페이로드 ~40% 절감
+const ARCHIVE_CARD_COLS =
+  'id, kind, format, external_url, file_url, main_category, sub_category, title, summary, published_at, registered_at, views, tags';
+const FAQ_CARD_COLS = 'id, main_category, question, answer';
+
 export const getPopularItems = unstable_cache(
   async (limit = 8): Promise<ArchiveItem[]> => {
     const sb = createPublicClient();
     const { data } = await sb
       .from('archive_item')
-      .select('*')
+      .select(ARCHIVE_CARD_COLS)
       .eq('status', 'public')
       .order('views', { ascending: false })
       .order('registered_at', { ascending: false })
@@ -27,7 +32,7 @@ export const getRecentItems = unstable_cache(
     const sb = createPublicClient();
     const { data } = await sb
       .from('archive_item')
-      .select('*')
+      .select(ARCHIVE_CARD_COLS)
       .eq('status', 'public')
       .order('registered_at', { ascending: false })
       .limit(limit);
@@ -46,7 +51,7 @@ export const getItemsByKind = unstable_cache(
     const sb = createPublicClient();
     let q = sb
       .from('archive_item')
-      .select('*', { count: 'exact' })
+      .select(ARCHIVE_CARD_COLS, { count: 'exact' })
       .eq('status', 'public')
       .eq('kind', kind);
     if (main) q = q.eq('main_category', main);
@@ -73,7 +78,7 @@ export const getFAQs = unstable_cache(
     const sb = createPublicClient();
     const { data } = await sb
       .from('faq')
-      .select('*')
+      .select(FAQ_CARD_COLS)
       .order('main_category')
       .order('registered_at', { ascending: false });
     return (data ?? []) as FAQItem[];

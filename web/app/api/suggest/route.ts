@@ -2,9 +2,6 @@ import { NextResponse } from 'next/server';
 import { createPublicClient } from '@/lib/supabase/server';
 import { expand, allKeys, TRENDING } from '@/lib/synonyms';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 60;
-
 type Suggestion =
   | { type: 'title'; text: string; url: string; meta?: string }
   | { type: 'tag'; text: string; count: number }

@@ -2,6 +2,11 @@ import { createPublicClient } from './supabase/server';
 import { expand } from './synonyms';
 import type { ArchiveItem, FAQItem } from '@/types/db';
 
+// 카드 렌더에 실제 쓰는 컬럼만 (queries.ts와 동일 — 검색은 views/registered_at 필요)
+const ARCHIVE_CARD_COLS =
+  'id, kind, format, external_url, file_url, main_category, sub_category, title, summary, published_at, registered_at, views, tags';
+const FAQ_CARD_COLS = 'id, main_category, question, answer, views';
+
 export type SearchOpts = {
   kind?: 'files' | 'insights';
   format?: string;
@@ -37,7 +42,7 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
       const like = `%${t}%`;
       let q1 = sb
         .from('archive_item')
-        .select('*')
+        .select(ARCHIVE_CARD_COLS)
         .eq('status', 'public')
         .or(`title.ilike.${like},summary.ilike.${like}`);
       if (opts.kind) q1 = q1.eq('kind', opts.kind);
@@ -48,7 +53,7 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
 
       let q2 = sb
         .from('archive_item')
-        .select('*')
+        .select(ARCHIVE_CARD_COLS)
         .eq('status', 'public')
         .contains('tags', [t]);
       if (opts.kind) q2 = q2.eq('kind', opts.kind);
@@ -65,7 +70,7 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
       const like = `%${t}%`;
       const r = await sb
         .from('faq')
-        .select('*')
+        .select(FAQ_CARD_COLS)
         .or(`question.ilike.${like},answer.ilike.${like}`)
         .order('views', { ascending: false })
         .limit(20);

@@ -5,7 +5,7 @@ import { Menu, X, Search } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { visibleNav } from '@/lib/nav';
 
-export function MobileNav({ isReviewer = false }: { isReviewer?: boolean }) {
+export function MobileNavClient({ isReviewer = false }: { isReviewer?: boolean }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const pathname = usePathname();
