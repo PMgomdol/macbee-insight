@@ -23,11 +23,6 @@ export function SiteFooter() {
               </p>
             </div>
 
-            <blockquote className="border-l-2 border-[var(--accent)] pl-3 text-xs text-[var(--muted)] leading-relaxed">
-              &ldquo;지식은 나누면 더 커지고, 공유하면 단단해진다&rdquo;
-              <div className="text-[10px] text-[var(--muted-2)] mt-1">— 2019년 1월부터</div>
-            </blockquote>
-
             <div className="text-xs">
               <div className="font-semibold text-[var(--muted)] mb-1.5">운영팀</div>
               <ul className="flex flex-col gap-1 text-[var(--muted-2)]">

@@ -103,6 +103,54 @@ export type AnalyzeResult = {
   duplicate?: DuplicateMatch | null;
 };
 
+/**
+ * 업로드된 파일 자동 분석 — 파일명·확장자를 단서로 classify().
+ * PDF 본문 추출은 무거워서 1차는 파일명 기반. AI 분류기가 한글 파일명도 잘 추론.
+ */
+export async function analyzeFile(fileUrl: string, fileName: string): Promise<AnalyzeResult> {
+  fileUrl = fileUrl.trim();
+  fileName = fileName.trim();
+  if (!fileUrl || !fileName) return { ok: false, error: '파일 정보가 부족해요' };
+
+  // 파일명 정제 — 확장자·언더스코어·대시 정리해서 자연어로
+  const ext = (fileName.split('.').pop() || '').toLowerCase();
+  const base = fileName
+    .replace(/\.[^.]+$/, '')
+    .replace(/[_\-]+/g, ' ')
+    .trim();
+
+  // classify는 url + (title/description) 받음. 파일명을 title처럼 넘기고 description은 확장자 힌트
+  const description = `업로드 파일 (${ext.toUpperCase() || '?'}) — 파일명 기반 분류`;
+  const [cls, duplicate] = await Promise.all([
+    classify(fileUrl, { title: base, description }),
+    findDuplicate('', fileUrl),
+  ]);
+
+  // format은 확장자로 강제 보정 (ppt/docx 같은 건 '템플릿' 또는 '기획서'로)
+  const fmtByExt: Record<string, string> = {
+    pdf: '가이드',
+    pptx: '템플릿', ppt: '템플릿',
+    docx: '기획서', doc: '기획서',
+    xlsx: '템플릿', xls: '템플릿',
+    hwp: '기획서', hwpx: '기획서',
+  };
+  const format = fmtByExt[ext] ?? cls.format;
+
+  return {
+    ok: true,
+    title: cls.title || base,
+    summary: cls.summary,
+    mainCategory: cls.mainCategory,
+    subCategory: cls.subCategory,
+    tags: cls.tags,
+    format,
+    isFile: true,
+    publishedAt: null,
+    aiUsed: cls.aiUsed,
+    duplicate,
+  };
+}
+
 export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
   url = url.trim();
   if (!url) return { ok: false, error: 'URL을 먼저 입력해주세요' };

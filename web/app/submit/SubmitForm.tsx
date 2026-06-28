@@ -6,7 +6,7 @@ import {
   Sparkles, Upload, Loader2, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle,
 } from 'lucide-react';
 import {
-  analyzeUrl, submitProposal, uploadFile,
+  analyzeUrl, analyzeFile, submitProposal, uploadFile,
   type AnalyzeResult, type DuplicateMatch,
 } from './actions';
 
@@ -115,9 +115,24 @@ export function SubmitForm({ categories }: Props) {
   function fmtMB(b: number) { return (b / 1024 / 1024).toFixed(1) + 'MB'; }
 
   function switchMode(next: 'url' | 'file') {
+    if (mode === next) return;
     setMode(next);
+    // 탭 전환 시 이전 탭에서 입력·분석된 정보 모두 초기화 (URL→파일 또는 파일→URL)
+    setUrl('');
+    setFileUrl('');
+    setFinalUrl('');
+    setTitle('');
+    setSummary('');
+    setMain('');
+    setSub('');
+    setTags('');
+    setFormat('');
+    setPublishedAt('');
+    setFileName(null);
     setAnalyzeMsg(null);
+    setAnalyzed(false);
     setDuplicate(null);
+    setForceSubmit(false);
   }
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -154,12 +169,15 @@ export function SubmitForm({ categories }: Props) {
         });
         return;
       }
-      setFileUrl(r.url ?? '');
-      if (!title) {
-        const base = f.name.replace(/\.[^.]+$/, '').replace(/_/g, ' ');
-        setTitle(base);
-      }
-      setAnalyzeMsg({ kind: 'ok', text: `파일을 올렸어요 (${fmtMB(f.size)})` });
+      const uploadedUrl = r.url ?? '';
+      setFileUrl(uploadedUrl);
+      setAnalyzeMsg({ kind: 'ok', text: `파일을 올렸어요 (${fmtMB(f.size)}) · 분석 중...` });
+
+      // 파일 자동 분석 — 파일명 기반 classify로 제목·요약·카테고리·태그 자동 채움
+      startAnalyze(async () => {
+        const ar = await analyzeFile(uploadedUrl, f.name);
+        applyAnalysis(ar);
+      });
     });
   }
 
