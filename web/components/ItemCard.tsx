@@ -18,11 +18,10 @@ function isVideo(item: ArchiveItem): boolean {
   return /youtube\.com|youtu\.be|vimeo\.com|tv\.naver\.com/.test(url);
 }
 
-/** 파일 확장자 배지 — PDF / 워드 / PPT / 엑셀 / 한글 등. file_url 또는 external_url 기준 */
+/** 파일 확장자 배지 — PDF / 워드 / PPT / 엑셀 / 한글 등 */
 function fileExtBadge(item: ArchiveItem): string | null {
   const u = (item.file_url || item.external_url || '').toLowerCase();
   if (!u) return null;
-  // 구글 docs/drive — 형식 추정 불가, 일반 라벨
   if (/docs\.google\.com\/document/.test(u)) return '구글 문서';
   if (/docs\.google\.com\/spreadsheets/.test(u)) return '구글 시트';
   if (/docs\.google\.com\/presentation/.test(u)) return '구글 슬라이드';
@@ -36,11 +35,20 @@ function fileExtBadge(item: ArchiveItem): string | null {
   return null;
 }
 
+/**
+ * 카드 정보 위계 — Linear/Medium 카드 참고
+ *  ① 태그 (종류·형식·실태그)  — 작게
+ *  ② 타이틀                  — 가장 강조 (16px 700)
+ *  ③ 카테고리                — 작게 (메타)
+ *  ④ 요약                    — 작게 (보조)
+ *  ⑤ 날짜·조회수             — 가장 작게 (푸터)
+ */
 export function ItemCard({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
   const isFile = item.kind === 'files';
   const video = isVideo(item);
   const fileExt = fileExtBadge(item);
+  const tags = (item.tags ?? []).slice(0, 2);
 
   return (
     <a
@@ -48,51 +56,61 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       target="_blank"
       rel="noopener noreferrer"
       data-card-id={item.id}
-      className="app-card group relative flex flex-col gap-2 p-3.5 min-h-[140px] overflow-hidden"
+      className="app-card group flex flex-col gap-2.5 p-4 min-h-[180px] overflow-hidden"
       aria-label={`${video ? '영상' : kindLabel(item.kind)}: ${item.title} (새 탭에서 열어요)`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-          <span
-            className={`slds-badge ${
-              video
-                ? 'app-badge-video'
-                : isFile
-                ? 'app-badge-file'
-                : 'app-badge-insight'
-            }`}
-          >
-            {video ? (
-              <PlayCircle size={11} aria-hidden />
-            ) : isFile ? (
-              <Download size={11} aria-hidden />
-            ) : (
-              <ExternalLink size={11} aria-hidden />
-            )}
-            {video ? '영상' : kindLabel(item.kind)}
-          </span>
-          {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
-        </div>
-        <span className="text-[var(--muted-2)] opacity-0 group-hover:opacity-100 transition" aria-hidden>
-          {isFile ? <Download size={14} /> : <ExternalLink size={14} />}
+      {/* ① 태그·형식 — 위 */}
+      <div className="flex items-center gap-1.5 flex-wrap min-h-[20px]">
+        <span
+          className={`slds-badge ${
+            video ? 'app-badge-video' : isFile ? 'app-badge-file' : 'app-badge-insight'
+          }`}
+        >
+          {video ? (
+            <PlayCircle size={11} aria-hidden />
+          ) : isFile ? (
+            <Download size={11} aria-hidden />
+          ) : (
+            <ExternalLink size={11} aria-hidden />
+          )}
+          {video ? '영상' : kindLabel(item.kind)}
+        </span>
+        {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
+        {tags.map((t) => (
+          <span key={t} className="slds-badge">#{t}</span>
+        ))}
+      </div>
+
+      {/* ② 타이틀 — 가장 강조 */}
+      <h3 className="font-bold text-[16px] leading-snug line-clamp-2 tracking-tight text-[var(--fg)] group-hover:text-[var(--accent)] transition">
+        {item.title}
+      </h3>
+
+      {/* ③ 카테고리 */}
+      <div className="flex items-center gap-1.5 text-[11px] text-[var(--muted-2)]">
+        <FileText size={12} aria-hidden />
+        <span className="truncate">
+          {item.main_category}
+          {item.sub_category ? ` · ${item.sub_category}` : ''}
         </span>
       </div>
 
-      <div className="flex items-center gap-1.5 text-[12px] text-[var(--muted-2)]">
-        <FileText size={13} className="text-[var(--muted)]" aria-hidden />
-        <span className="truncate">{item.main_category}{item.sub_category ? ` · ${item.sub_category}` : ''}</span>
-      </div>
+      {/* ④ 요약 — 있으면 */}
+      {item.summary && (
+        <p className="text-[12px] text-[var(--muted)] line-clamp-2 leading-relaxed">
+          {item.summary}
+        </p>
+      )}
 
-      <h3 className="font-semibold text-[14px] leading-snug line-clamp-2 text-[var(--fg)]">
-        {item.title}
-      </h3>
-      <p className="text-[12px] text-[var(--muted)] line-clamp-2 leading-relaxed min-h-[34px]">
-        {item.summary || ''}
-      </p>
-
-      <div className="flex items-center gap-3 text-[11px] text-[var(--muted-2)] mt-auto pt-1">
-        {formatDate(item.published_at) && <span>{formatDate(item.published_at)}</span>}
-        {item.views > 0 && <span>조회 {item.views.toLocaleString()}</span>}
+      {/* ⑤ 푸터 메타 */}
+      <div className="flex items-center justify-between gap-3 text-[11px] text-[var(--muted-2)] mt-auto pt-1">
+        <div className="flex items-center gap-3">
+          {formatDate(item.published_at) && <span>{formatDate(item.published_at)}</span>}
+          {item.views > 0 && <span>조회 {item.views.toLocaleString()}</span>}
+        </div>
+        <span className="opacity-0 group-hover:opacity-100 transition" aria-hidden>
+          {isFile ? <Download size={13} /> : <ExternalLink size={13} />}
+        </span>
       </div>
     </a>
   );
@@ -115,7 +133,9 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
         {video ? <PlayCircle size={18} /> : <FileText size={16} />}
       </span>
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <span className="font-medium text-sm truncate group-hover:text-[var(--accent)]">{item.title}</span>
+        <span className="font-semibold text-[14px] truncate group-hover:text-[var(--accent)]">
+          {item.title}
+        </span>
         <div className="flex items-center gap-2 text-[11px] text-[var(--muted-2)]">
           <span
             className={`slds-badge ${
@@ -125,7 +145,10 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
             {video ? '영상' : kindLabel(item.kind)}
           </span>
           {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
-          <span className="truncate">{item.main_category}{item.sub_category ? ` · ${item.sub_category}` : ''}</span>
+          <span className="truncate">
+            {item.main_category}
+            {item.sub_category ? ` · ${item.sub_category}` : ''}
+          </span>
         </div>
       </div>
     </a>
