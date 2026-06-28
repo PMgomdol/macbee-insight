@@ -1,29 +1,37 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
-type Mode = 'light' | 'dark' | 'system';
+type Mode = 'light' | 'dark';
 
 const MODES: { v: Mode; label: string; Icon: typeof Sun }[] = [
   { v: 'light', label: '라이트', Icon: Sun },
   { v: 'dark', label: '다크', Icon: Moon },
-  { v: 'system', label: '시스템', Icon: Monitor },
 ];
 
 function apply(mode: Mode) {
-  const root = document.documentElement;
-  if (mode === 'system') root.removeAttribute('data-theme');
-  else root.setAttribute('data-theme', mode);
+  document.documentElement.setAttribute('data-theme', mode);
+}
+
+function detectInitial(): Mode {
+  try {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+  } catch {}
+  if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+  return 'light';
 }
 
 export function ThemeToggle() {
-  const [mode, setMode] = useState<Mode>('system');
+  const [mode, setMode] = useState<Mode>('light');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = (localStorage.getItem('theme') as Mode | null) ?? 'system';
-    setMode(saved);
-    apply(saved);
+    const initial = detectInitial();
+    setMode(initial);
+    apply(initial);
     setMounted(true);
   }, []);
 
@@ -48,7 +56,7 @@ export function ThemeToggle() {
             role="radio"
             aria-checked={active}
             onClick={() => pick(v)}
-            title={`${label}${v === 'system' ? ' (OS 설정 따라감)' : ''}`}
+            title={label}
             className={`inline-flex items-center justify-center w-7 h-7 rounded-[3px] transition ${
               active
                 ? 'bg-[var(--accent-bg)] text-[var(--accent)]'
