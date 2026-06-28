@@ -2,7 +2,7 @@
 
 import { createClient, createAdminClient, createPublicClient } from '@/lib/supabase/server';
 import { fetchUrlMeta, isFileUrl, normalizeUrl } from '@/lib/url-meta';
-import { classify } from '@/lib/ai-classify';
+import { classify, type InlineData } from '@/lib/ai-classify';
 import { randomUUID } from 'crypto';
 
 export type SubmitResult = { ok: true; id: string | null } | { ok: false; error: string };
@@ -104,11 +104,42 @@ export type AnalyzeResult = {
 };
 
 /**
+ * 이미지·PDF는 Gemini에 직접 바이트 전송해 시각 분석 가능 (inline_data).
+ * Gemini 2.5 Flash inline 한도: 20MB. 더 크면 null (텍스트 추출 폴백 또는 파일명만 사용)
+ */
+const VISION_MAX_BYTES = 18 * 1024 * 1024; // 20MB 한도, 여유분
+const VISION_MIME: Record<string, string> = {
+  pdf: 'application/pdf',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  heic: 'image/heic',
+  heif: 'image/heif',
+};
+
+async function fetchInlineForVision(fileUrl: string, ext: string): Promise<InlineData | null> {
+  const mime = VISION_MIME[ext];
+  if (!mime) return null;
+  try {
+    const resp = await fetch(fileUrl, { signal: AbortSignal.timeout(20000) });
+    if (!resp.ok) return null;
+    const buf = Buffer.from(await resp.arrayBuffer());
+    if (buf.byteLength === 0 || buf.byteLength > VISION_MAX_BYTES) return null;
+    return { mime, base64: buf.toString('base64') };
+  } catch (e) {
+    console.error('fetchInlineForVision error:', e);
+    return null;
+  }
+}
+
+/**
  * 업로드된 파일의 실제 본문 텍스트 추출.
- * - PDF: pdf-parse, 첫 10페이지
+ * - PDF: pdf-parse, 첫 10페이지 (vision 한도 초과 시 폴백용)
  * - DOCX: mammoth
  * - TXT/MD/CSV: 그대로 utf-8 디코드
- * - 그 외 (PPTX/XLSX/HWP/이미지): 빈 문자열 반환 → 파일명만으로 분류
+ * - 그 외: 빈 문자열
  */
 async function extractFileText(fileUrl: string, ext: string): Promise<string> {
   const SUPPORTED = ['pdf', 'docx', 'txt', 'md', 'csv'];
@@ -144,35 +175,44 @@ async function extractFileText(fileUrl: string, ext: string): Promise<string> {
 }
 
 /**
- * 업로드된 파일 자동 분석 — 본문 텍스트 + 파일명을 classify()에 투입.
- * PDF·DOCX·TXT는 실제 본문, 그 외 형식은 파일명만 사용.
+ * 업로드된 파일 자동 분석 — 우선순위:
+ *   ① 이미지/PDF (≤18MB): Gemini 멀티모달로 바이트 직접 전송 → 시각 분석
+ *   ② DOCX/TXT/MD/CSV 또는 vision 한도 초과 PDF: 본문 텍스트 추출 → classify
+ *   ③ 그 외 (PPTX/XLSX/HWP 등): 파일명만 사용
  */
 export async function analyzeFile(fileUrl: string, fileName: string): Promise<AnalyzeResult> {
   fileUrl = fileUrl.trim();
   fileName = fileName.trim();
   if (!fileUrl || !fileName) return { ok: false, error: '파일 정보가 부족해요' };
 
-  // 파일명 정제 — 확장자·언더스코어·대시 정리해서 자연어로
   const ext = (fileName.split('.').pop() || '').toLowerCase();
   const base = fileName
     .replace(/\.[^.]+$/, '')
     .replace(/[_\-]+/g, ' ')
     .trim();
 
-  // 본문 추출 + 중복 검사 병렬
-  const [bodyText, duplicate] = await Promise.all([
-    extractFileText(fileUrl, ext),
+  // 중복 검사 + (이미지/PDF면 vision용 inline data 준비) 병렬
+  const isVisionEligible = ext in VISION_MIME;
+  const [inline, duplicate] = await Promise.all([
+    isVisionEligible ? fetchInlineForVision(fileUrl, ext) : Promise.resolve(null),
     findDuplicate('', fileUrl),
   ]);
 
-  // classify는 (url, { title, description }) 받음 — 파일명을 title, 본문을 description으로 투입
-  // 본문이 있으면 본문 우선, 없으면 확장자 힌트만
-  const description = bodyText
-    ? bodyText
-    : `업로드 파일 (${ext.toUpperCase() || '?'}) — 본문 추출 불가, 파일명만 기반 분류`;
-  const cls = await classify(fileUrl, { title: base, description });
+  let cls;
+  if (inline) {
+    // 시각 분석 — Gemini가 파일을 직접 본다
+    cls = await classify(fileUrl, { title: base, description: '' }, inline);
+  } else {
+    // 폴백: 본문 텍스트 추출 (PDF가 18MB 초과거나 DOCX/TXT 등)
+    const bodyText = await extractFileText(fileUrl, ext);
+    const description = bodyText
+      ? bodyText
+      : `업로드 파일 (${ext.toUpperCase() || '?'}) — 본문 추출 불가, 파일명만 기반 분류`;
+    cls = await classify(fileUrl, { title: base, description });
+  }
 
   // format은 확장자로 강제 보정 (AI가 파일명·본문 보고 잘못 추정하는 케이스 방지)
+  // 이미지(png/jpg 등)는 AI가 보고 판단한 format(템플릿/가이드 등) 그대로 신뢰
   const fmtByExt: Record<string, string> = {
     pdf: '가이드',
     pptx: '템플릿', ppt: '템플릿',

@@ -27,14 +27,27 @@ export type ClassifyResult = {
   error?: string;
 };
 
+/**
+ * 멀티모달 inline data — 이미지/PDF 바이트를 직접 Gemini에 전송해 시각 분석.
+ * mime: image/png · image/jpeg · application/pdf 등 / data: base64 string
+ * Gemini 2.5 Flash inline 한도: 20MB. 그 이상은 호출 측에서 null 처리.
+ */
+export type InlineData = { mime: string; base64: string };
+
 export async function classify(
   url: string,
-  meta: { title: string; description: string }
+  meta: { title: string; description: string },
+  inline?: InlineData | null
 ): Promise<ClassifyResult> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return { ...heuristic(url, meta), aiUsed: false };
 
-  const prompt = buildPrompt(url, meta);
+  const prompt = inline ? buildVisionPrompt(url, meta) : buildPrompt(url, meta);
+  const parts: Array<{ text: string } | { inline_data: { mime_type: string; data: string } }> = [
+    { text: prompt },
+  ];
+  if (inline) parts.push({ inline_data: { mime_type: inline.mime, data: inline.base64 } });
+
   try {
     const resp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`,
@@ -42,7 +55,7 @@ export async function classify(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [{ parts }],
           generationConfig: {
             responseMimeType: 'application/json',
             responseSchema: {
@@ -60,7 +73,7 @@ export async function classify(
             temperature: 0.2,
           },
         }),
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(inline ? 30000 : 15000),
       }
     );
     if (!resp.ok) throw new Error(`Gemini HTTP ${resp.status}`);
@@ -82,6 +95,25 @@ export async function classify(
     console.error('Gemini classify error:', err);
     return { ...heuristic(url, meta), aiUsed: false, error: err };
   }
+}
+
+function buildVisionPrompt(url: string, meta: { title: string; description: string }) {
+  return `당신은 맥비기획 자료실 큐레이션 어시스턴트.
+첨부된 파일(이미지 또는 PDF)을 직접 보고 자료실 등록용 정보를 JSON으로 반환.
+
+힌트:
+- 파일 URL: ${url}
+- 파일명 추정 제목: ${meta.title}
+
+규칙:
+- title_ko, summary_ko는 한글. 파일에 영문이 보이면 번역해서 한글 제목/요약 작성.
+- summary_ko는 1~2문장. 파일에 보이는 실제 내용("어떤 자료이고 무슨 주제를 다루는지")을 구체적으로.
+  파일명만 가지고 추측하지 말 것 — 본문/이미지에서 본 것만 기술.
+  내용이 흐릿하거나 알 수 없으면 "확인 불가" 명시.
+- main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
+- sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
+- tags: 3~6개. 파일에서 본 핵심 키워드. 한글 우선. 너무 일반적인 단어(UI, 디자인) 단독 금지
+- format: ${FORMATS.join(' | ')} 중 1개. 이미지면 보통 '템플릿' 또는 '가이드'`;
 }
 
 function buildPrompt(url: string, meta: { title: string; description: string }) {
