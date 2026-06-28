@@ -238,7 +238,7 @@ export function SubmitForm({ categories }: Props) {
               type="button"
               onClick={onAnalyze}
               disabled={analyzing || !url.trim()}
-              className="fc-btn fc-btn-primary px-4 whitespace-nowrap shrink-0"
+              className="slds-button slds-button_brand px-4 whitespace-nowrap shrink-0"
             >
               {analyzing ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Sparkles size={14} aria-hidden />}
               {analyzing ? '분석 중...' : '자동 분석'}
@@ -426,7 +426,7 @@ export function SubmitForm({ categories }: Props) {
           <button
             type="submit"
             disabled={submitting || !title || (!url && !fileUrl) || (!!duplicate && !forceSubmit)}
-            className="fc-btn fc-btn-primary mt-4 px-4 py-3"
+            className="slds-button slds-button_brand mt-4 px-4 py-3"
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}
             {submitting ? '보내고 있어요...' : '등록할게요'}
@@ -465,10 +465,10 @@ export function SubmitForm({ categories }: Props) {
               {proposerEmail && ' 결과는 이메일로 알려드릴게요.'}
             </p>
             <div className="flex gap-2 mt-1">
-              <button type="button" onClick={resetForm} className="fc-btn fc-btn-primary flex-1 px-4 py-2.5">
+              <button type="button" onClick={resetForm} className="slds-button slds-button_brand flex-1 px-4 py-2.5">
                 하나 더 등록할래요
               </button>
-              <Link href="/" className="fc-btn fc-btn-subtle flex-1 px-4 py-2.5 justify-center text-center">
+              <Link href="/" className="slds-button slds-button_neutral flex-1 px-4 py-2.5 justify-center text-center">
                 홈으로 갈래요
               </Link>
             </div>

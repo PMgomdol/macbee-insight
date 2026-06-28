@@ -11,21 +11,63 @@ const ARCHIVE_CARD_COLS =
   'id, kind, format, external_url, file_url, main_category, sub_category, title, summary, published_at, registered_at, views, tags';
 const FAQ_CARD_COLS = 'id, main_category, question, answer';
 
-export const getPopularItems = unstable_cache(
-  async (limit = 8): Promise<ArchiveItem[]> => {
+/**
+ * 월간 Top — 최근 30일 view_event 집계 → 자료 조회.
+ * 폴백: 30일 데이터 부족 시 누적 views 기준 (초기 운영 단계 대응).
+ */
+export const getMonthlyPopularItems = unstable_cache(
+  async (limit = 10): Promise<ArchiveItem[]> => {
     const sb = createPublicClient();
-    const { data } = await sb
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    // 최근 30일 view_event → item_id별 카운트
+    const { data: events } = await sb
+      .from('view_event')
+      .select('item_id')
+      .gte('viewed_at', since);
+    const counts = new Map<number, number>();
+    for (const r of events ?? []) {
+      const itemId = (r as { item_id: number }).item_id;
+      counts.set(itemId, (counts.get(itemId) ?? 0) + 1);
+    }
+    let topIds = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([id]) => id);
+
+    // 30일 데이터 부족 시 누적 views 폴백
+    if (topIds.length < limit) {
+      const need = limit - topIds.length;
+      const exclude = topIds.length > 0 ? `(${topIds.join(',')})` : '(0)';
+      const { data: fallback } = await sb
+        .from('archive_item')
+        .select('id')
+        .eq('status', 'public')
+        .not('id', 'in', exclude)
+        .order('views', { ascending: false })
+        .order('registered_at', { ascending: false })
+        .limit(need);
+      const fbIds = (fallback ?? []).map((r) => (r as { id: number }).id);
+      topIds = [...topIds, ...fbIds];
+    }
+
+    if (topIds.length === 0) return [];
+
+    // 자료 상세 조회 — 순서 보존
+    const { data: items } = await sb
       .from('archive_item')
       .select(ARCHIVE_CARD_COLS)
       .eq('status', 'public')
-      .order('views', { ascending: false })
-      .order('registered_at', { ascending: false })
-      .limit(limit);
-    return (data ?? []) as ArchiveItem[];
+      .in('id', topIds);
+    const map = new Map<number, ArchiveItem>();
+    for (const it of (items ?? []) as ArchiveItem[]) map.set(it.id, it);
+    return topIds.map((id) => map.get(id)).filter(Boolean) as ArchiveItem[];
   },
-  ['popular-items-v5'],
-  { revalidate: 5 * MINUTE, tags: ['archive', 'popular'] }
+  ['monthly-popular-v1'],
+  { revalidate: HOUR, tags: ['archive', 'popular'] }
 );
+
+// 호환 alias — 검색 결과 정렬 등에서 누적 views 기준 필요 시
+export const getPopularItems = getMonthlyPopularItems;
 
 export const getRecentItems = unstable_cache(
   async (limit = 8): Promise<ArchiveItem[]> => {

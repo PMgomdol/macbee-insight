@@ -13,7 +13,7 @@ export function ApproveButton({ id, disabled }: { id: string; disabled?: boolean
         finally { setLoading(false); }
       }}
       disabled={disabled || loading}
-      className="fc-btn fc-btn-primary px-3 py-1.5 text-xs"
+      className="slds-button slds-button_brand px-3 py-1.5 text-xs"
     >
       {disabled ? '승인했어요' : loading ? '처리하고 있어요...' : '승인'}
     </button>
@@ -36,7 +36,7 @@ export function ForceApproveButton({ id, isAdmin }: { id: string; isAdmin: boole
         finally { setLoading(false); }
       }}
       disabled={loading}
-      className="fc-btn fc-btn-subtle px-3 py-1.5 text-xs"
+      className="slds-button slds-button_neutral px-3 py-1.5 text-xs"
       title="운영진 2인이 갖춰지기 전 한시적 처리예요"
     >
       {loading ? '처리하고 있어요...' : '단독 승인'}
@@ -57,7 +57,7 @@ export function RejectButton({ id }: { id: string }) {
         finally { setLoading(false); }
       }}
       disabled={loading}
-      className="fc-btn fc-btn-subtle px-3 py-1.5 text-xs"
+      className="slds-button slds-button_neutral px-3 py-1.5 text-xs"
     >
       {loading ? '처리하고 있어요...' : '거절'}
     </button>

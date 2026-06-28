@@ -21,7 +21,7 @@ export default async function AdminPage() {
       <div className="flex flex-col gap-3 max-w-md py-8 mx-auto">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">운영진 검토</h1>
         <p className="text-sm text-[var(--muted)]">검토 페이지를 보려면 운영진으로 로그인해주세요.</p>
-        <Link href="/admin1229" className="fc-btn fc-btn-primary w-fit px-4 py-2.5">진입점으로 가기</Link>
+        <Link href="/admin1229" className="slds-button slds-button_brand w-fit px-4 py-2.5">진입점으로 가기</Link>
       </div>
     );
   }
@@ -117,7 +117,7 @@ export default async function AdminPage() {
               const reasonM = (app.notes ?? '').match(/reason:(.+)$/);
               const reason = reasonM?.[1]?.trim();
               return (
-                <article key={app.id} className="fc-card flex flex-col gap-1.5 p-3 sm:p-4 bg-[var(--card)]">
+                <article key={app.id} className="app-card flex flex-col gap-1.5 p-3 sm:p-4 bg-[var(--card)]">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="font-semibold text-sm">{app.display_name}</span>
                     <span className="text-[11px] text-[var(--muted)]">
@@ -144,11 +144,11 @@ export default async function AdminPage() {
         ) : (
           <div className="flex flex-col gap-2.5">
             {items.map((p) => (
-              <article key={p.id} className="fc-card flex flex-col gap-2 p-3 sm:p-4 min-w-0 bg-[var(--card)]">
+              <article key={p.id} className="app-card flex flex-col gap-2 p-3 sm:p-4 min-w-0 bg-[var(--card)]">
                 <div className="flex items-center gap-2 text-[11px] text-[var(--muted-2)] flex-wrap">
                   <span className="font-medium">{p.main_category ?? '미분류'}</span>
                   {p.sub_category && <span>· {p.sub_category}</span>}
-                  {p.format && <span className="fc-badge">{p.format}</span>}
+                  {p.format && <span className="slds-badge">{p.format}</span>}
                 </div>
                 <h3 className="font-semibold text-sm break-words">{p.title}</h3>
                 {p.summary && <p className="text-xs text-[var(--muted)] leading-relaxed break-words">{p.summary}</p>}
@@ -166,7 +166,7 @@ export default async function AdminPage() {
                 {p.tags && p.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {p.tags.map((t) => (
-                      <span key={t} className="fc-badge">{t}</span>
+                      <span key={t} className="slds-badge">{t}</span>
                     ))}
                   </div>
                 )}

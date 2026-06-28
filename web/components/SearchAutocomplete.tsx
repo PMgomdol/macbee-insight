@@ -137,7 +137,7 @@ export function SearchAutocomplete({
 
   const inputCls =
     variant === 'header'
-      ? 'fc-input w-full'
+      ? 'app-input w-full'
       : 'flex-1 min-w-0 flex items-center gap-2 px-4 py-3 rounded-[var(--r-md)] border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)] focus-within:border-b-2';
 
   return (
@@ -176,14 +176,14 @@ export function SearchAutocomplete({
           )}
         </div>
         {variant !== 'header' && (
-          <button type="submit" className="fc-btn fc-btn-primary px-5 py-3 text-sm shrink-0">검색</button>
+          <button type="submit" className="slds-button slds-button_brand px-5 py-3 text-sm shrink-0">검색</button>
         )}
       </form>
 
       {open && (
         <div
           role="listbox"
-          className="absolute left-0 right-0 top-full mt-1.5 z-50 fc-card overflow-hidden shadow-[var(--shadow-16)] max-h-[70vh] overflow-y-auto"
+          className="absolute left-0 right-0 top-full mt-1.5 z-50 app-card overflow-hidden shadow-[var(--shadow-16)] max-h-[70vh] overflow-y-auto"
         >
           {/* 동의어 안내 */}
           {resp?.synonyms && q && (

@@ -46,13 +46,13 @@ export async function POST(req: Request) {
     }
 
     const sb = createAdminClient();
-    // 현재 views + 1 atomic — RPC 없으면 select-then-update. 동시성 약간 약하지만 UV 카운트에 충분
-    const { data: cur } = await sb.from('archive_item').select('views').eq('id', id).single();
-    const next = (cur?.views ?? 0) + 1;
-    const { error } = await sb.from('archive_item').update({ views: next }).eq('id', id);
-    if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    // atomic increment via RPC (race condition 해결)
+    const { data: next, error: rpcErr } = await sb.rpc('increment_archive_views', { p_id: id });
+    if (rpcErr) {
+      return NextResponse.json({ ok: false, error: rpcErr.message }, { status: 500 });
     }
+    // 월간/주간 Top 집계용 시점 로그
+    await sb.from('view_event').insert({ item_id: id });
 
     // 쿠키 갱신 — 최대 MAX_IDS만 유지 (앞에서 잘림)
     const ids = [...seen.ids, id].slice(-MAX_IDS);
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       path: '/',
     });
 
-    return NextResponse.json({ ok: true, counted: true, views: next });
+    return NextResponse.json({ ok: true, counted: true, views: next ?? null });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message ?? 'unknown' }, { status: 500 });
   }

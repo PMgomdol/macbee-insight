@@ -48,9 +48,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       target="_blank"
       rel="noopener noreferrer"
       data-card-id={item.id}
-      className={`fc-card group relative flex flex-col gap-2 p-3.5 pl-4 min-h-[140px] overflow-hidden ${
-        isFile ? 'fc-kind-file' : 'fc-kind-insight'
-      }`}
+      className="app-card group relative flex flex-col gap-2 p-3.5 pl-4 min-h-[140px] overflow-hidden"
       aria-label={`${video ? '영상' : kindLabel(item.kind)}: ${item.title} (새 탭에서 열어요)`}
     >
       {/* 좌측 액센트 바 */}
@@ -64,12 +62,12 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
           <span
-            className={`fc-badge ${
+            className={`slds-badge ${
               video
-                ? 'fc-badge-video'
+                ? 'app-badge-video'
                 : isFile
-                ? 'fc-badge-file'
-                : 'fc-badge-insight'
+                ? 'app-badge-file'
+                : 'app-badge-insight'
             }`}
           >
             {video ? (
@@ -81,7 +79,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
             )}
             {video ? '영상' : kindLabel(item.kind)}
           </span>
-          {fileExt && !video && <span className="fc-badge">{fileExt}</span>}
+          {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
         </div>
         <span className="text-[var(--muted-2)] opacity-0 group-hover:opacity-100 transition" aria-hidden>
           {isFile ? <Download size={14} /> : <ExternalLink size={14} />}
@@ -128,13 +126,13 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
         <span className="font-medium text-sm truncate group-hover:text-[var(--accent)]">{item.title}</span>
         <div className="flex items-center gap-2 text-[11px] text-[var(--muted-2)]">
           <span
-            className={`fc-badge ${
-              video ? 'fc-badge-video' : isFile ? 'fc-badge-file' : 'fc-badge-insight'
+            className={`slds-badge ${
+              video ? 'app-badge-video' : isFile ? 'app-badge-file' : 'app-badge-insight'
             }`}
           >
             {video ? '영상' : kindLabel(item.kind)}
           </span>
-          {fileExt && !video && <span className="fc-badge">{fileExt}</span>}
+          {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
           <span className="truncate">{item.main_category}{item.sub_category ? ` · ${item.sub_category}` : ''}</span>
         </div>
       </div>

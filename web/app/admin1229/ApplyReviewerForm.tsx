@@ -80,7 +80,7 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
       <button
         type="submit"
         disabled={pending || !name.trim()}
-        className="fc-btn fc-btn-primary mt-1"
+        className="slds-button slds-button_brand mt-1"
       >
         {pending && <Loader2 size={14} className="animate-spin" aria-hidden />}
         {pending ? '보내고 있어요...' : '운영진 신청'}

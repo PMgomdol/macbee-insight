@@ -32,10 +32,10 @@ export function ReviewerApplyButtons({ profileId, isSelf = false }: { profileId:
 
   return (
     <div className="flex gap-1.5 mt-1">
-      <button onClick={onApprove} disabled={pending} className="fc-btn fc-btn-primary px-3 py-1.5 text-xs">
+      <button onClick={onApprove} disabled={pending} className="slds-button slds-button_brand px-3 py-1.5 text-xs">
         {pending ? '처리하고 있어요...' : '승인'}
       </button>
-      <button onClick={onReject} disabled={pending} className="fc-btn fc-btn-subtle px-3 py-1.5 text-xs">
+      <button onClick={onReject} disabled={pending} className="slds-button slds-button_neutral px-3 py-1.5 text-xs">
         거절
       </button>
     </div>
