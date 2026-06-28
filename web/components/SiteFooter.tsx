@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { MessageCircle, Youtube, FolderOpen, Mail, MessageSquare, ExternalLink } from 'lucide-react';
+import { MessageCircle, Video, FolderOpen, Mail, MessageSquare, ExternalLink } from 'lucide-react';
 import { FooterAdminLink } from './FooterAdminLink';
 
 const ROOMS = [
@@ -74,7 +74,7 @@ export function SiteFooter() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 hover:text-[var(--accent)] w-fit"
                   >
-                    <Youtube size={13} aria-hidden /> 유튜브 @맥비IT
+                    <Video size={13} aria-hidden /> 유튜브 @맥비IT
                     <ExternalLink size={10} aria-hidden />
                   </a>
                 </li>
