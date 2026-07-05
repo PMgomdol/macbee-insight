@@ -1,0 +1,209 @@
+'use client';
+import { useEffect, useState, useTransition } from 'react';
+import { MessageCircle, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { submitFeedback, type FeedbackKind } from '@/app/actions/feedback';
+import { track } from '@/lib/track';
+
+const KINDS: { v: FeedbackKind; label: string }[] = [
+  { v: 'suggestion', label: '개선 제안' },
+  { v: 'bug', label: '버그·오류' },
+  { v: 'inquiry', label: '문의' },
+  { v: 'praise', label: '칭찬' },
+];
+
+export function FeedbackWidget() {
+  const [open, setOpen] = useState(false);
+  const [kind, setKind] = useState<FeedbackKind>('suggestion');
+  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState('');
+  const [pending, startTransition] = useTransition();
+  const [status, setStatus] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  function openWidget() {
+    setOpen(true);
+    track('feedback_open', {});
+  }
+
+  function close() {
+    setOpen(false);
+    // status는 유지 (닫고 다시 열면 초기화)
+    setTimeout(() => setStatus(null), 300);
+  }
+
+  function reset() {
+    setKind('suggestion');
+    setMessage('');
+    setEmail('');
+    setStatus(null);
+  }
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!message.trim()) { setStatus({ kind: 'error', text: '내용을 입력해주세요' }); return; }
+    setStatus(null);
+    startTransition(async () => {
+      const r = await submitFeedback({
+        kind,
+        message,
+        email: email || undefined,
+        pageUrl: typeof window !== 'undefined' ? window.location.pathname + window.location.search : undefined,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      });
+      if (r.ok) {
+        track('feedback_submit', { kind });
+        setStatus({ kind: 'ok', text: '보내주셔서 고마워요. 운영진이 확인할게요.' });
+        setMessage('');
+      } else {
+        setStatus({ kind: 'error', text: r.error ?? '보내지 못했어요' });
+      }
+    });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={openWidget}
+        aria-label="의견 보내기"
+        className="fixed z-40 bottom-5 right-5 sm:bottom-6 sm:right-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[var(--accent)] text-white font-semibold text-sm shadow-[var(--shadow-8)] hover:bg-[var(--accent-hover)] transition"
+      >
+        <MessageCircle size={16} aria-hidden />
+        의견 보내기
+      </button>
+
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="feedback-title"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4 bg-black/40"
+          onClick={close}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[var(--bg)] border border-[var(--border)] rounded-t-[var(--r-lg)] sm:rounded-[var(--r-md)] shadow-[var(--shadow-16)] w-full sm:max-w-md max-h-[90vh] overflow-y-auto flex flex-col"
+          >
+            <div className="flex items-start justify-between gap-3 p-4 border-b border-[var(--border)]">
+              <div className="flex flex-col">
+                <h2 id="feedback-title" className="font-bold text-base">의견 보내기</h2>
+                <p className="text-xs text-[var(--muted)] mt-0.5">개선 제안·버그·문의 뭐든 편하게 보내주세요.</p>
+              </div>
+              <button type="button" onClick={close} aria-label="닫기" className="p-1 -m-1 text-[var(--muted)] hover:text-[var(--fg)]">
+                <X size={18} aria-hidden />
+              </button>
+            </div>
+
+            <form onSubmit={onSubmit} className="p-4 flex flex-col gap-3">
+              {/* 종류 세그먼트 */}
+              <div>
+                <label className="text-xs font-medium text-[var(--muted)] block mb-1.5">종류</label>
+                <div role="radiogroup" className="grid grid-cols-4 gap-1 p-0.5 rounded-[var(--r-sm)] bg-[var(--card)] border border-[var(--border)]">
+                  {KINDS.map(({ v, label }) => {
+                    const active = kind === v;
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => setKind(v)}
+                        className={`px-2 py-1.5 rounded-[var(--r-sm)] text-xs transition ${
+                          active ? 'bg-[var(--bg)] shadow-[var(--shadow-2)] font-semibold' : 'text-[var(--muted)] hover:text-[var(--fg)]'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="fb-message" className="text-xs font-medium text-[var(--muted)] block mb-1.5">
+                  내용 <span className="text-[var(--danger)]">*</span>
+                </label>
+                <textarea
+                  id="fb-message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  required
+                  rows={5}
+                  maxLength={5000}
+                  placeholder="어떤 게 불편했는지·어떻게 개선하면 좋을지 자유롭게 적어주세요"
+                  className="w-full px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] bg-[var(--bg)] text-sm focus:border-[var(--accent)] focus:shadow-[0_0_0_1px_var(--accent)] outline-none resize-y"
+                />
+                <div className="text-[10px] text-[var(--muted-2)] text-right mt-1">{message.length}/5000</div>
+              </div>
+
+              <div>
+                <label htmlFor="fb-email" className="text-xs font-medium text-[var(--muted)] block mb-1.5">
+                  이메일 <span className="text-[var(--muted-2)] font-normal">(답변 받고 싶으면)</span>
+                </label>
+                <input
+                  id="fb-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] bg-[var(--bg)] text-sm focus:border-[var(--accent)] focus:shadow-[0_0_0_1px_var(--accent)] outline-none"
+                />
+              </div>
+
+              {status && (
+                <div
+                  role={status.kind === 'error' ? 'alert' : 'status'}
+                  className={`flex items-start gap-2 p-2.5 rounded-[var(--r-sm)] border text-xs ${
+                    status.kind === 'error'
+                      ? 'border-[var(--danger)]/40 bg-[var(--danger)]/10 text-[var(--fg)]'
+                      : 'border-[var(--success)]/40 bg-[var(--success)]/10 text-[var(--fg)]'
+                  }`}
+                >
+                  {status.kind === 'error' ? (
+                    <AlertCircle size={14} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
+                  ) : (
+                    <CheckCircle2 size={14} className="text-[var(--success)] shrink-0 mt-0.5" aria-hidden />
+                  )}
+                  <span className="flex-1">{status.text}</span>
+                </div>
+              )}
+
+              <div className="flex gap-2 mt-2">
+                {status?.kind === 'ok' ? (
+                  <>
+                    <button type="button" onClick={reset} className="slds-button slds-button_neutral flex-1 px-4 py-2">
+                      하나 더 보낼래요
+                    </button>
+                    <button type="button" onClick={close} className="slds-button slds-button_brand flex-1 px-4 py-2">
+                      닫기
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" onClick={close} className="slds-button slds-button_neutral flex-1 px-4 py-2">
+                      취소
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={pending || !message.trim()}
+                      className="slds-button slds-button_brand flex-1 px-4 py-2 inline-flex items-center justify-center gap-1.5"
+                    >
+                      {pending && <Loader2 size={14} className="animate-spin" aria-hidden />}
+                      {pending ? '보내는 중...' : '보내기'}
+                    </button>
+                  </>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

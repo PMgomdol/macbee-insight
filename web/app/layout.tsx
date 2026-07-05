@@ -9,6 +9,9 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { CardClickTracker } from '@/components/CardClickTracker';
 import { NavProgress } from '@/components/NavProgress';
 import { SiteFooter } from '@/components/SiteFooter';
+import { AnalyticsProvider } from '@/components/AnalyticsProvider';
+import { FeedbackWidget } from '@/components/FeedbackWidget';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -32,6 +35,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--fg)]">
+        <Suspense fallback={null}><AnalyticsProvider /></Suspense>
+        <VercelAnalytics />
         <NavProgress />
         <CardClickTracker />
         <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)] z-50">
@@ -52,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <SiteFooter />
+        <FeedbackWidget />
       </body>
     </html>
   );

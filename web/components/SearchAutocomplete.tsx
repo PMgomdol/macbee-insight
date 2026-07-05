@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X, Sparkles, Tag, Folder, Clock, TrendingUp } from 'lucide-react';
+import { track } from '@/lib/track';
 
 type Suggestion =
   | { type: 'title'; text: string; url: string; meta?: string }
@@ -94,6 +95,7 @@ export function SearchAutocomplete({
     saveRecent(k);
     setRecent(loadRecent());
     setOpen(false);
+    track('search_submit', { query: k, source: variant });
     router.push(`/search?q=${encodeURIComponent(k)}`);
   }
 

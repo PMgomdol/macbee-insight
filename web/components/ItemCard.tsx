@@ -56,6 +56,8 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       target="_blank"
       rel="noopener noreferrer"
       data-card-id={item.id}
+      data-card-kind={item.kind}
+      data-card-category={item.main_category}
       className="app-card group flex flex-col gap-2.5 p-4 min-h-[180px] overflow-hidden"
       aria-label={`${video ? '영상' : kindLabel(item.kind)}: ${item.title} (새 탭에서 열어요)`}
     >
@@ -127,6 +129,8 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
       target="_blank"
       rel="noopener noreferrer"
       data-card-id={item.id}
+      data-card-kind={item.kind}
+      data-card-category={item.main_category}
       className="group flex items-center gap-3 px-3 py-2.5 rounded-[var(--r-sm)] hover:bg-[var(--card)] transition"
     >
       <span className={video ? 'text-[var(--danger)] shrink-0' : 'text-[var(--muted-2)] shrink-0'}>

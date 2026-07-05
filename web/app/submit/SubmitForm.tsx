@@ -9,6 +9,7 @@ import {
   analyzeUrl, analyzeFile, submitProposal, uploadFile,
   type AnalyzeResult, type DuplicateMatch,
 } from './actions';
+import { track } from '@/lib/track';
 
 type Props = { categories: { main_category: string; sub_category: string | null }[] };
 
@@ -92,12 +93,14 @@ export function SubmitForm({ categories }: Props) {
         ? 'AI가 자동으로 채워뒀어요. 내용을 확인하고 등록해주세요.'
         : '메타 정보로 채워뒀어요. 내용을 확인하고 등록해주세요.',
     });
+    track('submit_analyzed', { mode, ai_used: !!r.aiUsed });
   }
 
   function onAnalyze() {
     if (!url.trim()) { setAnalyzeMsg({ kind: 'error', text: 'URL을 먼저 입력해주세요' }); return; }
     setAnalyzeMsg(null);
     setDuplicate(null);
+    track('submit_start', { mode: 'url' });
     startAnalyze(async () => {
       const r = await analyzeUrl(url);
       applyAnalysis(r);
@@ -154,6 +157,7 @@ export function SubmitForm({ categories }: Props) {
       return;
     }
 
+    track('submit_start', { mode: 'file' });
     const fd = new FormData();
     fd.append('file', f);
     startUpload(async () => {
@@ -201,6 +205,7 @@ export function SubmitForm({ categories }: Props) {
       const r = await submitProposal(fd);
       if ('ok' in r && r.ok) {
         setSubmitDone(true);
+        track('submit_success', { mode, category: main });
         return;
       }
       if ('duplicate' in r && r.duplicate) {

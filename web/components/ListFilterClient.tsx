@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { ItemCard } from './ItemCard';
 import type { ArchiveItem } from '@/types/db';
+import { track } from '@/lib/track';
 
 type Props = {
   kind: 'files' | 'insights';
@@ -64,16 +65,19 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
     setMain(next);
     setSub(null);
     setShowCount(STEP);
+    track('filter_change', { type: 'category', value: next ?? 'all', page: kind });
   }
 
   function selectSub(next: string | null) {
     setSub(next);
     setShowCount(STEP);
+    track('filter_change', { type: 'sub_category', value: next ?? 'all', page: kind });
   }
 
   function changeSort(next: 'recent' | 'popular') {
     setSort(next);
     setShowCount(STEP);
+    track('filter_change', { type: 'sort', value: next, page: kind });
   }
 
   function changeQ(next: string) {

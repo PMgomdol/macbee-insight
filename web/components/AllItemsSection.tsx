@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import { ItemCard } from './ItemCard';
 import type { ArchiveItem } from '@/types/db';
+import { track } from '@/lib/track';
 
 type Props = {
   items: ArchiveItem[];
@@ -58,6 +59,7 @@ export function AllItemsSection({ items, categories }: Props) {
     setMain(name);
     setSub(null);
     setShowCount(STEP);
+    track('filter_change', { type: 'category', value: name ?? 'all', page: 'home' });
   }
 
   return (
@@ -76,7 +78,7 @@ export function AllItemsSection({ items, categories }: Props) {
               key={k.v}
               role="tab"
               aria-selected={active}
-              onClick={() => { setKind(k.v); setSub(null); }}
+              onClick={() => { setKind(k.v); setSub(null); track('filter_change', { type: 'kind', value: k.v, page: 'home' }); }}
               className={`px-3 py-1.5 rounded-[var(--r-sm)] text-sm transition ${
                 active
                   ? 'bg-[var(--bg)] text-[var(--fg)] font-semibold shadow-[var(--shadow-2)]'
