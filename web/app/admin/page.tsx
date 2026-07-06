@@ -1,7 +1,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getAuthState } from '@/lib/auth';
 import Link from 'next/link';
-import { ExternalLink, UserPlus } from 'lucide-react';
+import { BarChart3, ExternalLink, UserPlus } from 'lucide-react';
 import { ApproveButton, ForceApproveButton, RejectButton } from './buttons';
 import { ReviewerApplyButtons } from './ReviewerApplyButtons';
 
@@ -93,6 +93,12 @@ export default async function AdminPage() {
           <span className="text-xs text-[var(--muted-2)]">{displayName ?? user.email} · {roleLabel(role)}</span>
         </div>
         <p className="text-sm text-[var(--muted)]">멤버가 제안한 자료와 새 운영진 신청을 확인해주세요.</p>
+        <Link
+          href="/admin/dashboard"
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--accent)] hover:underline w-fit mt-1"
+        >
+          <BarChart3 size={14} aria-hidden /> 지표 대시보드 열기
+        </Link>
         {(reviewerCount ?? 0) < 2 && isAdmin && (
           <p className="text-xs text-[var(--warning)] mt-1">
             지금 운영진이 {reviewerCount ?? 0}명이에요. 2명 승인이 필요한데 아직 부족해요. 관리자는 사유를 적고 <strong>단독 승인</strong>할 수 있어요.
