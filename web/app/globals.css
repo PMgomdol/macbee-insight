@@ -1,95 +1,96 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Salesforce Lightning Design System v2.30 — 토큰 + 컴포넌트 사양 차용
-   - SLDS 공식 CSS는 Tailwind hybrid에 부적합 (slds-button line-height 1.875rem 강제 +
-     slds-grid 등 자체 layout system) → 토큰 + 컴포넌트 비주얼만 SLDS 사양으로 재구현
-   - 클래스명 SLDS 공식 유지: .slds-button / .slds-button_brand / .slds-button_neutral /
-     .slds-badge — 마크업 그대로 호환
-   참고: https://www.lightningdesignsystem.com/components/buttons/
+   Atlassian Design System (ADS) — 토큰 · 컴포넌트 사양 이식
+   - 색·타이포·간격·라운드·엘리베이션 모두 ADS 값 그대로
+   - 기존 var(--fg) / var(--bg) 등 이름은 유지 (기존 마크업 무수정)
+   - 실제 값을 ADS로 교체 → 사이트 전체 톤 즉시 전환
+   - @atlaskit React 컴포넌트는 AtlaskitProvider에서 setGlobalTheme로 hydration
+   참고: https://atlassian.design/tokens
    ============================================================ */
 
 :root {
-  /* Neutral */
-  --bg: #ffffff;
-  --bg-alt: #f3f3f3;
-  --fg: #181818;
-  --muted: #444444;
-  --muted-2: #747474;
-  --border: #e5e5e5;
-  --border-strong: #c9c9c9;
-  --card: #f3f3f3;
-  --card-hover: #e5e5e5;
+  /* Surface & Neutral */
+  --bg: #FFFFFF;                    /* elevation.surface */
+  --bg-alt: #F7F8F9;                /* neutral subtle bg */
+  --fg: #292A2E;                    /* color.text */
+  --muted: #505258;                 /* color.text.subtle */
+  --muted-2: #6B6E76;               /* color.text.subtlest */
+  --border: #DCDFE4;                /* solid border, softer than translucent */
+  --border-strong: #8C8F97;         /* color.border.input */
+  --card: #F7F8F9;                  /* subtle surface */
+  --card-hover: #F0F1F2;            /* elevation.surface.hovered */
   /* Brand */
-  --accent: #0176d3;
-  --accent-hover: #014486;
-  --accent-pressed: #032d60;
-  --accent-bg: #eef4ff;
-  --focus-ring: #0176d3;
+  --accent: #1868DB;                /* color.background.brand.bold */
+  --accent-hover: #1558BC;
+  --accent-pressed: #0C3D91;
+  --accent-bg: #E9F2FE;             /* brand.subtlest */
+  --focus-ring: #4688EC;            /* color.border.focused */
   /* Semantic */
-  --success: #2e844a;
-  --danger: #ba0517;
-  --warning: #fe9339;
-  /* Elevation */
-  --shadow-2: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-4: 0 2px 4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-8: 0 4px 8px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-16: 0 16px 32px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
-  /* Radius */
-  --r-sm: 2px;
+  --success: #22A06B;
+  --danger: #C9372C;
+  --danger-text: #AE2E24;
+  --warning: #E56910;
+  /* Elevation (ADS shadow spec) */
+  --shadow-2: 0 1px 1px rgba(30,31,33,0.25), 0 0 1px rgba(30,31,33,0.31);   /* raised */
+  --shadow-4: 0 0 1px rgba(30,31,33,0.12), 0 8px 12px rgba(30,31,33,0.16); /* overflow */
+  --shadow-8: 0 0 1px rgba(30,31,33,0.31), 0 8px 12px rgba(30,31,33,0.15); /* overlay */
+  --shadow-16: 0 0 1px rgba(30,31,33,0.31), 0 20px 32px rgba(30,31,33,0.20);
+  /* Radius — ADS 는 더 각짐 */
+  --r-sm: 3px;
   --r-md: 4px;
   --r-lg: 8px;
 }
 
-/* 사용자 수동 다크 (ThemeToggle로 설정) */
 :root[data-theme="dark"] {
-  --bg: #181818;
-  --bg-alt: #1a1b1e;
-  --fg: #f3f3f3;
-  --muted: #c9c9c9;
-  --muted-2: #939393;
-  --border: #2e2e2e;
-  --border-strong: #444444;
-  --card: #232323;
-  --card-hover: #2e2e2e;
-  --accent: #57a3fd;
-  --accent-hover: #78b0fd;
-  --accent-pressed: #1b96ff;
-  --accent-bg: #03234d;
-  --focus-ring: #57a3fd;
-  --success: #45c65a;
-  --danger: #fe8f7d;
-  --warning: #ffba90;
-  --shadow-2: 0 1px 2px rgba(0,0,0,0.5);
-  --shadow-4: 0 2px 4px rgba(0,0,0,0.55);
-  --shadow-8: 0 4px 8px rgba(0,0,0,0.60);
-  --shadow-16: 0 16px 32px rgba(0,0,0,0.65);
+  --bg: #1F1F21;                    /* elevation.surface (dark) */
+  --bg-alt: #242528;
+  --fg: #CECFD2;                    /* color.text (dark) */
+  --muted: #A9ABAF;                 /* text.subtle */
+  --muted-2: #96999E;               /* text.subtlest */
+  --border: #3A3B3F;
+  --border-strong: #7E8188;         /* border.input */
+  --card: #2C2C2F;
+  --card-hover: #3A3B3F;
+  --accent: #669DF1;                /* brand.bold (dark) */
+  --accent-hover: #8FB8F6;
+  --accent-pressed: #4688EC;
+  --accent-bg: #1C2B42;             /* brand.subtlest (dark) */
+  --focus-ring: #8FB8F6;
+  --success: #94C748;
+  --danger: #F87168;
+  --danger-text: #FD9891;
+  --warning: #FBC828;
+  --shadow-2: 0 1px 1px rgba(0,0,0,0.55), 0 0 1px rgba(0,0,0,0.60);
+  --shadow-4: 0 0 1px rgba(0,0,0,0.50), 0 8px 12px rgba(0,0,0,0.55);
+  --shadow-8: 0 0 1px rgba(0,0,0,0.60), 0 8px 12px rgba(0,0,0,0.55);
+  --shadow-16: 0 0 1px rgba(0,0,0,0.60), 0 20px 32px rgba(0,0,0,0.70);
 }
 
-/* OS 다크 — 사용자가 토글로 light/dark 강제 안 한 경우만 */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):not([data-theme="dark"]) {
-    --bg: #181818;
-    --bg-alt: #1a1b1e;
-    --fg: #f3f3f3;
-    --muted: #c9c9c9;
-    --muted-2: #939393;
-    --border: #2e2e2e;
-    --border-strong: #444444;
-    --card: #232323;
-    --card-hover: #2e2e2e;
-    --accent: #57a3fd;
-    --accent-hover: #78b0fd;
-    --accent-pressed: #1b96ff;
-    --accent-bg: #03234d;
-    --focus-ring: #57a3fd;
-    --success: #45c65a;
-    --danger: #fe8f7d;
-    --warning: #ffba90;
-    --shadow-2: 0 1px 2px rgba(0,0,0,0.5);
-    --shadow-4: 0 2px 4px rgba(0,0,0,0.55);
-    --shadow-8: 0 4px 8px rgba(0,0,0,0.60);
-    --shadow-16: 0 16px 32px rgba(0,0,0,0.65);
+    --bg: #1F1F21;
+    --bg-alt: #242528;
+    --fg: #CECFD2;
+    --muted: #A9ABAF;
+    --muted-2: #96999E;
+    --border: #3A3B3F;
+    --border-strong: #7E8188;
+    --card: #2C2C2F;
+    --card-hover: #3A3B3F;
+    --accent: #669DF1;
+    --accent-hover: #8FB8F6;
+    --accent-pressed: #4688EC;
+    --accent-bg: #1C2B42;
+    --focus-ring: #8FB8F6;
+    --success: #94C748;
+    --danger: #F87168;
+    --danger-text: #FD9891;
+    --warning: #FBC828;
+    --shadow-2: 0 1px 1px rgba(0,0,0,0.55), 0 0 1px rgba(0,0,0,0.60);
+    --shadow-4: 0 0 1px rgba(0,0,0,0.50), 0 8px 12px rgba(0,0,0,0.55);
+    --shadow-8: 0 0 1px rgba(0,0,0,0.60), 0 8px 12px rgba(0,0,0,0.55);
+    --shadow-16: 0 0 1px rgba(0,0,0,0.60), 0 20px 32px rgba(0,0,0,0.70);
   }
 }
 
@@ -119,7 +120,7 @@ body {
   word-break: keep-all;
   overflow-wrap: anywhere;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.4285;                /* ADS body line-height */
 }
 
 a { color: inherit; text-decoration: none; }
@@ -130,7 +131,6 @@ a { color: inherit; text-decoration: none; }
   border-radius: var(--r-sm);
 }
 
-/* input/textarea/select은 모두 래퍼가 focus 표시 담당 — 글로벌 outline 이중 표시 방지 */
 input:focus,
 input:focus-visible,
 textarea:focus,
@@ -157,9 +157,12 @@ input[type="search"]::-webkit-search-results-decoration {
 .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
 /* ============================================================
-   SLDS Button — 공식 사양 직접 정의 (line-height 강제 없음)
-   기본 size = medium. text-xs/sm/lg padding은 Tailwind utility로 자유롭게 조절.
-   @layer components: Tailwind utility(.px-3 등)가 항상 우위를 점하도록 함
+   ADS Button — spec 그대로
+   - height 32px medium, padding 4px 12px
+   - radius 3px
+   - font 14 / weight 500
+   - transition 150ms
+   기존 .slds-button 클래스명 유지 (마크업 무수정) — 비주얼만 ADS
    ============================================================ */
 @layer components {
 .slds-button {
@@ -167,20 +170,22 @@ input[type="search"]::-webkit-search-results-decoration {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px 16px;
-  border-radius: var(--r-md);
+  padding: 4px 12px;
+  min-height: 32px;
+  border-radius: var(--r-sm);
   border: 1px solid transparent;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4285;
   background: transparent;
   color: var(--accent);
   cursor: pointer;
-  transition: background 80ms ease, color 80ms ease, border-color 80ms ease;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
   text-decoration: none;
   white-space: nowrap;
 }
-.slds-button:hover { color: var(--accent-hover); background: var(--accent-bg); }
+.slds-button:hover { background: var(--card); }
+.slds-button:active { background: var(--card-hover); }
 .slds-button:disabled { color: var(--muted-2); background: transparent; cursor: not-allowed; }
 
 .slds-button_brand {
@@ -200,17 +205,17 @@ input[type="search"]::-webkit-search-results-decoration {
 .slds-button_brand:disabled {
   background: var(--card);
   color: var(--muted-2);
-  border-color: var(--border);
+  border-color: transparent;
 }
 
 .slds-button_neutral {
   background: var(--bg);
-  color: var(--accent);
-  border-color: var(--border-strong);
+  color: var(--fg);
+  border-color: var(--border);
 }
-.slds-button_neutral:hover { background: var(--card); }
+.slds-button_neutral:hover { background: var(--card); border-color: var(--border-strong); }
 .slds-button_neutral:active { background: var(--card-hover); }
-.slds-button_neutral:disabled { color: var(--muted-2); cursor: not-allowed; }
+.slds-button_neutral:disabled { color: var(--muted-2); cursor: not-allowed; border-color: var(--border); }
 
 .slds-button_destructive {
   background: var(--danger);
@@ -220,67 +225,69 @@ input[type="search"]::-webkit-search-results-decoration {
 .slds-button_destructive:hover { background: color-mix(in srgb, var(--danger) 85%, #000); border-color: color-mix(in srgb, var(--danger) 85%, #000); }
 
 /* ============================================================
-   SLDS Badge — 공식 사양
+   ADS Lozenge (구 Badge) — 소문자·bold·pill·outline
+   ADS 는 배지가 아니라 Lozenge — 유형 표시용
    ============================================================ */
 .slds-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border-radius: 9999px;
+  padding: 1px 6px;
+  border-radius: var(--r-sm);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.4;
+  letter-spacing: 0.02em;
   background: var(--card);
   color: var(--muted);
   border: 1px solid transparent;
   white-space: nowrap;
+  text-transform: uppercase;
 }
 
-/* 종류별 변형 — file·insight·video */
 .app-badge-file {
   background: var(--accent-bg);
-  color: var(--accent-hover);
+  color: var(--accent);
 }
 .app-badge-insight {
   background: var(--card);
   color: var(--muted);
 }
 .app-badge-video {
-  background: color-mix(in srgb, var(--danger) 10%, var(--bg));
-  color: var(--danger);
-  font-weight: 600;
+  background: color-mix(in srgb, var(--danger) 12%, var(--bg));
+  color: var(--danger-text);
 }
 
 /* ============================================================
-   App card / input — SLDS 비주얼 패턴
+   Card / Input — ADS 톤
    ============================================================ */
 .app-card {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  transition: box-shadow 100ms ease, border-color 100ms ease;
+  transition: box-shadow 150ms ease, border-color 150ms ease, background 150ms ease;
 }
 .app-card:hover {
-  box-shadow: var(--shadow-4);
+  box-shadow: var(--shadow-2);
   border-color: var(--border-strong);
+  background: var(--card-hover);
 }
 
 .app-input {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-md);
+  padding: 0 8px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
   background: var(--bg);
-  font-size: 13px;
+  font-size: 14px;
   min-height: 32px;
-  transition: border-color 100ms ease, box-shadow 100ms ease;
+  transition: border-color 100ms ease;
 }
 .app-input:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  border-color: var(--focus-ring);
+  box-shadow: none;
 }
 .app-input input,
 .app-input textarea {
@@ -289,8 +296,10 @@ input[type="search"]::-webkit-search-results-decoration {
   background: transparent;
   outline: none;
   border: none;
+  color: var(--fg);
 }
-/* 래퍼가 focus 표시 담당 — 내부 input의 글로벌 :focus-visible 이중 outline 제거 */
+.app-input input::placeholder,
+.app-input textarea::placeholder { color: var(--muted-2); }
 .app-input input:focus,
 .app-input input:focus-visible,
 .app-input textarea:focus,
@@ -299,4 +308,3 @@ input[type="search"]::-webkit-search-results-decoration {
   box-shadow: none;
 }
 }
-

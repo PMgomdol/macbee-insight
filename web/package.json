@@ -9,6 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@atlaskit/badge": "^19.1.0",
+    "@atlaskit/button": "^24.3.0",
+    "@atlaskit/icon": "^36.1.0",
+    "@atlaskit/primitives": "^20.3.0",
+    "@atlaskit/select": "^22.3.1",
+    "@atlaskit/tabs": "^20.1.0",
+    "@atlaskit/textfield": "^9.1.0",
+    "@atlaskit/theme": "^26.1.0",
+    "@atlaskit/tokens": "^15.4.0",
     "@salesforce-ux/design-system": "^2.30.6",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",
