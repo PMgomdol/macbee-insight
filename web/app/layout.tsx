@@ -10,7 +10,7 @@ import { CardClickTracker } from '@/components/CardClickTracker';
 import { NavProgress } from '@/components/NavProgress';
 import { SiteFooter } from '@/components/SiteFooter';
 import { AnalyticsProvider } from '@/components/AnalyticsProvider';
-import { FeedbackWidget } from '@/components/FeedbackWidget';
+import { FeedbackWidgetLoader } from '@/components/FeedbackWidgetLoader';
 import { AtlaskitProvider } from '@/components/AtlaskitProvider';
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import './globals.css';
@@ -22,18 +22,12 @@ export const metadata: Metadata = {
 
 const THEME_INIT = `
 (function(){
+  var t = 'light';
   try {
-    var t = localStorage.getItem('theme');
-    if (t === 'light' || t === 'dark') {
-      document.documentElement.setAttribute('data-theme', t);
-      return;
-    }
+    var s = localStorage.getItem('theme');
+    if (s === 'dark' || s === 'light') t = s;
   } catch(e) {}
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  } else {
-    document.documentElement.setAttribute('data-theme', 'light');
-  }
+  document.documentElement.setAttribute('data-theme', t);
 })();
 `;
 
@@ -81,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <SiteFooter />
-        <FeedbackWidget />
+        <FeedbackWidgetLoader />
         </AtlaskitProvider>
       </body>
     </html>

@@ -16,11 +16,8 @@ function apply(mode: Mode) {
 function detectInitial(): Mode {
   try {
     const saved = localStorage.getItem('theme');
-    if (saved === 'light' || saved === 'dark') return saved;
+    if (saved === 'dark' || saved === 'light') return saved;
   } catch {}
-  if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
-    return 'dark';
-  }
   return 'light';
 }
 
