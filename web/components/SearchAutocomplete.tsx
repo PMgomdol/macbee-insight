@@ -169,7 +169,7 @@ export function SearchAutocomplete({
     <div ref={wrapRef} className={wrapCls}>
       <form
         onSubmit={(e) => { e.preventDefault(); go(q); }}
-        className={variant === 'header' ? 'w-full' : 'flex flex-col sm:flex-row gap-2 w-full'}
+        className={variant === 'page' ? 'flex flex-col sm:flex-row gap-2 w-full' : 'w-full'}
         role="search"
       >
         <div className={inputCls}>
@@ -210,15 +210,12 @@ export function SearchAutocomplete({
             </button>
           )}
         </div>
-        {variant !== 'header' && (
+        {/* hero·header: 검색 버튼 없음 (Enter로 submit, type="search" 키보드) */}
+        {variant === 'page' && (
           <button
             type="submit"
-            className={`slds-button slds-button_brand shrink-0 ${
-              variant === 'hero'
-                ? 'h-12 sm:h-14 px-6 text-base font-semibold'
-                : 'h-11 px-5'
-            }`}
-            style={{ minHeight: variant === 'hero' ? 48 : 44 }}
+            className="slds-button slds-button_brand shrink-0 h-11 px-5"
+            style={{ minHeight: 44 }}
           >
             검색
           </button>
