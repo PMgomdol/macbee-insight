@@ -157,10 +157,13 @@ export function SearchAutocomplete({
       ? 'flex relative w-full'
       : 'flex relative w-full';
 
+  // hero: 큰 검색창 (h-12 sm:h-14), page: iOS tap 권장 44px, header: app-input
   const inputCls =
     variant === 'header'
       ? 'app-input w-full'
-      : 'flex-1 min-w-0 flex items-center gap-2 px-3 h-10 rounded-[var(--r-sm)] border-2 border-[var(--border)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]';
+      : variant === 'hero'
+      ? 'flex-1 min-w-0 flex items-center gap-2.5 px-4 h-12 sm:h-14 rounded-[var(--r-sm)] border-2 border-[var(--border)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]'
+      : 'flex-1 min-w-0 flex items-center gap-2 px-3 h-11 rounded-[var(--r-sm)] border-2 border-[var(--border)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]';
 
   return (
     <div ref={wrapRef} className={wrapCls}>
@@ -170,7 +173,11 @@ export function SearchAutocomplete({
         role="search"
       >
         <div className={inputCls}>
-          <Search size={variant === 'header' ? 14 : 18} className="text-[var(--muted)] shrink-0" aria-hidden />
+          <Search
+            size={variant === 'header' ? 14 : variant === 'hero' ? 20 : 18}
+            className="text-[var(--muted)] shrink-0"
+            aria-hidden
+          />
           <input
             ref={inputRef}
             type="search"
@@ -179,7 +186,13 @@ export function SearchAutocomplete({
             onFocus={() => { setOpen(true); fetchSuggest(q); }}
             onKeyDown={onKey}
             placeholder={activePlaceholder}
-            className={`flex-1 min-w-0 bg-transparent outline-none ${variant === 'header' ? 'text-sm' : 'text-sm sm:text-base'}`}
+            className={`flex-1 min-w-0 bg-transparent outline-none ${
+              variant === 'header'
+                ? 'text-[16px]'
+                : variant === 'hero'
+                ? 'text-base sm:text-lg'
+                : 'text-base'
+            }`}
             aria-label="검색어"
             aria-autocomplete="list"
             aria-expanded={open}
@@ -200,8 +213,12 @@ export function SearchAutocomplete({
         {variant !== 'header' && (
           <button
             type="submit"
-            className="slds-button slds-button_brand h-10 px-5 shrink-0"
-            style={{ minHeight: 40 }}
+            className={`slds-button slds-button_brand shrink-0 ${
+              variant === 'hero'
+                ? 'h-12 sm:h-14 px-6 text-base font-semibold'
+                : 'h-11 px-5'
+            }`}
+            style={{ minHeight: variant === 'hero' ? 48 : 44 }}
           >
             검색
           </button>

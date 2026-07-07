@@ -281,7 +281,8 @@ input[type="search"]::-webkit-search-results-decoration {
   border: 2px solid var(--border);
   border-radius: var(--r-sm);
   background: var(--bg);
-  font-size: 14px;
+  /* iOS Safari focus 시 자동 zoom 방지 — input font-size 최소 16px */
+  font-size: 16px;
   min-height: 32px;
   transition: border-color 100ms ease;
 }
