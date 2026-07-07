@@ -1,9 +1,9 @@
-import posthog from 'posthog-js';
+import { getPosthog } from './posthog';
 
 /**
  * 클라이언트 사이드 이벤트 트래킹 헬퍼.
+ * posthog-js는 lib/posthog.ts에서 dynamic import — 초기 번들에서 제거.
  * PostHog 미세팅 시 no-op. 이벤트명은 스네이크 케이스 통일.
- * KPI 지표에 맞춰 좁게 유지 — 무분별한 이벤트 지양.
  */
 export type TrackEvent =
   | { name: 'search_submit'; props: { query: string; source: 'hero' | 'header' | 'page' } }
@@ -17,8 +17,9 @@ export type TrackEvent =
   | { name: 'feedback_submit'; props: { kind: string } };
 
 export function track<E extends TrackEvent>(event: E['name'], props: E['props']) {
-  if (typeof window === 'undefined') return;
-  try {
-    posthog.capture(event, props as Record<string, unknown>);
-  } catch {}
+  const p = getPosthog();
+  if (!p) return;
+  p.then((ph) => {
+    try { ph.capture(event, props as Record<string, unknown>); } catch {}
+  });
 }
