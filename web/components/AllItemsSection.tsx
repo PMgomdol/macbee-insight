@@ -49,10 +49,10 @@ export function AllItemsSection({ items, categories }: Props) {
     return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
   }, [items, kind, main]);
 
-  const hasFilter = kind !== 'all' || main || sub || sort !== 'recent';
+  const hasFilter = kind !== 'all' || main || sub;
 
   function reset() {
-    setKind('all'); setMain(null); setSub(null); setSort('recent');
+    setKind('all'); setMain(null); setSub(null);
   }
 
   function pickMain(name: string | null) {

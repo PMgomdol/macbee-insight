@@ -21,7 +21,26 @@ export const metadata: Metadata = {
 };
 
 const THEME_INIT = `
-(function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();
+(function(){
+  try {
+    var t = localStorage.getItem('theme');
+    if (t === 'light' || t === 'dark') {
+      document.documentElement.setAttribute('data-theme', t);
+      return;
+    }
+  } catch(e) {}
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+`;
+
+// 외부 CSS 로드 전 FOUC 방지 — 초기 배경/글자색을 인라인으로 잡아둠.
+const EARLY_STYLE = `
+:root { background:#FFFFFF; color:#292A2E; }
+:root[data-theme="dark"] { background:#1F1F21; color:#CECFD2; }
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -29,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko" className="h-full antialiased">
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
+        <style dangerouslySetInnerHTML={{ __html: EARLY_STYLE }} />
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
         <link
           rel="stylesheet"

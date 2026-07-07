@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X, Sparkles, Tag, Folder, Clock, TrendingUp } from 'lucide-react';
-import Button from '@atlaskit/button/new';
 import { track } from '@/lib/track';
 
 type Suggestion =
@@ -141,7 +140,7 @@ export function SearchAutocomplete({
   const inputCls =
     variant === 'header'
       ? 'app-input w-full'
-      : 'flex-1 min-w-0 flex items-center gap-2 px-4 py-3 rounded-[var(--r-md)] border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)] focus-within:border-b-2';
+      : 'flex-1 min-w-0 flex items-center gap-2 px-3 h-10 rounded-[var(--r-sm)] border-2 border-[var(--border)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]';
 
   return (
     <div ref={wrapRef} className={wrapCls}>
@@ -179,7 +178,13 @@ export function SearchAutocomplete({
           )}
         </div>
         {variant !== 'header' && (
-          <Button type="submit" appearance="primary">검색</Button>
+          <button
+            type="submit"
+            className="slds-button slds-button_brand h-10 px-5 shrink-0"
+            style={{ minHeight: 40 }}
+          >
+            검색
+          </button>
         )}
       </form>
 
