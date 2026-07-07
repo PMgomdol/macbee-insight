@@ -61,7 +61,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       className="app-card group flex flex-col gap-2.5 p-4 min-h-[180px] overflow-hidden"
       aria-label={`${video ? '영상' : kindLabel(item.kind)}: ${item.title} (새 탭에서 열어요)`}
     >
-      {/* ① 태그·형식 — 위 */}
+      {/* ① 자료 종류 (Lozenge) — 메타 배지 */}
       <div className="flex items-center gap-1.5 flex-wrap min-h-[20px]">
         <span
           className={`slds-badge ${
@@ -78,9 +78,6 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
           {video ? '영상' : kindLabel(item.kind)}
         </span>
         {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
-        {tags.map((t) => (
-          <span key={t} className="slds-badge">#{t}</span>
-        ))}
       </div>
 
       {/* ② 타이틀 — 가장 강조 */}
@@ -88,23 +85,29 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
         {item.title}
       </h3>
 
-      {/* ③ 요약 — 있으면 */}
+      {/* ③ 요약 */}
       {item.summary && (
         <p className="text-[12px] text-[var(--muted)] line-clamp-2 leading-relaxed">
           {item.summary}
         </p>
       )}
 
-      {/* ④ 카테고리 */}
+      {/* ④ 카테고리 (대분류만) */}
       <div className="flex items-center gap-1.5 text-[11px] text-[var(--muted-2)]">
         <FileText size={12} aria-hidden />
-        <span className="truncate">
-          {item.main_category}
-          {item.sub_category ? ` · ${item.sub_category}` : ''}
-        </span>
+        <span className="truncate">{item.main_category}</span>
       </div>
 
-      {/* ⑤ 푸터 메타 */}
+      {/* ⑤ 태그 — 카테고리와 분리, 톤 낮춰 표시 */}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-[var(--muted-2)]">
+          {tags.map((t) => (
+            <span key={t}>#{t}</span>
+          ))}
+        </div>
+      )}
+
+      {/* ⑥ 푸터 메타 */}
       <div className="flex items-center justify-between gap-3 text-[11px] text-[var(--muted-2)] mt-auto pt-1">
         <div className="flex items-center gap-3">
           {formatDate(item.published_at) && <span>{formatDate(item.published_at)}</span>}
@@ -149,10 +152,7 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
             {video ? '영상' : kindLabel(item.kind)}
           </span>
           {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
-          <span className="truncate">
-            {item.main_category}
-            {item.sub_category ? ` · ${item.sub_category}` : ''}
-          </span>
+          <span className="truncate">{item.main_category}</span>
         </div>
       </div>
     </a>

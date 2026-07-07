@@ -43,19 +43,21 @@ export function SiteFooter() {
               <p className="text-[11px] text-[var(--muted-2)]">
                 인원이 비어있는 방에 자유롭게 참여하세요 · 참여코드 <code className="px-1 py-0.5 rounded bg-[var(--card)] text-[var(--muted)]">macbe</code>
               </p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-[var(--muted)]">
                 {ROOMS.map((r) => (
-                  <a
-                    key={r.label}
-                    href={r.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center px-2 py-2 rounded-[var(--r-md)] bg-[#FEE500] text-[#191919] font-semibold text-xs hover:opacity-90 transition"
-                  >
-                    {r.label}
-                  </a>
+                  <li key={r.label}>
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 hover:text-[var(--accent)] w-fit"
+                    >
+                      {r.label}
+                      <ExternalLink size={10} aria-hidden />
+                    </a>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
 
             {/* 다른 채널 */}
