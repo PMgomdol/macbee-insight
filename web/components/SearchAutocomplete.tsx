@@ -162,7 +162,7 @@ export function SearchAutocomplete({
     variant === 'header'
       ? 'app-input w-full'
       : variant === 'hero'
-      ? 'flex-1 min-w-0 flex items-center gap-2.5 px-4 h-12 sm:h-14 rounded-[var(--r-sm)] border-2 border-[var(--border)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]'
+      ? 'flex-1 min-w-0 flex items-center gap-2.5 px-5 sm:px-6 h-12 sm:h-14 rounded-full border-2 border-[var(--border)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]'
       : 'flex-1 min-w-0 flex items-center gap-2 px-3 h-11 rounded-[var(--r-sm)] border-2 border-[var(--border)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]';
 
   return (
