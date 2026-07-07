@@ -1,7 +1,10 @@
 'use client';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
+import Button from '@atlaskit/button/new';
+import Textfield from '@atlaskit/textfield';
+import TextArea from '@atlaskit/textarea';
 import { applyReviewer } from './actions';
 
 export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
@@ -45,14 +48,12 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
         <label htmlFor="name" className="text-sm font-medium">
           이름·닉네임 <span className="text-[var(--danger)]">*</span>
         </label>
-        <input
+        <Textfield
           id="name"
-          type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+          isRequired
           placeholder="실명이나 카톡방 닉네임"
-          className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
         />
       </div>
 
@@ -60,13 +61,12 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
         <label htmlFor="reason" className="text-sm font-medium">
           신청 사유 <span className="text-[var(--muted-2)] font-normal">(선택)</span>
         </label>
-        <textarea
+        <TextArea
           id="reason"
           value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          rows={3}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setReason(e.target.value)}
+          minimumRows={3}
           placeholder="어떻게 도와줄 수 있는지 짧게 적어주세요"
-          className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none resize-y"
         />
       </div>
 
@@ -77,14 +77,13 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
         </div>
       )}
 
-      <button
+      <Button
         type="submit"
-        disabled={pending || !name.trim()}
-        className="slds-button slds-button_brand mt-1"
+        appearance="primary"
+        isDisabled={pending || !name.trim()}
       >
-        {pending && <Loader2 size={14} className="animate-spin" aria-hidden />}
-        {pending ? '보내고 있어요...' : '운영진 신청'}
-      </button>
+        {pending ? '보내고 있어요…' : '운영진 신청'}
+      </Button>
     </form>
   );
 }

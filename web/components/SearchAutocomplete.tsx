@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X, Sparkles, Tag, Folder, Clock, TrendingUp } from 'lucide-react';
+import Button from '@atlaskit/button/new';
 import { track } from '@/lib/track';
 
 type Suggestion =
@@ -178,7 +179,7 @@ export function SearchAutocomplete({
           )}
         </div>
         {variant !== 'header' && (
-          <button type="submit" className="slds-button slds-button_brand px-5 py-3 text-sm shrink-0">검색</button>
+          <Button type="submit" appearance="primary">검색</Button>
         )}
       </form>
 
@@ -222,7 +223,7 @@ export function SearchAutocomplete({
                       <button
                         key={t}
                         onClick={() => go(t)}
-                        className={`px-2.5 py-1 rounded-full text-xs border transition ${
+                        className={`px-2.5 py-1 rounded-[var(--r-sm)] text-xs border transition ${
                           activeIdx === idx
                             ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
                             : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'

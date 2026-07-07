@@ -81,7 +81,7 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
                 key={cat}
                 href={`#${slugify(cat)}`}
                 aria-disabled={disabled}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm border whitespace-nowrap transition ${
+                className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs sm:text-sm border whitespace-nowrap transition ${
                   disabled
                     ? 'border-[var(--border)] text-[var(--muted-2)] opacity-50 pointer-events-none'
                     : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]'

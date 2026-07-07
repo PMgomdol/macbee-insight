@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import Link from 'next/link';
 import {
-  Sparkles, Upload, Loader2, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle,
+  Sparkles, Upload, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle,
 } from 'lucide-react';
+import Button, { LinkButton } from '@atlaskit/button/new';
+import Textfield from '@atlaskit/textfield';
+import TextArea from '@atlaskit/textarea';
+import Select from '@atlaskit/select';
+import Spinner from '@atlaskit/spinner';
 import {
   analyzeUrl, analyzeFile, submitProposal, uploadFile,
   type AnalyzeResult, type DuplicateMatch,
@@ -246,26 +250,29 @@ export function SubmitForm({ categories }: Props) {
           <label className="text-sm font-medium" htmlFor="url-input">
             URL <span className="text-[var(--danger)]">*</span>
           </label>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              id="url-input"
-              type="url"
-              value={url}
-              onChange={(e) => { setUrl(e.target.value); if (analyzed) setAnalyzed(false); }}
-              onKeyDown={onUrlKeyDown}
-              placeholder="https://..."
-              autoFocus
-              className="flex-1 min-w-0 px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
-            />
-            <button
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch">
+            <div className="flex-1 min-w-0">
+              <Textfield
+                id="url-input"
+                type="url"
+                value={url}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setUrl(e.target.value); if (analyzed) setAnalyzed(false); }}
+                onKeyDown={onUrlKeyDown}
+                placeholder="https://..."
+                autoFocus
+              />
+            </div>
+            <Button
               type="button"
+              appearance="primary"
               onClick={onAnalyze}
-              disabled={analyzing || !url.trim()}
-              className="slds-button slds-button_brand px-4 whitespace-nowrap shrink-0"
+              isDisabled={analyzing || !url.trim()}
             >
-              {analyzing ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Sparkles size={14} aria-hidden />}
-              {analyzing ? '분석 중...' : '자동 분석'}
-            </button>
+              <span className="inline-flex items-center gap-1.5">
+                {analyzing ? <Spinner size="small" /> : <Sparkles size={14} aria-hidden />}
+                {analyzing ? '분석 중…' : '자동 분석'}
+              </span>
+            </Button>
           </div>
           <p className="text-xs text-[var(--muted)]">
             URL만 붙여넣으면 제목·요약·카테고리·태그를 알아서 채워드려요. Enter로 바로 분석할 수 있어요.
@@ -285,7 +292,7 @@ export function SubmitForm({ categories }: Props) {
           </label>
           <label className="flex items-center gap-2 px-3 py-3 rounded-[var(--r-sm)] border-2 border-dashed border-[var(--border-strong)] bg-[var(--card)] cursor-pointer hover:border-[var(--accent)]">
             <input type="file" onChange={onFileChange} className="hidden" />
-            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+            {uploading ? <Spinner size="small" /> : <Upload size={16} />}
             <span className="text-sm">
               {uploading ? '올리고 있어요...' : fileName ?? '파일 고르기 (50MB까지)'}
             </span>
@@ -347,94 +354,92 @@ export function SubmitForm({ categories }: Props) {
         <>
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium">제목 <span className="text-[var(--danger)]">*</span></label>
-            <input
+            <Textfield
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
+              isRequired
               placeholder="자료 제목"
-              className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium">한 줄 설명</label>
-            <textarea
+            <TextArea
               value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-              rows={3}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setSummary(e.target.value)}
+              minimumRows={3}
               placeholder="이 자료가 어떤 내용인지 한 줄로 적어주세요"
-              className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none resize-y"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5 min-w-0">
               <label className="text-sm font-medium">대분류</label>
-              <select
-                value={main}
-                onChange={(e) => { setMain(e.target.value); setSub(''); }}
-                className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
-              >
-                <option value="">선택</option>
-                {cats.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <Select
+                inputId="main-cat"
+                value={main ? { label: main, value: main } : null}
+                onChange={(o: any) => { setMain(o?.value ?? ''); setSub(''); }}
+                options={cats.map((c) => ({ label: c, value: c }))}
+                placeholder="선택"
+                isClearable
+              />
             </div>
             <div className="flex flex-col gap-1.5 min-w-0">
               <label className="text-sm font-medium">소분류</label>
-              <select
-                value={sub}
-                onChange={(e) => setSub(e.target.value)}
-                className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
-              >
-                <option value="">선택</option>
-                {(subs[main] ?? []).map((s) => <option key={s} value={s}>{s}</option>)}
-                {sub && !(subs[main] ?? []).includes(sub) && <option value={sub}>{sub} (신규)</option>}
-              </select>
+              <Select
+                inputId="sub-cat"
+                value={sub ? { label: sub, value: sub } : null}
+                onChange={(o: any) => setSub(o?.value ?? '')}
+                options={[
+                  ...(subs[main] ?? []).map((s) => ({ label: s, value: s })),
+                  ...(sub && !(subs[main] ?? []).includes(sub) ? [{ label: `${sub} (신규)`, value: sub }] : []),
+                ]}
+                placeholder="선택"
+                isClearable
+                isDisabled={!main}
+              />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5 min-w-0">
             <label className="text-sm font-medium" htmlFor="published-at">발행일 <span className="text-[var(--muted-2)] font-normal">(선택 · 자동 추출)</span></label>
-            <input
-              id="published-at"
-              type="date"
-              value={publishedAt}
-              onChange={(e) => setPublishedAt(e.target.value)}
-              lang="ko-KR"
-              placeholder="YYYY-MM-DD"
-              className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none w-full sm:max-w-xs"
-            />
+            <div className="w-full sm:max-w-xs">
+              <Textfield
+                id="published-at"
+                type="date"
+                value={publishedAt}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPublishedAt(e.target.value)}
+                placeholder="YYYY-MM-DD"
+              />
+            </div>
             <span className="text-[11px] text-[var(--muted-2)]">원본에 발행일이 있으면 알아서 채워드려요. 없으면 비워둬도 괜찮아요.</span>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium">태그 <span className="text-[var(--muted-2)] font-normal">(쉼표 구분)</span></label>
-            <input
+            <Textfield
               value={tags}
-              onChange={(e) => setTags(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTags(e.target.value)}
               placeholder="피그마, Figma, 디자인툴"
-              className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[var(--border)]">
             <div className="flex flex-col gap-1.5 min-w-0">
               <label className="text-sm font-medium">제안자 <span className="text-[var(--muted-2)] font-normal">(선택)</span></label>
-              <input
+              <Textfield
                 value={proposer}
-                onChange={(e) => setProposer(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProposer(e.target.value)}
                 placeholder="이름·닉네임"
-                className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
               />
             </div>
             <div className="flex flex-col gap-1.5 min-w-0">
               <label className="text-sm font-medium">이메일 <span className="text-[var(--muted-2)] font-normal">(선택)</span></label>
-              <input
+              <Textfield
                 type="email"
                 value={proposerEmail}
-                onChange={(e) => setProposerEmail(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProposerEmail(e.target.value)}
                 placeholder="검토 결과를 알려드려요"
-                className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] border-b-2 bg-[var(--bg)] text-sm focus:border-b-[var(--accent)] outline-none"
               />
             </div>
           </div>
@@ -446,14 +451,16 @@ export function SubmitForm({ categories }: Props) {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={submitting || !title || (!url && !fileUrl) || (!!duplicate && !forceSubmit)}
-            className="slds-button slds-button_brand mt-4 px-4 py-3"
-          >
-            {submitting && <Loader2 size={14} className="animate-spin" />}
-            {submitting ? '보내고 있어요...' : '등록할게요'}
-          </button>
+          <div className="mt-4">
+            <Button
+              type="submit"
+              appearance="primary"
+              isDisabled={submitting || !title || (!url && !fileUrl) || (!!duplicate && !forceSubmit)}
+              shouldFitContainer
+            >
+              {submitting ? '보내고 있어요…' : '등록할게요'}
+            </Button>
+          </div>
         </>
       )}
 
@@ -487,13 +494,9 @@ export function SubmitForm({ categories }: Props) {
               자료를 잘 받았어요. 운영진 두 분이 확인한 뒤 자료실에 올라가요.
               {proposerEmail && ' 결과는 이메일로 알려드릴게요.'}
             </p>
-            <div className="flex gap-2 mt-1">
-              <button type="button" onClick={resetForm} className="slds-button slds-button_brand flex-1 px-4 py-2.5">
-                하나 더 등록할래요
-              </button>
-              <Link href="/" className="slds-button slds-button_neutral flex-1 px-4 py-2.5 justify-center text-center">
-                홈으로 갈래요
-              </Link>
+            <div className="flex gap-2 mt-1 [&>button]:flex-1 [&>a]:flex-1">
+              <Button appearance="primary" onClick={resetForm} shouldFitContainer>하나 더 등록할래요</Button>
+              <LinkButton href="/" appearance="default" shouldFitContainer>홈으로 갈래요</LinkButton>
             </div>
           </div>
         </div>

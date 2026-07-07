@@ -1,6 +1,9 @@
 'use client';
 import { useEffect, useState, useTransition } from 'react';
-import { MessageCircle, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { MessageCircle, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import Button from '@atlaskit/button/new';
+import Textfield from '@atlaskit/textfield';
+import TextArea from '@atlaskit/textarea';
 import { submitFeedback, type FeedbackKind } from '@/app/actions/feedback';
 import { track } from '@/lib/track';
 
@@ -129,15 +132,14 @@ export function FeedbackWidget() {
                 <label htmlFor="fb-message" className="text-xs font-medium text-[var(--muted)] block mb-1.5">
                   내용 <span className="text-[var(--danger)]">*</span>
                 </label>
-                <textarea
+                <TextArea
                   id="fb-message"
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  required
-                  rows={5}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
+                  isRequired
+                  minimumRows={5}
                   maxLength={5000}
                   placeholder="어떤 게 불편했는지·어떻게 개선하면 좋을지 자유롭게 적어주세요"
-                  className="w-full px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] bg-[var(--bg)] text-sm focus:border-[var(--accent)] focus:shadow-[0_0_0_1px_var(--accent)] outline-none resize-y"
                 />
                 <div className="text-[10px] text-[var(--muted-2)] text-right mt-1">{message.length}/5000</div>
               </div>
@@ -146,13 +148,12 @@ export function FeedbackWidget() {
                 <label htmlFor="fb-email" className="text-xs font-medium text-[var(--muted)] block mb-1.5">
                   이메일 <span className="text-[var(--muted-2)] font-normal">(답변 받고 싶으면)</span>
                 </label>
-                <input
+                <Textfield
                   id="fb-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] bg-[var(--bg)] text-sm focus:border-[var(--accent)] focus:shadow-[0_0_0_1px_var(--accent)] outline-none"
                 />
               </div>
 
@@ -174,29 +175,23 @@ export function FeedbackWidget() {
                 </div>
               )}
 
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-2 [&>button]:flex-1">
                 {status?.kind === 'ok' ? (
                   <>
-                    <button type="button" onClick={reset} className="slds-button slds-button_neutral flex-1 px-4 py-2">
-                      하나 더 보낼래요
-                    </button>
-                    <button type="button" onClick={close} className="slds-button slds-button_brand flex-1 px-4 py-2">
-                      닫기
-                    </button>
+                    <Button appearance="default" onClick={reset} shouldFitContainer>하나 더 보낼래요</Button>
+                    <Button appearance="primary" onClick={close} shouldFitContainer>닫기</Button>
                   </>
                 ) : (
                   <>
-                    <button type="button" onClick={close} className="slds-button slds-button_neutral flex-1 px-4 py-2">
-                      취소
-                    </button>
-                    <button
+                    <Button appearance="default" onClick={close} shouldFitContainer>취소</Button>
+                    <Button
                       type="submit"
-                      disabled={pending || !message.trim()}
-                      className="slds-button slds-button_brand flex-1 px-4 py-2 inline-flex items-center justify-center gap-1.5"
+                      appearance="primary"
+                      isDisabled={pending || !message.trim()}
+                      shouldFitContainer
                     >
-                      {pending && <Loader2 size={14} className="animate-spin" aria-hidden />}
-                      {pending ? '보내는 중...' : '보내기'}
-                    </button>
+                      {pending ? '보내는 중…' : '보내기'}
+                    </Button>
                   </>
                 )}
               </div>

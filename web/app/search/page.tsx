@@ -91,7 +91,7 @@ export default async function SearchPage({
             <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap">
               <Link
                 href={buildHref({ main: undefined, sub: undefined })}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs border whitespace-nowrap transition ${
+                className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs border whitespace-nowrap transition ${
                   !sp.main
                     ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
                     : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
@@ -103,7 +103,7 @@ export default async function SearchPage({
                 <Link
                   key={cat}
                   href={buildHref({ main: cat, sub: undefined })}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs border whitespace-nowrap transition ${
+                  className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs border whitespace-nowrap transition ${
                     sp.main === cat
                       ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
                       : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
@@ -177,7 +177,7 @@ export default async function SearchPage({
               <Link
                 key={t}
                 href={`/search?q=${encodeURIComponent(t)}`}
-                className="px-3 py-1.5 rounded-full text-xs border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                className="px-3 py-1.5 rounded-[var(--r-sm)] text-xs border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
               >
                 {t}
               </Link>

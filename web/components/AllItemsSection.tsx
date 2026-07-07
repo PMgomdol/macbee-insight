@@ -95,7 +95,7 @@ export function AllItemsSection({ items, categories }: Props) {
       <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap">
         <button
           onClick={() => pickMain(null)}
-          className={`shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm border whitespace-nowrap transition ${
+          className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs sm:text-sm border whitespace-nowrap transition ${
             !main ? 'bg-[var(--accent)] text-white border-[var(--accent)]' : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
           }`}
         >
@@ -105,7 +105,7 @@ export function AllItemsSection({ items, categories }: Props) {
           <button
             key={c.name}
             onClick={() => pickMain(main === c.name ? null : c.name)}
-            className={`shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm border whitespace-nowrap transition ${
+            className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs sm:text-sm border whitespace-nowrap transition ${
               main === c.name
                 ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
                 : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
