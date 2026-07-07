@@ -46,11 +46,15 @@ export function SearchAutocomplete({
   variant = 'hero',
   autoFocus = false,
   placeholder,
+  placeholders,
+  placeholderIntervalMs = 2600,
 }: {
   initial?: string;
   variant?: Variant;
   autoFocus?: boolean;
   placeholder?: string;
+  placeholders?: string[];
+  placeholderIntervalMs?: number;
 }) {
   const router = useRouter();
   const [q, setQ] = useState(initial);
@@ -58,12 +62,28 @@ export function SearchAutocomplete({
   const [resp, setResp] = useState<Resp | null>(null);
   const [recent, setRecent] = useState<string[]>([]);
   const [activeIdx, setActiveIdx] = useState(-1);
+  const [rotIdx, setRotIdx] = useState(0);
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debouncer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 최초 마운트 — 최근 검색 로드
   useEffect(() => { setRecent(loadRecent()); }, []);
+
+  // placeholder 순환 — placeholders 배열이 있고 입력 비었을 때만
+  useEffect(() => {
+    if (!placeholders || placeholders.length < 2) return;
+    if (q) return;
+    const id = setInterval(() => {
+      setRotIdx((i) => (i + 1) % placeholders.length);
+    }, placeholderIntervalMs);
+    return () => clearInterval(id);
+  }, [placeholders, placeholderIntervalMs, q]);
+
+  const activePlaceholder =
+    placeholders && placeholders.length > 0
+      ? placeholders[rotIdx % placeholders.length]
+      : (placeholder ?? '제목·태그·카테고리로 찾아보세요');
 
   // 외부 클릭 닫기
   useEffect(() => {
@@ -158,7 +178,7 @@ export function SearchAutocomplete({
             onChange={(e) => { setQ(e.target.value); setOpen(true); setActiveIdx(-1); }}
             onFocus={() => { setOpen(true); fetchSuggest(q); }}
             onKeyDown={onKey}
-            placeholder={placeholder ?? '제목·태그·카테고리로 찾아보세요'}
+            placeholder={activePlaceholder}
             className={`flex-1 min-w-0 bg-transparent outline-none ${variant === 'header' ? 'text-sm' : 'text-sm sm:text-base'}`}
             aria-label="검색어"
             aria-autocomplete="list"

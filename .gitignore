@@ -41,3 +41,6 @@ npm-debug.log*
 docs/맥비기획_자료실_운영팀 DB_v2.xlsx
 docs/맥비톡방 자료실.xlsx
 macbee-document/~$*
+
+# 카톡 로그 (개인 대화 · 대용량)
+KakaoTalk_Chat_*.csv
