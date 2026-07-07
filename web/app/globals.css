@@ -67,32 +67,7 @@
   --shadow-16: 0 0 1px rgba(0,0,0,0.60), 0 20px 32px rgba(0,0,0,0.70);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]):not([data-theme="dark"]) {
-    --bg: #1F1F21;
-    --bg-alt: #242528;
-    --fg: #CECFD2;
-    --muted: #A9ABAF;
-    --muted-2: #96999E;
-    --border: #3A3B3F;
-    --border-strong: #7E8188;
-    --card: #2C2C2F;
-    --card-hover: #3A3B3F;
-    --accent: #669DF1;
-    --accent-hover: #8FB8F6;
-    --accent-pressed: #4688EC;
-    --accent-bg: #1C2B42;
-    --focus-ring: #8FB8F6;
-    --success: #94C748;
-    --danger: #F87168;
-    --danger-text: #FD9891;
-    --warning: #FBC828;
-    --shadow-2: 0 1px 1px rgba(0,0,0,0.55), 0 0 1px rgba(0,0,0,0.60);
-    --shadow-4: 0 0 1px rgba(0,0,0,0.50), 0 8px 12px rgba(0,0,0,0.55);
-    --shadow-8: 0 0 1px rgba(0,0,0,0.60), 0 8px 12px rgba(0,0,0,0.55);
-    --shadow-16: 0 0 1px rgba(0,0,0,0.60), 0 20px 32px rgba(0,0,0,0.70);
-  }
-}
+/* 시스템 자동 다크 감지 제거 — data-theme 속성으로만 제어. THEME_INIT script가 SSR 이후 값 적용. */
 
 @theme inline {
   --color-bg: var(--bg);

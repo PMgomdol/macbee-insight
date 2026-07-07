@@ -39,7 +39,7 @@ const EARLY_STYLE = `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className="h-full antialiased">
+    <html lang="ko" className="h-full antialiased" data-theme="light" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         <style dangerouslySetInnerHTML={{ __html: EARLY_STYLE }} />

@@ -1,18 +1,35 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Search } from 'lucide-react';
+import { Menu, X, Search, Sun, Moon } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { visibleNav } from '@/lib/nav';
+
+type Mode = 'light' | 'dark';
 
 export function MobileNavClient({ isReviewer = false }: { isReviewer?: boolean }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
+  const [theme, setTheme] = useState<Mode>('light');
   const pathname = usePathname();
   const router = useRouter();
   const items = visibleNav(isReviewer);
 
   useEffect(() => { setOpen(false); }, [pathname]);
+
+  // 마운트 시 현재 테마 로드
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'dark' || saved === 'light') setTheme(saved);
+    } catch {}
+  }, []);
+
+  function pickTheme(next: Mode) {
+    setTheme(next);
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('theme', next); } catch {}
+  }
 
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden';
@@ -69,6 +86,37 @@ export function MobileNavClient({ isReviewer = false }: { isReviewer?: boolean }
               </Link>
             ))}
           </nav>
+
+          {/* 테마 전환 — 모바일에도 접근 가능 */}
+          <div className="px-4 py-3 border-t border-[var(--border)]">
+            <div className="text-[11px] uppercase tracking-wide text-[var(--muted-2)] mb-2">테마</div>
+            <div
+              role="radiogroup"
+              aria-label="테마"
+              className="inline-flex p-0.5 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--bg)]"
+            >
+              {([{ v: 'light', label: '라이트', Icon: Sun }, { v: 'dark', label: '다크', Icon: Moon }] as const).map(({ v, label, Icon }) => {
+                const active = theme === v;
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => pickTheme(v)}
+                    className={`inline-flex items-center gap-1.5 px-3 h-8 rounded-[3px] text-xs transition ${
+                      active
+                        ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium'
+                        : 'text-[var(--muted)] hover:text-[var(--fg)]'
+                    }`}
+                  >
+                    <Icon size={14} aria-hidden />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </>
