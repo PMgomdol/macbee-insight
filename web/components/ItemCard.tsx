@@ -92,13 +92,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
         </p>
       )}
 
-      {/* ④ 카테고리 (대분류만) */}
-      <div className="flex items-center gap-1.5 text-[11px] text-[var(--muted-2)]">
-        <FileText size={12} aria-hidden />
-        <span className="truncate">{item.main_category}</span>
-      </div>
-
-      {/* ⑤ 태그 — 카테고리와 분리, 톤 낮춰 표시 */}
+      {/* ④ 태그 */}
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-[var(--muted-2)]">
           {tags.map((t) => (
@@ -107,7 +101,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
         </div>
       )}
 
-      {/* ⑥ 푸터 메타 */}
+      {/* ⑤ 푸터 메타 */}
       <div className="flex items-center justify-between gap-3 text-[11px] text-[var(--muted-2)] mt-auto pt-1">
         <div className="flex items-center gap-3">
           {formatDate(item.published_at) && <span>{formatDate(item.published_at)}</span>}
@@ -152,7 +146,6 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
             {video ? '영상' : kindLabel(item.kind)}
           </span>
           {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
-          <span className="truncate">{item.main_category}</span>
         </div>
       </div>
     </a>
