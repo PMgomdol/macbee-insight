@@ -284,3 +284,32 @@ input[type="search"]::-webkit-search-results-decoration {
   box-shadow: none;
 }
 }
+
+/* FAQ 답변 마크다운 — Tailwind reset 이후 최소 스타일 복원 */
+.faq-answer p { margin: 0 0 0.6em; }
+.faq-answer p:last-child { margin-bottom: 0; }
+.faq-answer strong { color: var(--fg); font-weight: 600; }
+.faq-answer ul, .faq-answer ol { margin: 0.4em 0 0.8em; padding-left: 1.4em; }
+.faq-answer ul { list-style: disc; }
+.faq-answer ol { list-style: decimal; }
+.faq-answer li { margin: 0.25em 0; }
+.faq-answer li > ul, .faq-answer li > ol { margin: 0.25em 0; }
+.faq-answer h1, .faq-answer h2, .faq-answer h3, .faq-answer h4 {
+  color: var(--fg); font-weight: 600; font-size: 1em; margin: 1em 0 0.4em;
+}
+.faq-answer a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.faq-answer code {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 0.1em 0.35em; font-size: 0.9em;
+}
+.faq-answer pre { background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 0.8em; overflow-x: auto; margin: 0.6em 0; }
+.faq-answer pre code { background: none; border: none; padding: 0; }
+.faq-answer blockquote {
+  border-left: 3px solid var(--border-strong); padding-left: 0.8em; margin: 0.6em 0;
+  color: var(--muted-2);
+}
+.faq-answer table { border-collapse: collapse; margin: 0.6em 0; font-size: 0.95em; display: block; overflow-x: auto; }
+.faq-answer th, .faq-answer td { border: 1px solid var(--border); padding: 0.35em 0.6em; text-align: left; }
+.faq-answer th { background: var(--card); color: var(--fg); font-weight: 600; }
+.faq-answer hr { border: none; border-top: 1px solid var(--border); margin: 1em 0; }

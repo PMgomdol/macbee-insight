@@ -1,5 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Search, X, ChevronDown } from 'lucide-react';
 import type { FAQItem } from '@/types/db';
 
@@ -119,8 +121,8 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
                       <span className="flex-1 min-w-0">{f.question}</span>
                       <ChevronDown size={16} className="text-[var(--muted-2)] group-open:rotate-180 transition shrink-0 mt-0.5" aria-hidden />
                     </summary>
-                    <div className="px-1 pb-4 pt-1 text-sm text-[var(--muted)] leading-relaxed whitespace-pre-wrap">
-                      {f.answer}
+                    <div className="faq-answer px-1 pb-4 pt-1 text-sm text-[var(--muted)] leading-relaxed">
+                      <Markdown remarkPlugins={[remarkGfm]}>{f.answer}</Markdown>
                     </div>
                   </details>
                 ))}
