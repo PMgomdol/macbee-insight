@@ -50,23 +50,31 @@ export async function approveProposal(id: string) {
   if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
 
   const sb = await createClient();
-  const { data: row } = await sb.from('staging_proposal').select('*').eq('id', id).single();
-  if (!row) throw new Error('자료를 찾지 못했어요');
-  if (row.status !== 'pending') throw new Error('이미 처리한 자료예요');
+  // 원자적 승인 — DB 함수가 행 잠금(FOR UPDATE) 후 approvers append.
+  // 동시 승인 시에도 유실 없음. MIN 도달 시 status='approved'로 바꾸고
+  // approved=true를 받은 요청 한 곳만 자료실 이관을 수행.
+  const { data, error } = await sb.rpc('approve_proposal_atomic', {
+    p_id: id,
+    p_email: me.email,
+    p_min: MIN_APPROVALS,
+  });
+  if (error) throw new Error('승인 처리에 실패했어요 — ' + error.message);
+  const res = data as { ok: boolean; reason?: string; approved?: boolean; approvers?: string[] };
+  if (!res.ok) {
+    throw new Error(res.reason === 'not_pending' ? '이미 처리한 자료예요' : '자료를 찾지 못했어요');
+  }
 
-  const approvers = new Set<string>(row.approvers ?? []);
-  approvers.add(me.email);
-
-  if (approvers.size >= MIN_APPROVALS) {
-    await migrateToArchive(row, Array.from(approvers));
-    await sb.from('staging_proposal').update({
-      status: 'approved',
-      approvers: Array.from(approvers),
-      reviewed_at: new Date().toISOString(),
-    }).eq('id', id);
+  if (res.approved) {
+    const { data: row } = await sb.from('staging_proposal').select('*').eq('id', id).single();
+    if (!row) throw new Error('자료를 찾지 못했어요');
+    try {
+      await migrateToArchive(row, res.approvers ?? []);
+    } catch (e) {
+      // 이관 실패 시 pending으로 되돌려 재시도 가능하게 (승인 기록은 유지)
+      await sb.from('staging_proposal').update({ status: 'pending' }).eq('id', id);
+      throw e;
+    }
     updateTag('archive');
-  } else {
-    await sb.from('staging_proposal').update({ approvers: Array.from(approvers) }).eq('id', id);
   }
   revalidatePath('/admin');
 }

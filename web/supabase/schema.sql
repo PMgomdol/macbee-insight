@@ -41,14 +41,9 @@ create table if not exists archive_item (
   notes           text,
   views           integer not null default 0,
   downloads       integer not null default 0,
-  -- 자료실 vs 인사이트 자동 판별 (computed)
-  kind            text generated always as (
-    case
-      when file_url is not null and file_url <> '' then 'files'
-      when external_url ~* 'https?://(?:m\.|www\.)?(docs|drive|sheets|slides)\.google\.com' then 'files'
-      else 'insights'
-    end
-  ) stored
+  -- 메뉴 배치 (2026-07-08 회의: 자료 형식이 SSOT — 템플릿만 files, 나머지 insights)
+  -- 과거엔 URL 기반 generated column이었으나 수동 분류로 전환 (sync·승인 플로우가 세팅)
+  kind            text not null default 'insights'
 );
 
 create index if not exists idx_archive_kind on archive_item (kind);
@@ -195,3 +190,39 @@ create policy "checklog_admin" on check_log for all using (
 
 -- ================== 10. updated_at 트리거 (선택) ==================
 -- 추후 필요 시 추가
+
+-- ================== 승인 원자화 (2026-07-09) ==================
+-- 2인 승인 동시성 버그 수정: read-modify-write가 아니라 행 잠금(FOR UPDATE) 후
+-- append. 동시 승인 시에도 유실 없음. MIN 도달을 감지한 요청 하나만
+-- approved=true를 받아 자료실 이관을 수행한다.
+create or replace function approve_proposal_atomic(p_id uuid, p_email text, p_min int)
+returns jsonb
+language plpgsql
+security definer
+as $$
+declare
+  v_row staging_proposal%rowtype;
+  v_new text[];
+begin
+  select * into v_row from staging_proposal where id = p_id for update;
+  if not found then
+    return jsonb_build_object('ok', false, 'reason', 'not_found');
+  end if;
+  if v_row.status <> 'pending' then
+    return jsonb_build_object('ok', false, 'reason', 'not_pending');
+  end if;
+  if p_email = any(coalesce(v_row.approvers, '{}')) then
+    v_new := v_row.approvers;
+  else
+    v_new := coalesce(v_row.approvers, '{}') || p_email;
+  end if;
+  if coalesce(array_length(v_new, 1), 0) >= p_min then
+    update staging_proposal
+       set approvers = v_new, status = 'approved', reviewed_at = now()
+     where id = p_id;
+    return jsonb_build_object('ok', true, 'approved', true, 'approvers', to_jsonb(v_new));
+  else
+    update staging_proposal set approvers = v_new where id = p_id;
+    return jsonb_build_object('ok', true, 'approved', false, 'approvers', to_jsonb(v_new));
+  end if;
+end $$;

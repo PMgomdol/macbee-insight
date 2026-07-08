@@ -16,8 +16,22 @@ export function CollapsibleAnswer({ answer }: { answer: string }) {
   useEffect(() => {
     const el = innerRef.current;
     if (!el) return;
-    const emPx = parseFloat(getComputedStyle(el).fontSize) || 14;
-    setOverflows(el.scrollHeight > COLLAPSE_EM * emPx + 8);
+    const measure = () => {
+      // 닫힌 <details> 안에서는 scrollHeight=0 — 펼쳐진 뒤에만 유효한 값
+      if (el.scrollHeight === 0) return;
+      const emPx = parseFloat(getComputedStyle(el).fontSize) || 14;
+      setOverflows(el.scrollHeight > COLLAPSE_EM * emPx + 8);
+    };
+    measure();
+    // 부모 아코디언이 펼쳐질 때 + 뷰포트 리사이즈 시 재측정
+    const details = el.closest('details');
+    details?.addEventListener('toggle', measure);
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => {
+      details?.removeEventListener('toggle', measure);
+      ro.disconnect();
+    };
   }, [answer]);
 
   return (

@@ -26,6 +26,29 @@ function clean(s: string) {
   return s.replace(/[%_,()]/g, '').trim();
 }
 
+// 문장형 질의 대응 — "회원가입 정책이 궁금해요" → [회원가입, 정책]
+// 검색 의도와 무관한 꼬리 어절
+const STOPWORDS = new Set([
+  '궁금해요', '궁금합니다', '궁금', '있을까요', '있나요', '있어요', '알려주세요',
+  '알려줘', '주세요', '해주세요', '어떻게', '어떤', '무엇', '뭐', '관련', '자료',
+  '예시', '샘플요청', '필요해요', '필요합니다', '좀', '혹시', '문의',
+]);
+// 어절 끝 조사 — 제거 후 2자 이상 남을 때만 적용 ("정책이"→"정책", "회의"는 유지)
+const JOSA = /(이|가|을|를|은|는|의|에|에서|으로|로|이란|란|처럼|같은)$/;
+
+function tokenize(q: string): string[] {
+  const words = q.split(/\s+/).map(clean).filter(Boolean);
+  const out: string[] = [];
+  for (const w of words) {
+    if (STOPWORDS.has(w)) continue;
+    let t = w;
+    const stripped = w.replace(JOSA, '');
+    if (stripped.length >= 2 && stripped !== w) t = stripped;
+    if (t.length >= 2 && !STOPWORDS.has(t)) out.push(t);
+  }
+  return Array.from(new Set(out)).slice(0, 4); // 과도한 쿼리 수 방지
+}
+
 /** 검색어 + 동의어 OR 검색 → 자료 + FAQ + 관련도 점수 정렬 */
 export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<SearchResult> {
   const q = qRaw.trim();
@@ -33,7 +56,12 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
 
   const safe = clean(q);
   const syn = expand(q);
-  const terms = Array.from(new Set([safe, ...(syn?.expanded.map(clean) ?? [])])).filter(Boolean);
+  // 문장형이면 토큰도 검색 대상에 — 원질의(가중치 최고) > 토큰 > 동의어 순
+  const tokens = tokenize(q);
+  const tokenTerms = tokens.length >= 2 ? tokens : [];
+  const terms = Array.from(
+    new Set([safe, ...tokenTerms, ...(syn?.expanded.map(clean) ?? [])])
+  ).filter(Boolean);
 
   const sb = createPublicClient();
 
@@ -80,9 +108,17 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
 
   const [archAll, faqAll] = await Promise.all([archP, faqP]);
 
+  // 가중치: 원질의 전체 매칭 10 > 문장 토큰 7 > 동의어 5.
+  // 토큰 여러 개에 함께 걸리면 합산되어 자연히 상위로.
+  const weightOf = (termIdx: number) => {
+    if (termIdx === 0) return 10;
+    if (termIdx <= tokenTerms.length) return 7;
+    return 5;
+  };
+
   const archMap = new Map<number, { item: ArchiveItem; score: number }>();
   archAll.forEach((rows, termIdx) => {
-    const tScore = termIdx === 0 ? 10 : 5;
+    const tScore = weightOf(termIdx);
     for (const r of rows as ArchiveItem[]) {
       const prev = archMap.get(r.id);
       const titleHit = r.title.toLowerCase().includes(terms[termIdx].toLowerCase()) ? 5 : 0;
@@ -93,7 +129,7 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
 
   const faqMap = new Map<number, { item: FAQItem; score: number }>();
   faqAll.forEach((rows, termIdx) => {
-    const tScore = termIdx === 0 ? 10 : 5;
+    const tScore = weightOf(termIdx);
     for (const r of rows as FAQItem[]) {
       const prev = faqMap.get(r.id);
       faqMap.set(r.id, { item: r, score: (prev?.score ?? 0) + tScore });
