@@ -1,9 +1,55 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Search, X, ChevronDown } from 'lucide-react';
 import type { FAQItem } from '@/types/db';
+
+// 답변 접기 — 대략 10줄(15em) 넘으면 잘라서 '더 보기'
+const COLLAPSE_EM = 15;
+
+function CollapsibleAnswer({ answer }: { answer: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const innerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+    const emPx = parseFloat(getComputedStyle(el).fontSize) || 14;
+    setOverflows(el.scrollHeight > COLLAPSE_EM * emPx + 8);
+  }, [answer]);
+
+  return (
+    <div className="px-1 pb-4 pt-1 text-sm text-[var(--muted)] leading-relaxed">
+      <div
+        ref={innerRef}
+        className="faq-answer relative overflow-hidden"
+        style={
+          !expanded && overflows
+            ? {
+                maxHeight: `${COLLAPSE_EM}em`,
+                maskImage: 'linear-gradient(to bottom, black 75%, transparent)',
+                WebkitMaskImage: 'linear-gradient(to bottom, black 75%, transparent)',
+              }
+            : undefined
+        }
+      >
+        <Markdown remarkPlugins={[remarkGfm]}>{answer}</Markdown>
+      </div>
+      {overflows && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-1.5 text-xs font-medium text-[var(--accent)] hover:underline inline-flex items-center gap-1"
+        >
+          {expanded ? '접기' : '더 보기'}
+          <ChevronDown size={12} className={expanded ? 'rotate-180 transition' : 'transition'} aria-hidden />
+        </button>
+      )}
+    </div>
+  );
+}
 
 function slugify(s: string) {
   return 'cat-' + encodeURIComponent(s.replace(/\s+/g, '-').toLowerCase());
@@ -121,9 +167,7 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
                       <span className="flex-1 min-w-0">{f.question}</span>
                       <ChevronDown size={16} className="text-[var(--muted-2)] group-open:rotate-180 transition shrink-0 mt-0.5" aria-hidden />
                     </summary>
-                    <div className="faq-answer px-1 pb-4 pt-1 text-sm text-[var(--muted)] leading-relaxed">
-                      <Markdown remarkPlugins={[remarkGfm]}>{f.answer}</Markdown>
-                    </div>
+                    <CollapsibleAnswer answer={f.answer} />
                   </details>
                 ))}
               </div>
