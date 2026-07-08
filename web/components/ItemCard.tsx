@@ -77,7 +77,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       data-card-id={item.id}
       data-card-kind={item.kind}
       data-card-category={item.main_category}
-      className="app-card group flex flex-col gap-2.5 p-4 min-h-[180px] overflow-hidden"
+      className="app-card group flex flex-col gap-2.5 p-4 min-h-[180px] h-full overflow-hidden"
       aria-label={`${video ? '영상' : kindLabel(item.kind)}: ${item.title} (새 탭에서 열어요)`}
     >
       {/* ① 자료 종류 (Lozenge) — 메타 배지 */}
