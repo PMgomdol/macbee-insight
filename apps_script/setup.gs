@@ -583,6 +583,7 @@ function EXISTING_ARCHIVE_DATA_() {
  * 맥비톡방 자료실 시트의 정제된 자료 822건을 SSOT에 일괄 import.
  * 데이터는 imports_chat.gs의 GET_CHAT_AUTO_IMPORT_() 가 제공.
  * 중복 URL은 자동 skip. setValues로 일괄 처리해서 timeout 회피.
+ * 삭제 시트에 있는 URL은 재유입 금지 (2026-07-08: 과거 삭제분 97건 부활 사고 재발 방지).
  */
 function importChatArchive() {
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
@@ -593,6 +594,7 @@ function importChatArchive() {
   const getOwner = (main, sub) => ownerMap[main + '|' + sub] || '';
 
   const existingUrls = buildExistingUrlSet_(ssot);
+  const deletedUrls = buildDeletedUrlSet_(ss);
   const data = GET_CHAT_AUTO_IMPORT_();
   const now = new Date();
   let lastNo = ssot.getLastRow() > 1
@@ -601,8 +603,10 @@ function importChatArchive() {
 
   const rows = [];
   let skipped = 0;
+  let deletedSkipped = 0;
   data.forEach(d => {
     const key = normalizeUrl_(d.link);
+    if (key && deletedUrls.has(key)) { deletedSkipped++; return; }
     if (key && existingUrls.has(key)) { skipped++; return; }
     if (key) existingUrls.add(key);
     lastNo++;
@@ -624,9 +628,10 @@ function importChatArchive() {
     const startRow = ssot.getLastRow() + 1;
     ssot.getRange(startRow, 1, rows.length, 19).setValues(rows);
   }
-  Logger.log('importChatArchive: 신규 ' + rows.length + '건, 중복 skip ' + skipped + '건');
+  Logger.log('importChatArchive: 신규 ' + rows.length + '건, 중복 skip ' + skipped +
+    '건, 삭제이력 skip ' + deletedSkipped + '건');
   if (rows.length > 0) invalidateSsotCache_();
-  return { imported: rows.length, skipped: skipped };
+  return { imported: rows.length, skipped: skipped, deletedSkipped: deletedSkipped };
 }
 
 /** SSOT의 외부 링크(col 7) + 파일 링크(col 8) 모두 정규화해서 Set 생성 */
@@ -639,6 +644,26 @@ function buildExistingUrlSet_(ssot) {
     const u2 = normalizeUrl_(r[1]);
     if (u1) set.add(u1);
     if (u2) set.add(u2);
+  });
+  return set;
+}
+
+/**
+ * 삭제 시트 모음의 URL 정규화 Set — 운영진이 삭제 결정한 자료의 재유입 방지.
+ * 헤더에서 '외부 링크'·'파일 링크' 컬럼을 이름으로 찾음 (삭제 시트는 컬럼 구성이 다름).
+ */
+function buildDeletedUrlSet_(ss) {
+  const set = new Set();
+  const sheet = ss.getSheetByName(CONFIG.SHEETS.TRASH);
+  if (!sheet || sheet.getLastRow() < 2) return set;
+  const header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const iEu = header.indexOf('외부 링크');
+  const iFu = header.indexOf('파일 링크');
+  if (iEu < 0 && iFu < 0) return set;
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+  data.forEach(r => {
+    if (iEu >= 0) { const u = normalizeUrl_(r[iEu]); if (u) set.add(u); }
+    if (iFu >= 0) { const u = normalizeUrl_(r[iFu]); if (u) set.add(u); }
   });
   return set;
 }

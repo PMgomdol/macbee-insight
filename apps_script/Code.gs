@@ -25,6 +25,7 @@ const CONFIG = {
     STAGING: '_staging_',
     CATEGORY: '카테고리',
     LOG: '_점검로그',
+    TRASH: '삭제 시트 모음(제거 예정)',
   },
   PAGE_SIZE: 50,
 };
