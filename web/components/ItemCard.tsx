@@ -20,8 +20,11 @@ function isVideo(item: ArchiveItem): boolean {
   return /youtube\.com|youtu\.be|vimeo\.com|tv\.naver\.com/.test(url);
 }
 
-/** 파일 확장자 배지 — PDF / 워드 / PPT / 엑셀 / 한글 등 */
+/** 파일 확장자 배지 — DB의 file_ext 우선, 없으면 URL 패턴 fallback */
 function fileExtBadge(item: ArchiveItem): string | null {
+  // 1) DB에 미리 판별된 값 있으면 그대로 (Drive 파일 실제 mimeType 반영)
+  if (item.file_ext) return item.file_ext;
+  // 2) URL 패턴 fallback
   const u = (item.file_url || item.external_url || '').toLowerCase();
   if (!u) return null;
   if (/docs\.google\.com\/document/.test(u)) return '구글 문서';

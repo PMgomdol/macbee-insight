@@ -8,7 +8,7 @@ const DAY = 24 * HOUR;
 
 // 카드/리스트 렌더에 실제 쓰는 컬럼만 — RSC 페이로드 ~40% 절감
 const ARCHIVE_CARD_COLS =
-  'id, kind, format, external_url, file_url, main_category, sub_category, title, summary, published_at, registered_at, views, tags';
+  'id, kind, format, file_ext, external_url, file_url, main_category, sub_category, title, summary, published_at, registered_at, views, tags';
 const FAQ_CARD_COLS = 'id, main_category, question, answer';
 
 /**

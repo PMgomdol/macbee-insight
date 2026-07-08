@@ -8,6 +8,7 @@ export type ArchiveItem = {
   external_url: string | null;
   file_url: string | null;
   format: string | null;
+  file_ext: string | null;
   published_at: string | null;
   registered_at: string;
   proposer: string | null;

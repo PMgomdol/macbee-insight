@@ -29,7 +29,8 @@ create table if not exists archive_item (
   summary         text,
   external_url    text,                          -- 외부 링크 (아티클·영상)
   file_url        text,                          -- 다운로드 파일 (Drive/Storage)
-  format          text,                          -- 아티클|영상|기획서|가이드|템플릿|세미나
+  format          text,                          -- 아티클|영상|기획서|가이드|템플릿|세미나 (자료 카테고리성 값)
+  file_ext        text,                          -- PDF|워드|PPT|엑셀|한글|이미지|영상|ZIP|구글 문서|구글 시트|구글 슬라이드 (배지용)
   published_at    date,                          -- 원본 발행일 (없으면 NULL)
   registered_at   timestamptz not null default now(),
   proposer        text,
