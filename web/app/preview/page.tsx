@@ -3,7 +3,6 @@ import { ItemCard } from '@/components/ItemCard';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
 import { SearchAutocomplete } from '@/components/SearchAutocomplete';
 import { getMonthlyPopularItems, getCategoryCounts } from '@/lib/queries';
-import { InteractiveHero } from './InteractiveHero';
 
 export const metadata = {
   title: '자료 검색 (프리뷰) · 맥비기획 자료실',
@@ -36,16 +35,19 @@ export default async function PreviewLanding() {
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="flex flex-col items-stretch gap-14 sm:gap-20 pt-4 sm:pt-8 pb-10">
+    <div className="flex flex-col items-center gap-10 sm:gap-16 pt-4 sm:pt-16 pb-10">
       {/* 프리뷰 배너 */}
-      <div className="w-full max-w-3xl mx-auto">
+      <div className="w-full max-w-3xl">
         <div className="text-[11px] text-[var(--muted-2)] border border-dashed border-[var(--border)] rounded-[var(--r-sm)] px-3 py-1.5 text-center">
           프리뷰 화면 — 검토용 랜딩 시안. 정식 반영 전 상태입니다.
         </div>
       </div>
 
-      {/* 검색 히어로 — 인터랙티브 배경 wrapper */}
-      <InteractiveHero>
+      {/* 중앙 검색 영역 */}
+      <section
+        className="w-full max-w-2xl flex flex-col items-center gap-5 sm:gap-6"
+        aria-label="자료 검색"
+      >
         <div className="flex flex-col items-center gap-2 text-center px-2">
           <h1 className="text-[26px] leading-[1.2] sm:text-4xl font-bold tracking-tight">
             무엇을 찾아드릴까요?
@@ -73,9 +75,9 @@ export default async function PreviewLanding() {
             </Link>
           ))}
         </div>
-      </InteractiveHero>
+      </section>
 
-      {/* Top 10 캐러셀 — 배경 없음. 히어로와 자연 대비 */}
+      {/* Top 10 캐러셀 */}
       {popular.length > 0 && (
         <section className="w-full flex flex-col gap-3" aria-label="이번 달 인기 자료">
           <div className="flex items-baseline justify-between gap-3">
