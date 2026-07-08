@@ -1,8 +1,10 @@
 import type { ArchiveItem } from '@/types/db';
 import { ExternalLink, Download, PlayCircle, FileText } from 'lucide-react';
 
+// 카드 배지 라벨 — 페이지 타이틀/필터의 "양식·템플릿"·"아티클·영상"과 별도.
+// 카드에선 심플하게: files=파일, insights=아티클 (영상은 별도 분기)
 function kindLabel(kind: 'files' | 'insights') {
-  return kind === 'files' ? '양식·템플릿' : '아티클·영상';
+  return kind === 'files' ? '파일' : '아티클';
 }
 
 function formatDate(s: string | null): string | null {
