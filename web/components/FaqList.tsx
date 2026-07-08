@@ -8,7 +8,7 @@ import type { FAQItem } from '@/types/db';
 // 답변 접기 — 대략 10줄(15em) 넘으면 잘라서 '더 보기'
 const COLLAPSE_EM = 15;
 
-function CollapsibleAnswer({ answer }: { answer: string }) {
+export function CollapsibleAnswer({ answer }: { answer: string }) {
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
   const innerRef = useRef<HTMLDivElement>(null);

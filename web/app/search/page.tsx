@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
 import { ItemCard } from '@/components/ItemCard';
+import { CollapsibleAnswer } from '@/components/FaqList';
 import { SearchAutocomplete } from '@/components/SearchAutocomplete';
 import { searchAll, type SearchOpts } from '@/lib/search';
 import { TRENDING } from '@/lib/synonyms';
@@ -12,24 +13,31 @@ export default async function SearchPage({
 }) {
   const sp = await searchParams;
   const q = (sp.q ?? '').trim();
-  const opts: SearchOpts = {
-    kind: sp.kind === 'files' || sp.kind === 'insights' ? sp.kind : undefined,
-    main: sp.main,
-    sub: sp.sub,
-    sort: (sp.sort as SearchOpts['sort']) || 'relevance',
-  };
+  const kind = sp.kind === 'files' || sp.kind === 'insights' ? sp.kind : undefined;
+  const sort = (sp.sort as SearchOpts['sort']) || 'relevance';
 
-  const result = q ? await searchAll(q, opts) : { archives: [], faqs: [], expanded: [] as string[], synonymCanonical: undefined as string | undefined };
+  // 검색은 필터 없이 한 번만 — 필터는 아래서 계단식으로 적용.
+  // 분포(칩 카운트)를 "자기보다 상위 필터만 적용된 집합"에서 계산해야
+  // 필터를 걸어도 다른 선택지·해제 버튼이 계속 보인다.
+  const result = q ? await searchAll(q, { sort }) : { archives: [], faqs: [], expanded: [] as string[], synonymCanonical: undefined as string | undefined };
 
-  // 검색 결과 안에서 대분류·소분류 분포 (필터 없이 한 번 더 검색해야 정확하지만 비용 큼 — 현재 결과 기준)
+  const byKind = kind ? result.archives.filter((it) => it.kind === kind) : result.archives;
+  const byMain = sp.main ? byKind.filter((it) => it.main_category === sp.main) : byKind;
+  const archives = sp.sub ? byMain.filter((it) => it.sub_category === sp.sub) : byMain;
+
+  // kind 칩 카운트 — 전체 결과 기준
+  const kindCounts = { files: 0, insights: 0 };
+  for (const it of result.archives) kindCounts[it.kind] += 1;
+
+  // 대분류 분포 — kind만 적용된 집합 기준 (main 해제·전환 항상 가능)
   const mainCounts = new Map<string, number>();
-  for (const it of result.archives) {
+  for (const it of byKind) {
     mainCounts.set(it.main_category, (mainCounts.get(it.main_category) ?? 0) + 1);
   }
+  // 소분류 분포 — kind+main 적용, sub 미적용 집합 기준
   const subCounts = new Map<string, number>();
   if (sp.main) {
-    for (const it of result.archives) {
-      if (it.main_category !== sp.main) continue;
+    for (const it of byMain) {
       const s = it.sub_category;
       if (!s) continue;
       subCounts.set(s, (subCounts.get(s) ?? 0) + 1);
@@ -55,7 +63,11 @@ export default async function SearchPage({
       {q && (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-[var(--muted)]">
-            <strong className="text-[var(--fg)]">{q}</strong> 결과 — 자료 {result.archives.length} · 실무 Q&A {result.faqs.length}
+            <strong className="text-[var(--fg)]">{q}</strong> 결과 — 자료 {archives.length}
+            {archives.length !== result.archives.length && (
+              <span className="text-[var(--muted-2)]"> (전체 {result.archives.length})</span>
+            )}
+            {' '}· 실무 Q&A {result.faqs.length}
           </p>
 
           {result.synonymCanonical && result.expanded.length > 1 && (
@@ -72,17 +84,23 @@ export default async function SearchPage({
             </div>
           )}
 
-          {/* kind + 정렬 */}
+          {/* kind + 정렬 — kind 전환 시 하위 필터(소분류) 리셋 */}
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex gap-1 text-xs flex-wrap">
-              <FilterLink href={buildHref({ kind: undefined })} active={!opts.kind}>전체</FilterLink>
-              <FilterLink href={buildHref({ kind: 'files' })} active={opts.kind === 'files'}>양식·템플릿</FilterLink>
-              <FilterLink href={buildHref({ kind: 'insights' })} active={opts.kind === 'insights'}>콘텐츠</FilterLink>
+              <FilterLink href={buildHref({ kind: undefined, sub: undefined })} active={!kind}>
+                전체 ({result.archives.length})
+              </FilterLink>
+              <FilterLink href={buildHref({ kind: 'files', sub: undefined })} active={kind === 'files'}>
+                양식·템플릿 ({kindCounts.files})
+              </FilterLink>
+              <FilterLink href={buildHref({ kind: 'insights', sub: undefined })} active={kind === 'insights'}>
+                콘텐츠 ({kindCounts.insights})
+              </FilterLink>
             </div>
             <div className="flex gap-1 text-xs">
-              <FilterLink href={buildHref({ sort: 'relevance' })} active={opts.sort === 'relevance'}>관련도</FilterLink>
-              <FilterLink href={buildHref({ sort: 'popular' })} active={opts.sort === 'popular'}>인기순</FilterLink>
-              <FilterLink href={buildHref({ sort: 'recent' })} active={opts.sort === 'recent'}>최신순</FilterLink>
+              <FilterLink href={buildHref({ sort: 'relevance' })} active={sort === 'relevance'}>관련도</FilterLink>
+              <FilterLink href={buildHref({ sort: 'popular' })} active={sort === 'popular'}>인기순</FilterLink>
+              <FilterLink href={buildHref({ sort: 'recent' })} active={sort === 'recent'}>최신순</FilterLink>
             </div>
           </div>
 
@@ -143,13 +161,23 @@ export default async function SearchPage({
         </div>
       )}
 
-      {q && result.archives.length > 0 && (
+      {q && archives.length > 0 && (
         <section className="flex flex-col gap-2.5">
           <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">자료</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {result.archives.map((it) => <ItemCard key={it.id} item={it} />)}
+            {archives.map((it) => <ItemCard key={it.id} item={it} />)}
           </div>
         </section>
+      )}
+
+      {/* 필터 때문에 자료 0건 — 검색 자체는 결과 있음 */}
+      {q && archives.length === 0 && result.archives.length > 0 && (
+        <div className="py-6 text-center text-sm text-[var(--muted)]">
+          이 필터 조합에는 자료가 없어요.{' '}
+          <Link href={buildHref({ kind: undefined, main: undefined, sub: undefined })} className="text-[var(--accent)] hover:underline">
+            필터 초기화
+          </Link>
+        </div>
       )}
 
       {q && result.faqs.length > 0 && (
@@ -162,7 +190,7 @@ export default async function SearchPage({
                   <span className="flex-1 min-w-0">{f.question}</span>
                   <span className="text-xs text-[var(--muted-2)] shrink-0">{f.main_category}</span>
                 </summary>
-                <div className="pb-4 text-sm text-[var(--muted)] whitespace-pre-wrap">{f.answer}</div>
+                <CollapsibleAnswer answer={f.answer} />
               </details>
             ))}
           </div>
@@ -173,6 +201,24 @@ export default async function SearchPage({
         <div className="flex flex-col gap-3 py-8 text-center">
           <p className="text-sm text-[var(--muted)]">못 찾았어요. 이런 키워드는 어때요?</p>
           <div className="flex flex-wrap justify-center gap-1.5">
+            {TRENDING.map((t) => (
+              <Link
+                key={t}
+                href={`/search?q=${encodeURIComponent(t)}`}
+                className="px-3 py-1.5 rounded-[var(--r-sm)] text-xs border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              >
+                {t}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 검색어 없이 진입 — 추천 키워드로 시작 유도 */}
+      {!q && (
+        <div className="flex flex-col gap-3 py-4">
+          <p className="text-xs text-[var(--muted-2)]">추천 키워드</p>
+          <div className="flex flex-wrap gap-1.5">
             {TRENDING.map((t) => (
               <Link
                 key={t}
