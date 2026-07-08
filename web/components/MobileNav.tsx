@@ -63,7 +63,7 @@ export function MobileNavClient({ isReviewer = false }: { isReviewer?: boolean }
           aria-label="모바일 메뉴"
         >
           <form onSubmit={onSearch} className="px-4 py-3 border-b border-[var(--border)]">
-            <div className="app-input px-3 py-2.5">
+            <div className="app-input !rounded-full px-4 py-2.5">
               <Search size={16} className="text-[var(--muted)]" aria-hidden />
               <input
                 type="search"

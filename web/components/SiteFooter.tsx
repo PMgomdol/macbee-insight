@@ -14,8 +14,8 @@ export function SiteFooter() {
     <footer className="border-t border-[var(--border)] mt-12">
       <div className="max-w-6xl mx-auto px-3 sm:px-6 py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12">
-          {/* 사이트 소개 + 모토 + 운영팀 */}
-          <div className="flex flex-col gap-4">
+          {/* 사이트 소개 + 문의 */}
+          <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <h3 className="font-bold text-sm text-[var(--fg)]">맥비기획 자료실</h3>
               <p className="text-xs text-[var(--muted)] leading-relaxed">
@@ -23,17 +23,27 @@ export function SiteFooter() {
               </p>
             </div>
 
-            <div className="text-xs">
-              <div className="font-semibold text-[var(--muted)] mb-1.5">운영팀</div>
-              <ul className="flex flex-col gap-1 text-[var(--muted-2)]">
-                <li><span className="text-[var(--muted)]">정비팀</span> 전용구</li>
-                <li><span className="text-[var(--muted)]">운영팀</span> 서지연</li>
-                <li><span className="text-[var(--muted)]">구독팀</span> 이종석</li>
+            {/* 문의 */}
+            <div className="flex flex-col gap-2">
+              <h3 className="font-bold text-sm text-[var(--fg)]">문의</h3>
+              <ul className="flex flex-col gap-1.5 text-xs text-[var(--muted)]">
+                <li className="inline-flex items-center gap-1.5">
+                  <MessageSquare size={13} aria-hidden /> 톡장(맥비) ID
+                  <code className="px-1.5 py-0.5 rounded bg-[var(--card)] text-[var(--fg)]">iam219</code>
+                </li>
+                <li>
+                  <a
+                    href="mailto:macbe219@naver.com"
+                    className="inline-flex items-center gap-1.5 hover:text-[var(--accent)] w-fit"
+                  >
+                    <Mail size={13} aria-hidden /> macbe219@naver.com
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
 
-          {/* 맥비기획 채널 + 문의 */}
+          {/* 맥비기획 채널 */}
           <div className="flex flex-col gap-5">
             {/* 카카오톡 톡방 */}
             <div className="flex flex-col gap-2">
@@ -84,25 +94,6 @@ export function SiteFooter() {
                   >
                     <FolderOpen size={13} aria-hidden /> 포트폴리오 공유방 신청
                     <ExternalLink size={10} aria-hidden />
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* 문의 */}
-            <div className="flex flex-col gap-2">
-              <h3 className="font-bold text-sm text-[var(--fg)]">문의</h3>
-              <ul className="flex flex-col gap-1.5 text-xs text-[var(--muted)]">
-                <li className="inline-flex items-center gap-1.5">
-                  <MessageSquare size={13} aria-hidden /> 톡장(맥비) ID
-                  <code className="px-1.5 py-0.5 rounded bg-[var(--card)] text-[var(--fg)]">iam219</code>
-                </li>
-                <li>
-                  <a
-                    href="mailto:macbe219@naver.com"
-                    className="inline-flex items-center gap-1.5 hover:text-[var(--accent)] w-fit"
-                  >
-                    <Mail size={13} aria-hidden /> macbe219@naver.com
                   </a>
                 </li>
               </ul>

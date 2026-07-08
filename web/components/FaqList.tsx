@@ -94,7 +94,7 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
   return (
     <div className="flex flex-col gap-4">
       {/* 큰 검색 박스 — 실무 Q&A 전용 */}
-      <div className="flex items-center gap-2 px-4 py-3 rounded-[var(--r-md)] border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)] focus-within:border-b-2">
+      <div className="flex items-center gap-2 px-4 py-3 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)] focus-within:border-b-2">
         <Search size={18} className="text-[var(--muted)] shrink-0" aria-hidden />
         <input
           type="search"

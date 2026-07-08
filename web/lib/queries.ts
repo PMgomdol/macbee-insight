@@ -159,6 +159,31 @@ export const getCategoryCounts = unstable_cache(
 );
 
 /** 특정 대분류 안의 소분류별 자료 수 */
+/** 태그 빈도 상위 N — 홈 '자주 찾는 자료' 자동 집계 (하드코딩 대체) */
+export const getTopTags = unstable_cache(
+  async (limit = 5): Promise<string[]> => {
+    const sb = createPublicClient();
+    const { data } = await sb
+      .from('archive_item')
+      .select('tags')
+      .eq('status', 'public');
+    const counts = new Map<string, number>();
+    for (const r of data ?? []) {
+      for (const t of (r.tags as string[]) ?? []) {
+        const k = t.trim();
+        if (!k) continue;
+        counts.set(k, (counts.get(k) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([t]) => t);
+  },
+  ['top-tags-v1'],
+  { revalidate: HOUR, tags: ['archive'] }
+);
+
 export const getSubCategoryCounts = unstable_cache(
   async (main: string, kind?: 'files' | 'insights') => {
     if (!main) return {} as Record<string, number>;

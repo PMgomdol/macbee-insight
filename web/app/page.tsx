@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ItemCard } from '@/components/ItemCard';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
 import { SearchAutocomplete } from '@/components/SearchAutocomplete';
-import { getMonthlyPopularItems, getCategoryCounts } from '@/lib/queries';
+import { getMonthlyPopularItems, getCategoryCounts, getTopTags } from '@/lib/queries';
 
 // 카톡 실제 요청 패턴에서 뽑은 순환 힌트 (2년치 대화 상위 요청 문구)
 const PLACEHOLDERS = [
@@ -14,19 +14,17 @@ const PLACEHOLDERS = [
   '와이어프레임 레퍼런스',
 ];
 
-const QUICK_TAGS = ['화면설계서', '피그마 컴포넌트', 'GA4', '리서치', '구독 결제'];
-
 const FOOTER_LINKS = [
-  { href: '/faq', label: '처음이신가요? FAQ 보기' },
   { href: '/submit', label: '+ 자료 제안하기' },
   { href: '/files', label: '양식·템플릿 전체' },
   { href: '/insights', label: '콘텐츠 전체' },
 ];
 
 export default async function Home() {
-  const [popular, counts] = await Promise.all([
+  const [popular, counts, topTags] = await Promise.all([
     getMonthlyPopularItems(10),
     getCategoryCounts(),
+    getTopTags(5),
   ]);
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -52,18 +50,20 @@ export default async function Home() {
           <SearchAutocomplete variant="hero" placeholders={PLACEHOLDERS} />
         </div>
 
-        <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-1.5 text-[11px] sm:text-xs text-[var(--muted-2)]">
-          <span className="opacity-70">자주 찾는 자료</span>
-          {QUICK_TAGS.map((k) => (
-            <Link
-              key={k}
-              href={`/search?q=${encodeURIComponent(k)}`}
-              className="hover:text-[var(--fg)] underline decoration-dotted underline-offset-2 whitespace-nowrap"
-            >
-              {k}
-            </Link>
-          ))}
-        </div>
+        {topTags.length > 0 && (
+          <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-1.5 text-[11px] sm:text-xs text-[var(--muted-2)]">
+            <span className="opacity-70">인기 태그</span>
+            {topTags.map((k) => (
+              <Link
+                key={k}
+                href={`/search?q=${encodeURIComponent(k)}`}
+                className="hover:text-[var(--fg)] underline decoration-dotted underline-offset-2 whitespace-nowrap"
+              >
+                {k}
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Top 10 캐러셀 */}

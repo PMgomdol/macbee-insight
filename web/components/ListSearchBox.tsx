@@ -33,7 +33,7 @@ export function ListSearchBox({ basePath, placeholder }: { basePath: string; pla
   }
 
   return (
-    <form onSubmit={submit} role="search" className="flex items-center gap-2 px-3 py-2 rounded-[var(--r-md)] border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)] focus-within:border-b-2">
+    <form onSubmit={submit} role="search" className="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)] focus-within:border-b-2">
       <Search size={16} className="text-[var(--muted)] shrink-0" aria-hidden />
       <input
         type="search"
