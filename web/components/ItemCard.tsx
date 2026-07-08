@@ -20,13 +20,27 @@ function isVideo(item: ArchiveItem): boolean {
   return /youtube\.com|youtu\.be|vimeo\.com|tv\.naver\.com/.test(url);
 }
 
+// 구글 리다이렉트 URL(www.google.com/url?q=...) → 실제 URL로 풀기.
+// 카톡 공유 시 자주 감싸져 오는 형태라 URL 그대로면 substring 검사가 오탐남.
+function unwrapRedirect(u: string): string {
+  try {
+    const p = new URL(u);
+    if (p.hostname === 'www.google.com' && p.pathname === '/url') {
+      const q = p.searchParams.get('q');
+      if (q) return q;
+    }
+  } catch {}
+  return u;
+}
+
 /** 파일 확장자 배지 — DB의 file_ext 우선, 없으면 URL 패턴 fallback */
 function fileExtBadge(item: ArchiveItem): string | null {
   // 1) DB에 미리 판별된 값 있으면 그대로 (Drive 파일 실제 mimeType 반영)
   if (item.file_ext) return item.file_ext;
-  // 2) URL 패턴 fallback
-  const u = (item.file_url || item.external_url || '').toLowerCase();
-  if (!u) return null;
+  // 2) URL 패턴 fallback (리다이렉트 URL은 실제 URL로 풀어서 검사)
+  const raw = item.file_url || item.external_url || '';
+  if (!raw) return null;
+  const u = unwrapRedirect(raw).toLowerCase();
   if (/docs\.google\.com\/document/.test(u)) return '구글 문서';
   if (/docs\.google\.com\/spreadsheets/.test(u)) return '구글 시트';
   if (/docs\.google\.com\/presentation/.test(u)) return '구글 슬라이드';
