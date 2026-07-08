@@ -56,8 +56,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <NavProgress />
         <CardClickTracker />
         <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)] z-50">
-          <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-3">
-            <Link href="/" className="font-bold text-base sm:text-lg tracking-tight shrink-0">
+          <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
+            <Link href="/" className="font-bold text-base sm:text-lg tracking-tight shrink-0 justify-self-start">
               맥비기획 자료실
             </Link>
             <div className="flex justify-center">
