@@ -80,11 +80,10 @@ def map_sheet_status(s) -> str:
 
 
 def infer_kind(ext: str, file_link: str, fmt: str | None) -> str:
-    if file_link:
-        return "files"
-    if fmt in ("템플릿", "기획서"):
-        return "files"
-    return "insights"
+    # 2026-07-08 회의: 메뉴 배치는 '자료 형식'이 SSOT.
+    # 템플릿(바로 갖다 쓰는 양식·샘플)만 양식·템플릿 메뉴, 나머지(가이드·세미나·아티클
+    # 등)는 파일이어도 콘텐츠 메뉴. 파일 여부는 kind가 아니라 file_ext 배지로 표현.
+    return "files" if fmt == "템플릿" else "insights"
 
 
 def map_ssot_row(row: list) -> dict | None:
@@ -123,7 +122,8 @@ def map_ssot_row(row: list) -> dict | None:
         "notes": str(notes) if notes else None,
         "views": int(views) if str(views).strip().isdigit() else 0,
         "downloads": int(downloads) if str(downloads).strip().isdigit() else 0,
-        # kind는 Supabase 측 generated column
+        # 2026-07-08부터 kind는 일반 컬럼 — 자료 형식 기준으로 세팅
+        "kind": infer_kind("", file_link, str(fmt).strip() if fmt else None),
     }
 
 

@@ -24,7 +24,7 @@ const FOOTER_LINKS = [
   { href: '/faq', label: '처음이신가요? FAQ 보기' },
   { href: '/submit', label: '+ 자료 제안하기' },
   { href: '/files', label: '양식·템플릿 전체' },
-  { href: '/insights', label: '아티클·영상 전체' },
+  { href: '/insights', label: '콘텐츠 전체' },
 ];
 
 export default async function PreviewLanding() {

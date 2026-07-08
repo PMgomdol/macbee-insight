@@ -1,10 +1,12 @@
 import type { ArchiveItem } from '@/types/db';
 import { ExternalLink, Download, PlayCircle, FileText } from 'lucide-react';
 
-// 카드 배지 라벨 — 페이지 타이틀/필터의 "양식·템플릿"·"아티클·영상"과 별도.
-// 카드에선 심플하게: files=파일, insights=아티클 (영상은 별도 분기)
-function kindLabel(kind: 'files' | 'insights') {
-  return kind === 'files' ? '파일' : '아티클';
+// 카드 배지 라벨 — 메뉴(kind)와 무관하게 실제 매체 기준.
+// 콘텐츠 메뉴 안의 PDF 가이드도 '파일' 배지를 달아야 다운로드 여부를 즉시 알 수 있음.
+function mediaLabel(item: ArchiveItem): '영상' | '파일' | '아티클' {
+  if (isVideo(item)) return '영상';
+  if (item.file_url || item.file_ext) return '파일';
+  return '아티클';
 }
 
 function formatDate(s: string | null): string | null {
@@ -64,7 +66,8 @@ function fileExtBadge(item: ArchiveItem): string | null {
  */
 export function ItemCard({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
-  const isFile = item.kind === 'files';
+  const media = mediaLabel(item);
+  const isFile = media === '파일';
   const video = isVideo(item);
   const fileExt = fileExtBadge(item);
   const tags = (item.tags ?? []).slice(0, 2);
@@ -78,7 +81,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       data-card-kind={item.kind}
       data-card-category={item.main_category}
       className="app-card group flex flex-col gap-2.5 p-4 min-h-[180px] h-full overflow-hidden"
-      aria-label={`${video ? '영상' : kindLabel(item.kind)}: ${item.title} (새 탭에서 열어요)`}
+      aria-label={`${media}: ${item.title} (새 탭에서 열어요)`}
     >
       {/* ① 자료 종류 (Lozenge) — 메타 배지 */}
       <div className="flex items-center gap-1.5 flex-wrap min-h-[20px]">
@@ -94,7 +97,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
           ) : (
             <ExternalLink size={11} aria-hidden />
           )}
-          {video ? '영상' : kindLabel(item.kind)}
+          {media}
         </span>
         {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
       </div>
@@ -136,7 +139,8 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
 
 export function ItemRow({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
-  const isFile = item.kind === 'files';
+  const media = mediaLabel(item);
+  const isFile = media === '파일';
   const video = isVideo(item);
   const fileExt = fileExtBadge(item);
   return (
@@ -162,7 +166,7 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
               video ? 'app-badge-video' : isFile ? 'app-badge-file' : 'app-badge-insight'
             }`}
           >
-            {video ? '영상' : kindLabel(item.kind)}
+            {media}
           </span>
           {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
         </div>

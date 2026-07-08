@@ -13,7 +13,7 @@ type Props = {
 const KINDS = [
   { v: 'all', label: '전체' },
   { v: 'files', label: '양식·템플릿' },
-  { v: 'insights', label: '아티클·영상' },
+  { v: 'insights', label: '콘텐츠' },
 ] as const;
 const STEP = 24;
 

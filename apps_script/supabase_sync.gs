@@ -112,7 +112,9 @@ function mapSsotRowToArchiveItem_(row) {
     notes: row[16] ? String(row[16]) : null,
     views: Number(row[17]) || 0,
     downloads: Number(row[18]) || 0,
-    // kind는 Supabase 측 generated column
+    // 2026-07-08부터 kind는 일반 컬럼 — 자료 형식이 메뉴 배치의 SSOT.
+    // 템플릿만 양식·템플릿(files), 나머지는 파일이어도 콘텐츠(insights).
+    kind: (row[8] && String(row[8]).trim() === '템플릿') ? 'files' : 'insights',
   };
 }
 

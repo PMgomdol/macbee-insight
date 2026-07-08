@@ -37,6 +37,8 @@ async function migrateToArchive(row: any, approvers: string[], extraNote?: strin
     status: 'public',
     exposure_grade: 'free',
     notes: note,
+    // 자료 형식이 메뉴 배치 기준: 템플릿만 양식·템플릿, 나머지는 콘텐츠
+    kind: row.format === '템플릿' ? 'files' : 'insights',
   });
   if (insErr) throw new Error('자료실로 옮기지 못했어요 — ' + insErr.message);
 }

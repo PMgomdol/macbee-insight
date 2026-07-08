@@ -77,7 +77,7 @@ export default async function SearchPage({
             <div className="flex gap-1 text-xs flex-wrap">
               <FilterLink href={buildHref({ kind: undefined })} active={!opts.kind}>전체</FilterLink>
               <FilterLink href={buildHref({ kind: 'files' })} active={opts.kind === 'files'}>양식·템플릿</FilterLink>
-              <FilterLink href={buildHref({ kind: 'insights' })} active={opts.kind === 'insights'}>아티클·영상</FilterLink>
+              <FilterLink href={buildHref({ kind: 'insights' })} active={opts.kind === 'insights'}>콘텐츠</FilterLink>
             </div>
             <div className="flex gap-1 text-xs">
               <FilterLink href={buildHref({ sort: 'relevance' })} active={opts.sort === 'relevance'}>관련도</FilterLink>
