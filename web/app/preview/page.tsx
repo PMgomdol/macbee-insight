@@ -3,13 +3,13 @@ import { ItemCard } from '@/components/ItemCard';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
 import { SearchAutocomplete } from '@/components/SearchAutocomplete';
 import { getMonthlyPopularItems, getCategoryCounts } from '@/lib/queries';
+import { InteractiveHero } from './InteractiveHero';
 
 export const metadata = {
   title: '자료 검색 (프리뷰) · 맥비기획 자료실',
   description: '검색 중심 랜딩 프리뷰 — 페르소나 검토용',
 };
 
-// 카톡 실제 요청 패턴에서 뽑은 순환 힌트 (2년치 대화 상위 요청 문구)
 const PLACEHOLDERS = [
   '회원가입 정책이 궁금해요',
   'PRD 템플릿 있을까요?',
@@ -36,19 +36,16 @@ export default async function PreviewLanding() {
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="flex flex-col items-center gap-10 sm:gap-16 pt-4 sm:pt-16 pb-10">
+    <div className="flex flex-col items-stretch gap-14 sm:gap-20 pt-4 sm:pt-8 pb-10">
       {/* 프리뷰 배너 */}
-      <div className="w-full max-w-3xl">
+      <div className="w-full max-w-3xl mx-auto">
         <div className="text-[11px] text-[var(--muted-2)] border border-dashed border-[var(--border)] rounded-[var(--r-sm)] px-3 py-1.5 text-center">
           프리뷰 화면 — 검토용 랜딩 시안. 정식 반영 전 상태입니다.
         </div>
       </div>
 
-      {/* 중앙 검색 영역 */}
-      <section
-        className="w-full max-w-2xl flex flex-col items-center gap-5 sm:gap-6"
-        aria-label="자료 검색"
-      >
+      {/* 검색 히어로 — 인터랙티브 배경 wrapper */}
+      <InteractiveHero>
         <div className="flex flex-col items-center gap-2 text-center px-2">
           <h1 className="text-[26px] leading-[1.2] sm:text-4xl font-bold tracking-tight">
             무엇을 찾아드릴까요?
@@ -64,7 +61,6 @@ export default async function PreviewLanding() {
           <SearchAutocomplete variant="hero" placeholders={PLACEHOLDERS} />
         </div>
 
-        {/* 자주 찾는 자료 — 첫인상에서 성격 즉시 전달 */}
         <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-1.5 text-[11px] sm:text-xs text-[var(--muted-2)]">
           <span className="opacity-70">자주 찾는 자료</span>
           {QUICK_TAGS.map((k) => (
@@ -77,9 +73,9 @@ export default async function PreviewLanding() {
             </Link>
           ))}
         </div>
-      </section>
+      </InteractiveHero>
 
-      {/* Top 10 캐러셀 */}
+      {/* Top 10 캐러셀 — 배경 없음. 히어로와 자연 대비 */}
       {popular.length > 0 && (
         <section className="w-full flex flex-col gap-3" aria-label="이번 달 인기 자료">
           <div className="flex items-baseline justify-between gap-3">
@@ -103,7 +99,7 @@ export default async function PreviewLanding() {
         </section>
       )}
 
-      {/* 하단 액션 링크 — 구분점 없이 gap만 사용 (wrap 시 자연스럽게) */}
+      {/* 하단 링크 */}
       <nav
         aria-label="빠른 이동"
         className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-[var(--muted)] pt-2"
