@@ -1,8 +1,10 @@
 'use server';
 
+import { after } from 'next/server';
 import { createClient, createAdminClient, createPublicClient } from '@/lib/supabase/server';
 import { fetchUrlMeta, isFileUrl, normalizeUrl } from '@/lib/url-meta';
 import { classify, type InlineData } from '@/lib/ai-classify';
+import { notifyProposalSubmitted } from '@/lib/notify';
 import { randomUUID } from 'crypto';
 
 export type SubmitResult = { ok: true; id: string | null } | { ok: false; error: string };
@@ -344,6 +346,17 @@ export async function submitProposal(formData: FormData): Promise<SubmitResult |
       return { ok: false, error: '등록하지 못했어요 — ' + (e?.message ?? lastErr ?? '잠시 후 다시 시도해주세요') };
     }
   }
+
+  // 운영진 노티 — 응답 반환 뒤 백그라운드 발송 (등록 지연 없음)
+  after(() =>
+    notifyProposalSubmitted({
+      title,
+      proposer: proposer || null,
+      proposerEmail: proposer_email || null,
+      url: url || fileUrl || null,
+      summary: summary || null,
+    })
+  );
 
   return { ok: true, id: insertedId };
 }

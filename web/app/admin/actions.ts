@@ -1,7 +1,9 @@
 'use server';
 
+import { after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath, updateTag } from 'next/cache';
+import { notifyProposalResult } from '@/lib/notify';
 
 const MIN_APPROVALS = 2;
 
@@ -75,6 +77,10 @@ export async function approveProposal(id: string) {
       throw e;
     }
     updateTag('archive');
+    // 제안자에게 승인 결과 메일 — 응답 반환 뒤 백그라운드 발송
+    if (row.proposer_email) {
+      after(() => notifyProposalResult({ to: row.proposer_email, title: row.title, approved: true }));
+    }
   }
   revalidatePath('/admin');
 }
@@ -106,6 +112,9 @@ export async function forceApproveProposal(id: string, reason: string) {
     reviewed_at: new Date().toISOString(),
   }).eq('id', id);
   updateTag('archive');
+  if (row.proposer_email) {
+    after(() => notifyProposalResult({ to: row.proposer_email, title: row.title, approved: true }));
+  }
   revalidatePath('/admin');
 }
 
@@ -116,10 +125,14 @@ export async function rejectProposal(id: string, note: string) {
   if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
 
   const sb = await createClient();
-  await sb.from('staging_proposal').update({
+  const { data: row } = await sb.from('staging_proposal').update({
     status: 'rejected',
     reviewer_note: note || '거절 (사유를 적지 않았어요)',
     reviewed_at: new Date().toISOString(),
-  }).eq('id', id);
+  }).eq('id', id).select('title, proposer_email').single();
+  // 제안자에게 반려 결과 메일 — 응답 반환 뒤 백그라운드 발송
+  if (row?.proposer_email) {
+    after(() => notifyProposalResult({ to: row.proposer_email, title: row.title, approved: false, note: note || null }));
+  }
   revalidatePath('/admin');
 }
