@@ -129,7 +129,8 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
           {formatDate(item.published_at) && <span>{formatDate(item.published_at)}</span>}
           {item.views > 0 && <span>조회 {item.views.toLocaleString()}</span>}
         </div>
-        <span className="opacity-0 group-hover:opacity-100 transition" aria-hidden>
+        {/* 항상 보이게 (은은하게) — hover 전용이면 터치 기기에선 영영 안 보임 */}
+        <span className="opacity-60 group-hover:opacity-100 transition" aria-hidden>
           {isFile ? <Download size={13} /> : <ExternalLink size={13} />}
         </span>
       </div>

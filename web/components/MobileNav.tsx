@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Menu, X, Search, Sun, Moon } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -14,8 +14,40 @@ export function MobileNavClient({ isReviewer = false }: { isReviewer?: boolean }
   const pathname = usePathname();
   const router = useRouter();
   const items = visibleNav(isReviewer);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { setOpen(false); }, [pathname]);
+
+  // 열림 상태: Esc 닫기 + Tab 포커스 트랩. 닫히면 햄버거 버튼으로 포커스 복귀
+  useEffect(() => {
+    if (!open) return;
+    const panel = panelRef.current;
+    panel?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        toggleRef.current?.focus();
+        return;
+      }
+      if (e.key !== 'Tab' || !panel) return;
+      const focusables = panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === panel)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
 
   // 마운트 시 현재 테마 로드
   useEffect(() => {
@@ -48,6 +80,7 @@ export function MobileNavClient({ isReviewer = false }: { isReviewer?: boolean }
   return (
     <>
       <button
+        ref={toggleRef}
         onClick={() => setOpen((v) => !v)}
         className="sm:hidden p-2 rounded-[var(--r-sm)] hover:bg-[var(--card)] text-[var(--fg)]"
         aria-label={open ? '메뉴 닫기' : '메뉴 열기'}
@@ -58,8 +91,11 @@ export function MobileNavClient({ isReviewer = false }: { isReviewer?: boolean }
 
       {open && (
         <div
-          className="sm:hidden fixed inset-0 top-14 z-40 bg-[var(--bg)] flex flex-col"
+          ref={panelRef}
+          tabIndex={-1}
+          className="sm:hidden fixed inset-0 top-14 z-40 bg-[var(--bg)] flex flex-col outline-none"
           role="dialog"
+          aria-modal="true"
           aria-label="모바일 메뉴"
         >
           <form onSubmit={onSearch} className="px-4 py-3 border-b border-[var(--border)]">

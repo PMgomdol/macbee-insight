@@ -33,18 +33,28 @@ export function HorizontalScroll({ children, label }: { children: React.ReactNod
   }
 
   // 마우스 드래그 스크롤 (PC) — 모바일은 native touch scroll
+  const moved = useRef(false);
   function onMouseDown(e: React.MouseEvent) {
     if (!ref.current) return;
     setIsDragging(true);
+    moved.current = false;
     dragStart.current = { x: e.pageX, scrollLeft: ref.current.scrollLeft };
   }
   function onMouseMove(e: React.MouseEvent) {
     if (!isDragging || !dragStart.current || !ref.current) return;
     e.preventDefault();
     const dx = e.pageX - dragStart.current.x;
+    if (Math.abs(dx) > 5) moved.current = true;
     ref.current.scrollLeft = dragStart.current.scrollLeft - dx;
   }
   function endDrag() { setIsDragging(false); dragStart.current = null; }
+  // 드래그로 스크롤한 뒤 카드 위에서 놓으면 클릭으로 새 탭이 열리는 것 방지
+  function onClickCapture(e: React.MouseEvent) {
+    if (!moved.current) return;
+    e.preventDefault();
+    e.stopPropagation();
+    moved.current = false;
+  }
 
   return (
     <div className="relative">
@@ -57,6 +67,7 @@ export function HorizontalScroll({ children, label }: { children: React.ReactNod
         onMouseMove={onMouseMove}
         onMouseUp={endDrag}
         onMouseLeave={endDrag}
+        onClickCapture={onClickCapture}
         style={{ WebkitOverflowScrolling: 'touch', scrollSnapType: 'none' }}
       >
         {children}

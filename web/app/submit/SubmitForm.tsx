@@ -37,13 +37,15 @@ export function SubmitForm({ categories }: Props) {
   const [analyzeMsg, setAnalyzeMsg] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [analyzed, setAnalyzed] = useState(false);
+  const [manual, setManual] = useState(false);
   const [duplicate, setDuplicate] = useState<DuplicateMatch | null>(null);
   const [forceSubmit, setForceSubmit] = useState(false);
   const [submitDone, setSubmitDone] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // 점진적 노출 — URL 분석 성공 또는 파일 업로드 완료 시점부터 상세 필드 노출
-  const showDetails = analyzed || !!fileUrl;
+  // 점진적 노출 — URL 분석 성공·파일 업로드 완료·직접 입력 선택 시점부터 상세 필드 노출.
+  // 분석이 실패해도 (브런치·페이월·JS 렌더 사이트) 직접 입력으로 등록할 수 있어야 함
+  const showDetails = analyzed || manual || !!fileUrl;
 
   function resetForm() {
     setUrl('');
@@ -59,10 +61,17 @@ export function SubmitForm({ categories }: Props) {
     setFileName(null);
     setAnalyzeMsg(null);
     setAnalyzed(false);
+    setManual(false);
     setDuplicate(null);
     setForceSubmit(false);
     setSubmitDone(false);
     setSubmitError(null);
+  }
+
+  function startManual() {
+    setManual(true);
+    setAnalyzeMsg({ kind: 'ok', text: '아래에 직접 입력해주세요. 제목만 채우면 등록할 수 있어요.' });
+    track('submit_manual_fallback', { mode });
   }
 
   const cats = Array.from(new Set(categories.map((c) => c.main_category)));
@@ -138,6 +147,7 @@ export function SubmitForm({ categories }: Props) {
     setFileName(null);
     setAnalyzeMsg(null);
     setAnalyzed(false);
+    setManual(false);
     setDuplicate(null);
     setForceSubmit(false);
   }
@@ -318,7 +328,22 @@ export function SubmitForm({ categories }: Props) {
           {analyzeMsg.kind === 'error'
             ? <AlertCircle size={16} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
             : <CheckCircle2 size={16} className="text-[var(--success)] shrink-0 mt-0.5" aria-hidden />}
-          <span className="flex-1">{analyzeMsg.text}</span>
+          <span className="flex-1">
+            {analyzeMsg.text}
+            {/* 분석 실패 폴백 — 자동 분석이 막힌 사이트(브런치·페이월 등)도 직접 입력으로 등록 가능해야 함 */}
+            {analyzeMsg.kind === 'error' && mode === 'url' && !showDetails && (
+              <>
+                {' '}
+                <button
+                  type="button"
+                  onClick={startManual}
+                  className="text-[var(--accent)] font-medium hover:underline"
+                >
+                  직접 입력해서 등록하기
+                </button>
+              </>
+            )}
+          </span>
         </div>
       )}
 

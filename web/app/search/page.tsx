@@ -29,12 +29,13 @@ export default async function SearchPage({
       {q && result.synonymCanonical && result.expanded.length > 1 && (
         <div className="flex items-start gap-2 p-3 rounded-[var(--r-sm)] border border-[var(--accent)]/30 bg-[var(--accent-bg)] text-xs">
           <Sparkles size={14} className="text-[var(--accent)] shrink-0 mt-0.5" aria-hidden />
+          {/* 정보성 표시만 — 링크로 만들면 원 질의를 잃고 결과가 오히려 줄어듦 (이미 함께 검색된 키워드) */}
           <span className="flex-1">
-            <strong className="text-[var(--fg)]">{result.synonymCanonical}</strong> 관련 키워드를 함께 검색:&nbsp;
+            <strong className="text-[var(--fg)]">{result.synonymCanonical}</strong> 관련 키워드를 함께 검색했어요:&nbsp;
             {result.expanded.slice(1).map((t, i) => (
-              <Link key={t} href={`/search?q=${encodeURIComponent(t)}`} className="text-[var(--accent)] hover:underline">
+              <span key={t} className="text-[var(--fg)]">
                 {t}{i < result.expanded.length - 2 ? ', ' : ''}
-              </Link>
+              </span>
             ))}
           </span>
         </div>

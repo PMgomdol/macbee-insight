@@ -12,6 +12,7 @@ export type TrackEvent =
   | { name: 'filter_change'; props: { type: 'category' | 'sub_category' | 'kind' | 'sort'; value: string; page: string } }
   | { name: 'submit_start'; props: { mode: 'url' | 'file' } }
   | { name: 'submit_analyzed'; props: { mode: 'url' | 'file'; ai_used: boolean } }
+  | { name: 'submit_manual_fallback'; props: { mode: 'url' | 'file' } }
   | { name: 'submit_success'; props: { mode: 'url' | 'file'; category: string } }
   | { name: 'feedback_open'; props: Record<string, never> }
   | { name: 'feedback_submit'; props: { kind: string } };
