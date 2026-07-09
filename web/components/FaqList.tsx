@@ -107,15 +107,15 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* 큰 검색 박스 — 실무 Q&A 전용 */}
-      <div className="flex items-center gap-2 px-4 py-3 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)] focus-within:border-b-2">
+      {/* 검색 박스 — 검색 페이지(page variant)와 동일 스타일 (focus 시 색만 변경, 두께·높이 고정) */}
+      <div className="flex items-center gap-2 px-4 h-11 rounded-full border-2 border-[var(--border)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]">
         <Search size={18} className="text-[var(--muted)] shrink-0" aria-hidden />
         <input
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="질문·답변·카테고리로 찾아보세요 (예: 면접, 피그마, 휴가)"
-          className="flex-1 min-w-0 bg-transparent outline-none text-sm sm:text-base"
+          className="flex-1 min-w-0 bg-transparent outline-none text-base"
           aria-label="실무 Q&A 검색"
         />
         {q && (
