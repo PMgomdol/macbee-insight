@@ -17,8 +17,11 @@ export function getPosthog(): Promise<any> | null {
     posthogPromise = import('posthog-js').then((m) => {
       const ph = m.default;
       if (!ph.__loaded) {
+        // api_host는 하드코딩: Vercel의 NEXT_PUBLIC_POSTHOG_HOST에 설정 페이지 URL이
+        // 잘못 들어가 2026-07-13~18 수집이 전면 중단된 사고가 있었다. 수집 호스트는
+        // 비밀값이 아니고 바뀔 일도 없으므로 env를 신뢰하지 않는다.
         ph.init(key, {
-          api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
+          api_host: 'https://us.i.posthog.com',
           capture_pageview: false,
           capture_pageleave: true,
           persistence: 'localStorage+cookie',
