@@ -134,7 +134,6 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
       {/* 소분류 chips */}
       {main && sortedSubs.length > 0 && (
         <div className="flex gap-1 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap items-center">
-          <span className="text-[11px] text-[var(--muted-2)] mr-1 shrink-0">소분류</span>
           <SubChip active={!sub} onClick={() => pickSub(undefined)}>전체</SubChip>
           {sortedSubs.map(([s, n]) => (
             <SubChip key={s} active={sub === s} onClick={() => pickSub(sub === s ? undefined : s)}>

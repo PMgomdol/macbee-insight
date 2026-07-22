@@ -119,7 +119,6 @@ export function AllItemsSection({ items, categories }: Props) {
       {/* 소분류 chips — 대분류 선택 시 */}
       {main && sortedSubs.length > 0 && (
         <div className="flex gap-1 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap items-center">
-          <span className="text-[11px] text-[var(--muted-2)] mr-1 shrink-0">소분류</span>
           <button
             onClick={() => { setSub(null); setShowCount(STEP); }}
             className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${
