@@ -19,7 +19,7 @@ const STEP = 24;
 export function ListFilterClient({ kind, title, desc, items, total }: Props) {
   const [main, setMain] = useState<string | null>(null);
   const [sub, setSub] = useState<string | null>(null);
-  const [sort, setSort] = useState<'recent' | 'popular'>('recent');
+  const [sort, setSort] = useState<'default' | 'popular'>('default');
   const [q, setQ] = useState('');
   const [showCount, setShowCount] = useState(STEP);
 
@@ -74,7 +74,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
     track('filter_change', { type: 'sub_category', value: next ?? 'all', page: kind });
   }
 
-  function changeSort(next: 'recent' | 'popular') {
+  function changeSort(next: 'default' | 'popular') {
     setSort(next);
     setShowCount(STEP);
     track('filter_change', { type: 'sort', value: next, page: kind });
@@ -173,16 +173,10 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
         </div>
       )}
 
-      {/* 정렬 */}
+      {/* 정렬 — 인기순 토글 (기본=등록 순서). 등록일이 전건 동일해 최신순은 제거. */}
       <div className="flex items-center justify-end gap-1 text-xs">
         <button
-          onClick={() => changeSort('recent')}
-          className={`px-2.5 py-1 rounded-[var(--r-sm)] ${sort === 'recent' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
-        >
-          최신순
-        </button>
-        <button
-          onClick={() => changeSort('popular')}
+          onClick={() => changeSort(sort === 'popular' ? 'default' : 'popular')}
           className={`px-2.5 py-1 rounded-[var(--r-sm)] ${sort === 'popular' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
         >
           인기순

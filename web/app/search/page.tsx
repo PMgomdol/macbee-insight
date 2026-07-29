@@ -70,7 +70,7 @@ export default async function SearchPage({
           initialKind={sp.kind === 'files' || sp.kind === 'insights' ? sp.kind : undefined}
           initialMain={sp.main}
           initialSub={sp.sub}
-          initialSort={sp.sort === 'popular' || sp.sort === 'recent' ? sp.sort : 'relevance'}
+          initialSort={sp.sort === 'popular' ? 'popular' : 'relevance'}
         />
       )}
 

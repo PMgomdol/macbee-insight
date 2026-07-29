@@ -7,7 +7,7 @@ import { track } from '@/lib/track';
 import type { ArchiveItem, FAQItem } from '@/types/db';
 
 type Kind = 'files' | 'insights' | undefined;
-type Sort = 'relevance' | 'popular' | 'recent';
+type Sort = 'relevance' | 'popular';
 
 type Props = {
   q: string;
@@ -46,7 +46,6 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
 
   const sorted = useMemo(() => {
     if (sort === 'popular') return [...filtered].sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
-    if (sort === 'recent') return [...filtered].sort((a, b) => +new Date(b.registered_at) - +new Date(a.registered_at));
     return filtered; // relevance = 서버가 준 순서
   }, [filtered, sort]);
 
@@ -95,6 +94,21 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
     syncUrl(q, undefined, undefined, undefined, sort);
   }
 
+  // 검색 결과 클릭 트래킹 — ItemCard/FAQ는 공용이라 손 안 대고, 여기서 위임으로
+  // 잡는다. position은 컨테이너 안 DOM 순서(0-base)로 계산. 좌/중클릭만.
+  function trackResultClick(
+    e: React.MouseEvent<HTMLElement>,
+    sel: string,
+    kind: 'archive' | 'faq',
+  ) {
+    if (e.button !== 0 && e.button !== 1) return;
+    const el = (e.target as HTMLElement).closest(sel) as HTMLElement | null;
+    const box = e.currentTarget;
+    if (!el || !box.contains(el)) return;
+    const position = Array.from(box.querySelectorAll(sel)).indexOf(el);
+    track('search_result_click', { query: q, position, kind });
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-[var(--muted)]">
@@ -115,7 +129,6 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
         <div className="flex gap-1 text-xs">
           <FilterBtn onClick={() => pickSort('relevance')} active={sort === 'relevance'}>관련도</FilterBtn>
           <FilterBtn onClick={() => pickSort('popular')} active={sort === 'popular'}>인기순</FilterBtn>
-          <FilterBtn onClick={() => pickSort('recent')} active={sort === 'recent'}>최신순</FilterBtn>
         </div>
       </div>
 
@@ -147,7 +160,11 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
       {sorted.length > 0 && (
         <section className="flex flex-col gap-2.5 mt-2">
           <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">자료</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+            onClick={(e) => trackResultClick(e, '[data-card-id]', 'archive')}
+            onAuxClick={(e) => trackResultClick(e, '[data-card-id]', 'archive')}
+          >
             {sorted.map((it) => <ItemCard key={it.id} item={it} />)}
           </div>
         </section>
@@ -165,7 +182,7 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
       {faqs.length > 0 && (
         <section className="flex flex-col gap-2 mt-2">
           <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">실무 Q&A</h2>
-          <div className="flex flex-col">
+          <div className="flex flex-col" onClick={(e) => trackResultClick(e, 'details', 'faq')}>
             {faqs.map((f) => (
               <details key={f.id} className="border-b border-[var(--border)]">
                 <summary className="cursor-pointer py-3 text-sm font-medium select-none flex items-start justify-between gap-3 hover:text-[var(--accent)] list-none">
