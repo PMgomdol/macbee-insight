@@ -136,8 +136,13 @@ export function SearchAutocomplete({
     go(s.text);
   }
 
+  // 타이핑 중에는 빈 질의 응답(포커스 시 미리 받은 인기 태그)을 쓰지 않는다 —
+  // 새 응답 도착 전까지 인기 태그가 검색 제안인 것처럼 잘못 노출되던 문제.
+  // 직전 타이핑 질의의 제안은 유지 (교체 시 깜빡임 방지, 표준 자동완성 동작)
+  const fresh = resp && (!q || resp.query !== '') ? resp : null;
+
   // 키보드 nav
-  const flat = buildFlatList(resp, recent, q);
+  const flat = buildFlatList(q ? fresh : resp, recent, q);
   function onKey(e: React.KeyboardEvent) {
     if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx((i) => Math.min(i + 1, flat.length - 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx((i) => Math.max(i - 1, -1)); }
@@ -230,11 +235,11 @@ export function SearchAutocomplete({
           className="absolute left-0 right-0 top-full mt-1.5 z-50 app-card overflow-hidden shadow-[var(--shadow-16)] max-h-[70vh] overflow-y-auto"
         >
           {/* 동의어 안내 */}
-          {resp?.synonyms && q && (
+          {fresh?.synonyms && q && (
             <div className="px-3 py-2 text-[11px] text-[var(--muted)] bg-[var(--accent-bg)] border-b border-[var(--border)] flex items-center gap-1.5">
               <Sparkles size={12} className="text-[var(--accent)]" aria-hidden />
-              <strong className="text-[var(--fg)]">{resp.synonyms.from}</strong> 관련 키워드:&nbsp;
-              <span className="text-[var(--muted)]">{resp.synonyms.expanded.slice(0, 5).join(' · ')}</span>
+              <strong className="text-[var(--fg)]">{fresh!.synonyms!.from}</strong> 관련 키워드:&nbsp;
+              <span className="text-[var(--muted)]">{fresh!.synonyms!.expanded.slice(0, 5).join(' · ')}</span>
             </div>
           )}
 
@@ -278,11 +283,11 @@ export function SearchAutocomplete({
               </Section>
             )}
 
-            {q && (resp?.suggestions ?? []).length === 0 && (
+            {q && (fresh?.suggestions ?? []).length === 0 && (
               <div className="px-3 py-4 text-xs text-[var(--muted)]">Enter를 누르면 전체 검색해드려요</div>
             )}
 
-            {q && (resp?.suggestions ?? []).map((s, i) => {
+            {q && (fresh?.suggestions ?? []).map((s, i) => {
               const idx = flat.findIndex((x) => x.kind === 'sug' && x.s === s);
               const active = activeIdx === idx;
               if (s.type === 'title') {
