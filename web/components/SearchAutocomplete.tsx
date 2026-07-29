@@ -122,7 +122,9 @@ export function SearchAutocomplete({
   function pickSuggestion(s: Suggestion) {
     if (s.type === 'title') {
       saveRecent(q.trim() || s.text);
-      window.open(s.url, '_blank');
+      // 내부 경로(초성 제안 등)는 현재 탭, 외부 자료 링크는 새 탭
+      if (s.url.startsWith('/')) router.push(s.url);
+      else window.open(s.url, '_blank');
       setOpen(false);
       return;
     }

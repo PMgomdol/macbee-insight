@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createPublicClient } from '@/lib/supabase/server';
 import { expand, allKeys, TRENDING } from '@/lib/synonyms';
+import { getSearchIndex, isChosungQuery, toChosung } from '@/lib/search-index';
 
 type Suggestion =
   | { type: 'title'; text: string; url: string; meta?: string }
@@ -41,6 +42,34 @@ export async function GET(req: Request) {
       .slice(0, limit)
       .map(([text, count]) => ({ type: 'tag', text, count }));
     return NextResponse.json<Resp>({ query: '', trending: TRENDING, synonyms: null, suggestions: topTags });
+  }
+
+  // 초성 입력("ㅍㄱㅁ") — ilike로는 안 잡히므로 초성 인덱스로 제목·태그 제안
+  if (isChosungQuery(q)) {
+    const needle = q.replace(/\s+/g, '');
+    const index = await getSearchIndex();
+    const titles: Suggestion[] = [];
+    const tagc = new Map<string, number>();
+    for (const e of index) {
+      if (titles.length < 6 && e.cho.includes(needle)) {
+        titles.push({ type: 'title', text: e.title, url: `/search?q=${encodeURIComponent(e.title)}` });
+      }
+      for (const t of e.tags) {
+        if (toChosung(t.replace(/\s+/g, '')).includes(needle)) {
+          tagc.set(t, (tagc.get(t) ?? 0) + 1);
+        }
+      }
+    }
+    const tags: Suggestion[] = [...tagc.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([text, count]) => ({ type: 'tag', text, count }));
+    return NextResponse.json<Resp>({
+      query: q,
+      trending: TRENDING,
+      synonyms: null,
+      suggestions: [...tags, ...titles].slice(0, limit),
+    });
   }
 
   // 동의어 확장

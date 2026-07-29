@@ -7,6 +7,7 @@ import { getPosthog } from './posthog';
  */
 export type TrackEvent =
   | { name: 'search_submit'; props: { query: string; source: 'hero' | 'header' | 'page' } }
+  | { name: 'search_results'; props: { query: string; count: number; fallback: 'chosung' | 'fuzzy' | 'none' } }
   | { name: 'search_result_click'; props: { query: string; position: number; kind: 'archive' | 'faq' } }
   | { name: 'card_click'; props: { id: number; kind: 'files' | 'insights'; category: string; from: string } }
   | { name: 'filter_change'; props: { type: 'category' | 'sub_category' | 'kind' | 'sort'; value: string; page: string } }

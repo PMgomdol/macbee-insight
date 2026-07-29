@@ -1,5 +1,6 @@
 import { createPublicClient } from './supabase/server';
 import { expand } from './synonyms';
+import { getSearchIndex, isChosungQuery, chosungMatch, fuzzyMatch } from './search-index';
 import type { ArchiveItem, FAQItem } from '@/types/db';
 
 // 카드 렌더에 실제 쓰는 컬럼만 (queries.ts와 동일 — 검색은 views/registered_at 필요)
@@ -20,6 +21,8 @@ export type SearchResult = {
   faqs: FAQItem[];
   expanded: string[];
   synonymCanonical?: string;
+  /** 정확 매칭 0건 → 초성/유사도 폴백으로 찾은 결과임을 표시 */
+  fallback?: 'chosung' | 'fuzzy';
 };
 
 function clean(s: string) {
@@ -64,6 +67,14 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
   ).filter(Boolean);
 
   const sb = createPublicClient();
+
+  // 초성 질의("ㅍㄱㅁ")는 ilike로 잡히지 않음 — 처음부터 초성 인덱스로
+  if (isChosungQuery(q)) {
+    const index = await getSearchIndex();
+    const ids = chosungMatch(index, safe);
+    const archives = await fetchByIds(sb, ids, opts);
+    return { archives, faqs: [], expanded: [safe], fallback: 'chosung' };
+  }
 
   const archP = Promise.all(
     terms.map(async (t) => {
@@ -144,10 +155,45 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
 
   const faqs = [...faqMap.values()].sort((a, b) => b.score - a.score || b.item.views - a.item.views).map((x) => x.item);
 
+  // 정확 매칭 0건 → 오타 허용 폴백 (바이그램 유사도). 정상 결과가 있으면 건드리지 않음.
+  if (archivesArr.length === 0 && faqs.length === 0) {
+    const index = await getSearchIndex();
+    const ids = fuzzyMatch(index, safe);
+    if (ids.length > 0) {
+      const archives = await fetchByIds(sb, ids, opts);
+      if (archives.length > 0) {
+        return { archives, faqs: [], expanded: terms, synonymCanonical: syn?.canonical, fallback: 'fuzzy' };
+      }
+    }
+  }
+
   return {
     archives: archivesArr.map((x) => x.item),
     faqs,
     expanded: terms,
     synonymCanonical: syn?.canonical,
   };
+}
+
+/** id 목록으로 카드 데이터 조회 — 입력 순서(관련도순) 보존 */
+async function fetchByIds(
+  sb: ReturnType<typeof createPublicClient>,
+  ids: number[],
+  opts: SearchOpts
+): Promise<ArchiveItem[]> {
+  if (ids.length === 0) return [];
+  let q1 = sb
+    .from('archive_item')
+    .select(ARCHIVE_CARD_COLS)
+    .eq('status', 'public')
+    .in('id', ids);
+  if (opts.kind) q1 = q1.eq('kind', opts.kind);
+  if (opts.format) q1 = q1.eq('format', opts.format);
+  if (opts.main) q1 = q1.eq('main_category', opts.main);
+  if (opts.sub) q1 = q1.eq('sub_category', opts.sub);
+  const { data } = await q1;
+  const order = new Map(ids.map((id, i) => [id, i]));
+  return ((data ?? []) as ArchiveItem[]).sort(
+    (a, b) => (order.get(a.id) ?? 99) - (order.get(b.id) ?? 99)
+  );
 }
