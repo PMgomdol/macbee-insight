@@ -48,6 +48,7 @@ export function SearchAutocomplete({
   placeholder,
   placeholders,
   placeholderIntervalMs = 2600,
+  onCollapse,
 }: {
   initial?: string;
   variant?: Variant;
@@ -55,6 +56,8 @@ export function SearchAutocomplete({
   placeholder?: string;
   placeholders?: string[];
   placeholderIntervalMs?: number;
+  /** 헤더 접이식 모드 — Esc 또는 빈 상태에서 외부 클릭 시 호출 (아이콘으로 되접기) */
+  onCollapse?: () => void;
 }) {
   const router = useRouter();
   const [q, setQ] = useState(initial);
@@ -69,6 +72,12 @@ export function SearchAutocomplete({
 
   // 최초 마운트 — 최근 검색 로드
   useEffect(() => { setRecent(loadRecent()); }, []);
+
+  // 외부 클릭 핸들러(deps [])에서 최신 값 참조 — stale closure 방지
+  const qRef = useRef(q);
+  qRef.current = q;
+  const onCollapseRef = useRef(onCollapse);
+  onCollapseRef.current = onCollapse;
 
   // placeholder 순환 — placeholders 배열이 있고 입력 비었을 때만
   useEffect(() => {
@@ -85,10 +94,13 @@ export function SearchAutocomplete({
       ? placeholders[rotIdx % placeholders.length]
       : (placeholder ?? '제목·태그·카테고리로 찾아보세요');
 
-  // 외부 클릭 닫기
+  // 외부 클릭 닫기 — 접이식(header)에서 입력이 비어 있으면 아이콘으로 되접기
   useEffect(() => {
     function onDoc(e: MouseEvent) {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+      if (!wrapRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+        if (!qRef.current.trim()) onCollapseRef.current?.();
+      }
     }
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
@@ -146,7 +158,7 @@ export function SearchAutocomplete({
   function onKey(e: React.KeyboardEvent) {
     if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx((i) => Math.min(i + 1, flat.length - 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx((i) => Math.max(i - 1, -1)); }
-    else if (e.key === 'Escape') { setOpen(false); setActiveIdx(-1); inputRef.current?.blur(); }
+    else if (e.key === 'Escape') { setOpen(false); setActiveIdx(-1); inputRef.current?.blur(); onCollapse?.(); }
     else if (e.key === 'Enter') {
       e.preventDefault();
       if (activeIdx >= 0 && flat[activeIdx]) {
