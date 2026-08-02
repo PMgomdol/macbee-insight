@@ -350,6 +350,7 @@ export async function submitProposal(formData: FormData): Promise<SubmitResult |
   // 운영진 노티 — 응답 반환 뒤 백그라운드 발송 (등록 지연 없음)
   after(() =>
     notifyProposalSubmitted({
+      id: insertedId,
       title,
       proposer: proposer || null,
       proposerEmail: proposer_email || null,

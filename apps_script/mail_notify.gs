@@ -21,7 +21,10 @@
 var MAIL_NOTIFY = {
   SITE_URL: 'https://macbee-insight.vercel.app',
   SENDER_NAME: '맥비기획 자료실',
-  DEFAULT_ADMINS: ['asa067714@gmail.com', 'openpath@duotone.io'],
+  // Vercel이 운영진 목록(data.admins)을 넘기지 못한 경우의 폴백만.
+  DEFAULT_ADMINS: ['asa067714@gmail.com'],
+  // 개인 계정 — 어떤 경로로도 알림 발송 금지.
+  EXCLUDE: ['openpath@duotone.io'],
 };
 
 function mailSecret_() {
@@ -71,9 +74,21 @@ function doPost(e) {
   }
 }
 
+/** 제외 목록을 걸러낸 최종 수신자. Vercel이 넘긴 목록 우선, 없으면 폴백. */
+function resolveRecipients_(admins) {
+  var list = (admins && admins.length) ? admins : mailAdminEmails_();
+  var excl = MAIL_NOTIFY.EXCLUDE || [];
+  return list
+    .map(function (s) { return String(s).trim(); })
+    .filter(function (e) { return e && excl.indexOf(e) < 0; });
+}
+
 /** 운영진에게 새 자료 제안 알림 */
 function sendProposalSubmitted_(d) {
   var title = String(d.title || '(제목 없음)');
+  var recipients = resolveRecipients_(d.admins);
+  if (!recipients.length) return { ok: false, error: 'no recipients' };
+
   var lines = [
     '새 자료가 검토를 기다리고 있어요.',
     '',
@@ -85,17 +100,19 @@ function sendProposalSubmitted_(d) {
   if (d.proposerEmail) who += (who ? ' ' : '') + '(' + d.proposerEmail + ')';
   if (who) lines.push('제안자: ' + who);
   lines.push('');
-  lines.push('검토하기: ' + MAIL_NOTIFY.SITE_URL + '/admin');
+  // 딥링크 — 해당 제안 카드로 바로 이동 (admin 페이지가 #p-<id> 앵커 지원)
+  var reviewUrl = MAIL_NOTIFY.SITE_URL + '/admin' + (d.id ? '#p-' + d.id : '');
+  lines.push('바로 검토하기: ' + reviewUrl);
   lines.push('');
   lines.push('— 맥비기획 자료실 자동 알림');
 
   MailApp.sendEmail({
-    to: mailAdminEmails_().join(','),
+    to: recipients.join(','),
     subject: '[맥비 자료실] 새 자료 제안: ' + title,
     body: lines.join('\n'),
     name: MAIL_NOTIFY.SENDER_NAME,
   });
-  return { ok: true, sent: 'admins' };
+  return { ok: true, sent: recipients.join(',') };
 }
 
 /** 제안자에게 승인/반려 결과 알림 */
@@ -137,16 +154,27 @@ function sendProposalResult_(d) {
 }
 
 /**
- * 편집기에서 1회 실행 — 메일 권한 승인 트리거 + 본인에게 테스트 메일.
+ * 편집기에서 1회 실행 — 메일 권한 승인 트리거 + 운영진 첫 주소로 테스트 메일.
+ * (Session.getEffectiveUser는 별도 userinfo 권한이 필요해서 쓰지 않음)
  * 실행 후 로그에 남은 일일 발송 쿼터가 찍힌다.
  */
+/** 편집기에서 실행 — 수신자 필터(openpath 제외) 검증. 실패 시 throw. */
+function testResolveRecipients() {
+  var r1 = resolveRecipients_(['asa067714@gmail.com', 'openpath@duotone.io', ' x@y.com ']);
+  if (r1.indexOf('openpath@duotone.io') >= 0) throw new Error('openpath 누출!');
+  if (r1.length !== 2 || r1[1] !== 'x@y.com') throw new Error('필터/trim 오류: ' + JSON.stringify(r1));
+  var r2 = resolveRecipients_([]);  // 폴백 → DEFAULT_ADMINS, openpath 없어야
+  if (r2.indexOf('openpath@duotone.io') >= 0) throw new Error('폴백에 openpath 누출!');
+  Logger.log('testResolveRecipients OK: ' + JSON.stringify(r1) + ' / fallback ' + JSON.stringify(r2));
+}
+
 function testMailNotify() {
-  var me = Session.getEffectiveUser().getEmail();
+  var to = mailAdminEmails_()[0];
   MailApp.sendEmail({
-    to: me,
+    to: to,
     subject: '[맥비 자료실] 메일 노티 테스트',
     body: '메일 발송 권한이 정상적으로 승인됐어요.\n\n— 맥비기획 자료실 자동 알림',
     name: MAIL_NOTIFY.SENDER_NAME,
   });
-  Logger.log('테스트 메일 발송: ' + me + ' / 남은 일일 쿼터: ' + MailApp.getRemainingDailyQuota());
+  Logger.log('테스트 메일 발송: ' + to + ' / 남은 일일 쿼터: ' + MailApp.getRemainingDailyQuota());
 }

@@ -109,6 +109,18 @@ function submitProposal(payload) {
   let sheet = ss.getSheetByName(CONFIG.SHEETS.STAGING);
   if (!sheet) sheet = createStagingSheet_(ss);
 
+  // 중복 등록 차단 — 정규화 URL이 이미 SSOT에 있거나 삭제 이력에 있으면 거절.
+  const keys = [normalizeUrl_(payload.url), normalizeUrl_(payload.fileLink)].filter(Boolean);
+  if (keys.length) {
+    const ssot = ss.getSheetByName(CONFIG.SHEETS.SSOT);
+    const existing = ssot ? buildExistingUrlSet_(ssot) : new Set();
+    const deleted = buildDeletedUrlSet_(ss);  // ponytail: 재유입 가드와 동일 소스
+    for (const k of keys) {
+      if (existing.has(k)) return { ok: false, error: '이미 등록된 자료입니다. 자료실에서 검색해 확인하세요.' };
+      if (deleted.has(k)) return { ok: false, error: '운영진이 삭제한 자료입니다. 재등록하려면 운영진에게 문의하세요.' };
+    }
+  }
+
   const id = Utilities.getUuid();
   sheet.appendRow([
     id,

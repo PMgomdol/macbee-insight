@@ -150,7 +150,7 @@ export default async function AdminPage() {
         ) : (
           <div className="flex flex-col gap-2.5">
             {items.map((p) => (
-              <article key={p.id} className="app-card flex flex-col gap-2 p-3 sm:p-4 min-w-0 bg-[var(--card)]">
+              <article key={p.id} id={`p-${p.id}`} className="app-card flex flex-col gap-2 p-3 sm:p-4 min-w-0 bg-[var(--card)] scroll-mt-20 target:ring-2 target:ring-[var(--accent)]">
                 <div className="flex items-center gap-2 text-[11px] text-[var(--muted-2)] flex-wrap">
                   <span className="font-medium">{p.main_category ?? '미분류'}</span>
                   {p.sub_category && <span>· {p.sub_category}</span>}
