@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { ItemCard } from '@/components/ItemCard';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
@@ -20,9 +21,36 @@ const FOOTER_LINKS = [
   { href: '/insights', label: '콘텐츠 전체' },
 ];
 
+// 월간 인기 = Date.now() 기반(동적) → cacheComponents 하에선 Suspense 안에서만 접근 가능.
+async function PopularCarousel() {
+  const popular = await getMonthlyPopularItems(10);
+  if (popular.length === 0) return null;
+  return (
+    <section className="w-full flex flex-col gap-3" aria-label="이번 달 인기 자료">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-sm sm:text-base font-semibold tracking-tight text-[var(--muted)]">
+          사람들이 많이 보고 있어요
+        </h2>
+        <Link
+          href="/insights"
+          className="text-xs text-[var(--muted-2)] hover:text-[var(--fg)] whitespace-nowrap"
+        >
+          전체 자료 →
+        </Link>
+      </div>
+      <HorizontalScroll label="인기 자료 가로 스크롤">
+        {popular.map((it) => (
+          <div key={it.id} data-card className="shrink-0 w-[220px] sm:w-[260px]">
+            <ItemCard item={it} />
+          </div>
+        ))}
+      </HorizontalScroll>
+    </section>
+  );
+}
+
 export default async function Home() {
-  const [popular, counts, topTags] = await Promise.all([
-    getMonthlyPopularItems(10),
+  const [counts, topTags] = await Promise.all([
     getCategoryCounts(),
     getTopTags(5),
   ]);
@@ -66,29 +94,10 @@ export default async function Home() {
         )}
       </section>
 
-      {/* Top 10 캐러셀 */}
-      {popular.length > 0 && (
-        <section className="w-full flex flex-col gap-3" aria-label="이번 달 인기 자료">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-sm sm:text-base font-semibold tracking-tight text-[var(--muted)]">
-              사람들이 많이 보고 있어요
-            </h2>
-            <Link
-              href="/insights"
-              className="text-xs text-[var(--muted-2)] hover:text-[var(--fg)] whitespace-nowrap"
-            >
-              전체 자료 →
-            </Link>
-          </div>
-          <HorizontalScroll label="인기 자료 가로 스크롤">
-            {popular.map((it) => (
-              <div key={it.id} data-card className="shrink-0 w-[220px] sm:w-[260px]">
-                <ItemCard item={it} />
-              </div>
-            ))}
-          </HorizontalScroll>
-        </section>
-      )}
+      {/* Top 10 캐러셀 — 동적(월간) 데이터라 Suspense로 스트리밍 */}
+      <Suspense fallback={null}>
+        <PopularCarousel />
+      </Suspense>
 
       {/* 하단 링크 */}
       <nav
