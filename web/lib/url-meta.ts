@@ -8,6 +8,7 @@ export type UrlMeta = {
   finalUrl: string;
   title: string;
   description: string;
+  bodyText: string; // 본문 평문 발췌 (og가 부실할 때 AI 분류 근거)
   image: string | null;
   publishedAt: string | null; // ISO date
   siteName: string | null;
@@ -117,6 +118,25 @@ function extractDateFromText(html: string): string | null {
   return null;
 }
 
+/**
+ * 본문 평문 추출 — og 설명이 사이트 기본값/광고문구인 글(요즘IT 등) 대비.
+ * <article> 또는 <main> 우선, 없으면 body 전체. script/style/nav 제거 후 평문 4000자.
+ */
+function extractMainText(html: string): string {
+  let scope =
+    html.match(/<article\b[\s\S]*?<\/article>/i)?.[0] ??
+    html.match(/<main\b[\s\S]*?<\/main>/i)?.[0] ??
+    html;
+  scope = scope
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<(nav|header|footer|aside)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return decode(scope).slice(0, 4000);
+}
+
 function decode(s: string | null): string {
   if (!s) return '';
   return s
@@ -162,6 +182,7 @@ export async function fetchUrlMeta(url: string): Promise<UrlMeta> {
     finalUrl: url,
     title: '',
     description: '',
+    bodyText: '',
     image: null,
     publishedAt: null,
     siteName: null,
@@ -207,6 +228,7 @@ export async function fetchUrlMeta(url: string): Promise<UrlMeta> {
 
     result.title = decode(ogTitle || tag);
     result.description = decode(ogDesc);
+    result.bodyText = extractMainText(html);
     result.image = ogImage ? decode(ogImage) : null;
     result.siteName = siteName ? decode(siteName) : null;
     result.publishedAt = normalizePublishedDate(pub) || extractDateFromText(html);
@@ -243,6 +265,21 @@ export function guessFormat(url: string): string {
   if (/figma\.com\/community|figma\.com\/file/.test(u)) return '템플릿';
   if (/\.pdf($|\?)/.test(u)) return '가이드';
   return '아티클';
+}
+
+/** YouTube 영상 URL 판별 (watch / youtu.be / shorts). 채널·홈 등 비영상은 false */
+export function isYouTubeUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    const h = u.hostname.toLowerCase().replace(/^(m|www)\./, '');
+    if (h === 'youtu.be') return u.pathname.length > 1;
+    if (h === 'youtube.com' || h.endsWith('.youtube.com')) {
+      return (u.pathname === '/watch' && !!u.searchParams.get('v')) || u.pathname.startsWith('/shorts/');
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 /** 파일 자료 자동 판별 (file URL 또는 google docs/drive) */

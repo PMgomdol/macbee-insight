@@ -36,17 +36,23 @@ export type InlineData = { mime: string; base64: string };
 
 export async function classify(
   url: string,
-  meta: { title: string; description: string },
-  inline?: InlineData | null
+  meta: { title: string; description: string; body?: string },
+  inline?: InlineData | null,
+  videoUrl?: string | null
 ): Promise<ClassifyResult> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return { ...heuristic(url, meta), aiUsed: false };
 
-  const prompt = inline ? buildVisionPrompt(url, meta) : buildPrompt(url, meta);
-  const parts: Array<{ text: string } | { inline_data: { mime_type: string; data: string } }> = [
-    { text: prompt },
-  ];
+  const prompt = videoUrl ? buildVideoPrompt(url, meta)
+    : inline ? buildVisionPrompt(url, meta)
+    : buildPrompt(url, meta);
+  const parts: Array<
+    { text: string }
+    | { inline_data: { mime_type: string; data: string } }
+    | { file_data: { file_uri: string } }
+  > = [{ text: prompt }];
   if (inline) parts.push({ inline_data: { mime_type: inline.mime, data: inline.base64 } });
+  if (videoUrl) parts.push({ file_data: { file_uri: videoUrl } });
 
   try {
     const resp = await fetch(
@@ -73,7 +79,7 @@ export async function classify(
             temperature: 0.2,
           },
         }),
-        signal: AbortSignal.timeout(inline ? 30000 : 15000),
+        signal: AbortSignal.timeout(inline || videoUrl ? 30000 : 15000),
       }
     );
     if (!resp.ok) throw new Error(`Gemini HTTP ${resp.status}`);
@@ -116,21 +122,41 @@ function buildVisionPrompt(url: string, meta: { title: string; description: stri
 - format: ${FORMATS.join(' | ')} 중 1개. 이미지면 보통 '템플릿' 또는 '가이드'`;
 }
 
-function buildPrompt(url: string, meta: { title: string; description: string }) {
+function buildPrompt(url: string, meta: { title: string; description: string; body?: string }) {
   return `당신은 맥비기획 자료실 큐레이션 어시스턴트.
-다음 URL의 메타데이터를 보고 자료실 등록용 정보를 JSON으로 반환.
+다음 글을 보고 자료실 등록용 정보를 JSON으로 반환.
 
 URL: ${url}
 페이지 제목: ${meta.title}
-페이지 설명: ${meta.description}
+페이지 설명(og): ${meta.description}${meta.body ? `\n\n본문 발췌:\n${meta.body}` : ''}
 
 규칙:
 - title_ko, summary_ko는 한글. 영문 원본이면 번역.
-- summary_ko는 1문장. "이 자료가 무엇에 대한 무슨 내용인지" 명확히. 알 수 없으면 "확인 불가".
+- summary_ko는 1문장. "이 글이 무엇에 대한 무슨 내용인지" 명확히.
+  ${meta.body ? '**본문 발췌를 기준으로 작성**. og 설명이 사이트 소개/광고문구면 무시하고 본문 내용 우선.' : '알 수 없으면 "확인 불가".'}
+- title_ko도 본문과 og 제목이 다르면 실제 글 내용에 맞는 쪽으로.
 - main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
 - sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
 - tags: 3~6개. 한글 우선. 고유명사는 한글+영문 병기 가능. 너무 일반적인 단어(UI, 디자인) 단독 금지
 - format: ${FORMATS.join(' | ')} 중 1개`;
+}
+
+function buildVideoPrompt(url: string, meta: { title: string; description: string }) {
+  return `당신은 맥비기획 자료실 큐레이션 어시스턴트.
+첨부된 YouTube 영상을 직접 시청(화면 + 음성/자막)하고 자료실 등록용 정보를 JSON으로 반환.
+
+참고 힌트:
+- 영상 URL: ${url}
+- 영상 원제목: ${meta.title || '(불명)'}
+- 영상 설명: ${meta.description || '(불명)'}
+
+규칙:
+- title_ko: 영상 실제 내용을 반영한 한글 제목. 원제목이 적절하면 그대로/번역, 낚시성이면 내용 기반으로 재작성.
+- summary_ko: 1~2문장. 영상이 실제로 다루는 핵심(무슨 주제를 어떻게 설명·시연하는지)을 구체적으로. 제목 반복 금지. 힌트만 베끼지 말고 영상에서 본 내용 기술.
+- main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
+- sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
+- tags: 3~6개. 영상 핵심 키워드. 한글 우선. 너무 일반적인 단어 단독 금지
+- format: '영상' 고정`;
 }
 
 /** 키워드 사전 기반 태그 추출 — heuristic용. 본 사전은 자료실 실제 태그 빈도 기준 */

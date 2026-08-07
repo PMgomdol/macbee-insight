@@ -2,7 +2,7 @@
 
 import { after } from 'next/server';
 import { createClient, createAdminClient, createPublicClient } from '@/lib/supabase/server';
-import { fetchUrlMeta, isFileUrl, normalizeUrl } from '@/lib/url-meta';
+import { fetchUrlMeta, isFileUrl, isYouTubeUrl, normalizeUrl } from '@/lib/url-meta';
 import { classify, type InlineData } from '@/lib/ai-classify';
 import { notifyProposalSubmitted } from '@/lib/notify';
 import { randomUUID } from 'crypto';
@@ -244,13 +244,19 @@ export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
   if (!url) return { ok: false, error: 'URL을 먼저 입력해주세요' };
   if (!/^https?:\/\//i.test(url)) return { ok: false, error: 'URL은 http:// 또는 https://로 시작해요' };
 
+  const isYt = isYouTubeUrl(url);
   const meta = await fetchUrlMeta(url);
-  if (!meta.ok) return { ok: false, error: `URL을 못 가져왔어요 — ${meta.error ?? '잠시 후 다시 시도'}` };
+  // YouTube은 fetch가 봇차단·consent월에 막혀도 Gemini 영상분석으로 진행. 일반 URL만 실패 처리.
+  if (!meta.ok && !isYt) return { ok: false, error: `URL을 못 가져왔어요 — ${meta.error ?? '잠시 후 다시 시도'}` };
 
-  // 메타 추출·분류·중복 검사 병렬 — finalUrl로 검사 (리다이렉트 풀린 후 키)
+  const finalUrl = meta.ok ? meta.finalUrl : url;
+
+  // 분류·중복 검사 병렬. YouTube면 영상 자체를 Gemini에 전달, 아티클이면 본문 발췌 전달.
   const [cls, duplicate] = await Promise.all([
-    classify(url, { title: meta.title, description: meta.description }),
-    findDuplicate(meta.finalUrl, ''),
+    isYt
+      ? classify(url, { title: meta.title, description: meta.description }, null, url)
+      : classify(url, { title: meta.title, description: meta.description, body: meta.bodyText }),
+    findDuplicate(finalUrl, ''),
   ]);
 
   return {
@@ -261,9 +267,9 @@ export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
     subCategory: cls.subCategory,
     tags: cls.tags,
     format: cls.format,
-    isFile: isFileUrl(meta.finalUrl),
+    isFile: isFileUrl(finalUrl),
     publishedAt: meta.publishedAt,
-    finalUrl: meta.finalUrl,
+    finalUrl,
     aiUsed: cls.aiUsed,
     duplicate,
   };

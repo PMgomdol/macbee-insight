@@ -266,7 +266,14 @@ export function SubmitForm({ categories }: Props) {
                 id="url-input"
                 type="url"
                 value={url}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setUrl(e.target.value); if (analyzed) setAnalyzed(false); }}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setUrl(e.target.value);
+                  // 링크 바꾸면 이전 분석 결과 파생상태 초기화 — stale finalUrl이 제출되는 것 방지
+                  setFinalUrl('');
+                  setDuplicate(null);
+                  setForceSubmit(false);
+                  if (analyzed) setAnalyzed(false);
+                }}
                 onKeyDown={onUrlKeyDown}
                 placeholder="https://..."
                 autoFocus
