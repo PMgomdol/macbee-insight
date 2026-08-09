@@ -30,14 +30,7 @@ const SLIDES: Slide[] = [
     bg: '#FFF7D6',
     fg: '#533F04',
     badgeColor: '#946F00',
-    // template.png 생성 대기 — 그때까지 임시 SVG
-    art: (
-      <svg viewBox="0 0 120 120" className="w-full h-full" aria-hidden>
-        <rect x="34" y="18" width="56" height="72" rx="6" fill="#F8E6A0" transform="rotate(6 62 54)" />
-        <rect x="30" y="22" width="56" height="72" rx="6" fill="#FFFFFF" />
-        <path d="M40 38h36M40 50h36M40 62h24" stroke="#946F00" strokeWidth="5" strokeLinecap="round" />
-      </svg>
-    ),
+    img: '/banner/template.png',
   },
 ];
 
