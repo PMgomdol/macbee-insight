@@ -88,8 +88,10 @@ export default async function Home() {
         <PopularCarousel />
       </Suspense>
 
-      {/* 하단 슬라이드 배너 — 제안/양식·템플릿/콘텐츠 바로가기 */}
-      <HomeBanner />
+      {/* 하단 슬라이드 배너 — 위 캐러셀과 간격 확보 */}
+      <div className="w-full mt-6 sm:mt-12">
+        <HomeBanner />
+      </div>
     </div>
   );
 }
