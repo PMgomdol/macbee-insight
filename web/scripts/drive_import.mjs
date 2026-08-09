@@ -140,7 +140,7 @@ console.log(`폴더 파일 ${files.length}개${DRY ? ' (DRY RUN)' : ''}\n`);
 const seen = await existingUrlSet();
 let nextId = (await maxItemId()) + 1;
 
-let added = 0, skipped = 0, failed = 0;
+let added = 0, skipped = 0, failed = 0, consecFail = 0;
 for (const f of files) {
   const link = f.webViewLink;
   const key = normalizeUrl(link);
@@ -151,7 +151,14 @@ for (const f of files) {
     const title = f.name.replace(/\.[^.]+$/, '');
     const cls = await classify(link, { title, description: '', body: (body || '').slice(0, 6000) });
     // 분류 실패(429·오류 → 요약 빈값)면 공개하지 않고 보류 — 재실행 때 채움
-    if (!cls.aiUsed) { console.log(`보류(분류 실패, 재실행): ${title}`); failed++; await sleep(3500); continue; }
+    if (!cls.aiUsed) {
+      console.log(`보류(분류 실패, 재실행): ${title}`);
+      failed++;
+      if (++consecFail >= 3) { console.log('\n⚠️ 연속 3건 분류 실패 — Gemini 쿼터 소진 추정. 중단합니다. 쿼터 회복 후 재실행하세요.'); break; }
+      await sleep(3500);
+      continue;
+    }
+    consecFail = 0;
     const format = cls.format || (fileRes ? '템플릿' : '아티클');
     const item = {
       id: nextId,

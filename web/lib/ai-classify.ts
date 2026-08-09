@@ -84,6 +84,7 @@ export async function classify(
     // 429(free tier 분당 한도)는 응답의 "retry in Xs"만큼 대기 후 재시도 (최대 2회, 각 60s 상한)
     for (let attempt = 0; resp.status === 429 && attempt < 2; attempt++) {
       const msg = await resp.text().catch(() => '');
+      if (/PerDay/i.test(msg)) break; // 일일 한도 — 재시도해도 무의미(쿼터 낭비)
       const secs = Number(msg.match(/retry in ([\d.]+)s/)?.[1] ?? msg.match(/"retryDelay":\s*"([\d.]+)s"/)?.[1] ?? 5);
       await new Promise((r) => setTimeout(r, Math.min(secs * 1000 + 1000, 61000)));
       resp = await fetch(
