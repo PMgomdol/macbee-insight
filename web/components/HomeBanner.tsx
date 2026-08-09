@@ -58,6 +58,23 @@ export function HomeBanner() {
   const go = (i: number) => setIdx((i + SLIDES.length) % SLIDES.length);
   const resume = () => { setPaused(false); setEpoch((e) => e + 1); };
 
+  // 모바일 스와이프 — 가로 40px 이상 + 가로가 세로보다 크면 전환 (세로 스크롤 방해 금지)
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    setPaused(true);
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const st = touchStart.current;
+    touchStart.current = null;
+    if (st) {
+      const dx = e.changedTouches[0].clientX - st.x;
+      const dy = e.changedTouches[0].clientY - st.y;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(idx + (dx < 0 ? 1 : -1));
+    }
+    resume();
+  };
+
   return (
     <section
       aria-roledescription="carousel"
@@ -67,6 +84,8 @@ export function HomeBanner() {
       onMouseLeave={resume}
       onFocus={() => setPaused(true)}
       onBlur={resume}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
       <div className="overflow-hidden rounded-[var(--r-lg)] relative">
         <div

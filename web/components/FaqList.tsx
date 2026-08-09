@@ -209,7 +209,7 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
           if (!items || items.length === 0) return null;
           return (
             <section key={c} id={slugify(c)} className="flex flex-col gap-1.5 scroll-mt-32">
-              <h2 className="text-sm font-semibold text-[var(--fg)] tracking-tight pt-2 sticky top-[7.5rem] bg-[var(--bg)] py-1.5 z-20 border-b border-[var(--border)]">
+              <h2 className="text-sm font-semibold text-[var(--fg)] tracking-tight pt-2 py-1.5 border-b border-[var(--border)]">
                 {c} <span className="text-[var(--muted-2)] font-normal">({items.length})</span>
               </h2>
               <div className="flex flex-col">

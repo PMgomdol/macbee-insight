@@ -1,6 +1,7 @@
 'use client';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { SearchAutocomplete } from './SearchAutocomplete';
 
@@ -20,15 +21,25 @@ export function HeaderSearch() {
 
   if (!open) {
     return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="검색 열기"
-        aria-expanded={false}
-        className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--card)] transition-colors"
-      >
-        <Search size={18} aria-hidden />
-      </button>
+      <>
+        {/* 모바일: 검색 페이지로 이동 (인라인 펼침은 56px 헤더에서 너무 좁음) */}
+        <Link
+          href="/search"
+          aria-label="검색"
+          className="inline-flex sm:hidden items-center justify-center w-9 h-9 rounded-full text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--card)] transition-colors"
+        >
+          <Search size={18} aria-hidden />
+        </Link>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="검색 열기"
+          aria-expanded={false}
+          className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--card)] transition-colors"
+        >
+          <Search size={18} aria-hidden />
+        </button>
+      </>
     );
   }
 
