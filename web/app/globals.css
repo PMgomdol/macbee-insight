@@ -75,10 +75,10 @@ body {
 
 a { color: inherit; text-decoration: none; }
 
+/* outline은 요소 자체 라운드를 따라감 — border-radius 강제 지정 금지 (포커스 시 라운드 튐 원인) */
 *:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
-  border-radius: var(--r-sm);
 }
 
 input:focus,
