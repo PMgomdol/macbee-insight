@@ -119,22 +119,32 @@ function extractDateFromText(html: string): string | null {
 }
 
 /**
- * 본문 평문 추출 — og 설명이 사이트 기본값/광고문구인 글(요즘IT 등) 대비.
- * <article> 또는 <main> 우선, 없으면 body 전체. script/style/nav 제거 후 평문 4000자.
+ * 본문 평문 추출 — og 설명이 사이트 기본값/광고문구인 글(브런치·요즘IT 등) 대비.
+ * <article>/<main> 범위에서 블록 프로즈(<p>/<h1-3>/<li>/<blockquote>) 텍스트만 추출.
+ * 전체 태그제거(<[^>]+>)는 속성값 안의 '>' 나 data-* 트래킹 속성이 새어나와 깨지므로
+ * 블록 태그 내부 텍스트만 뽑는다. 프로즈가 빈약한 페이지만 전체 스트립으로 폴백.
  */
 function extractMainText(html: string): string {
-  let scope =
+  const scope = (
     html.match(/<article\b[\s\S]*?<\/article>/i)?.[0] ??
     html.match(/<main\b[\s\S]*?<\/main>/i)?.[0] ??
-    html;
-  scope = scope
+    html
+  )
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<(nav|header|footer|aside)[\s\S]*?<\/\1>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return decode(scope).slice(0, 4000);
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ');
+
+  const blocks = scope.match(/<(p|h[1-3]|li|blockquote)\b[^>]*>([\s\S]*?)<\/\1>/gi) ?? [];
+  let text = blocks
+    .map((b) => b.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim())
+    .filter((t) => t.length > 1)
+    .join('\n');
+
+  // 블록 태그 없는 페이지 — 전체 스트립 폴백
+  if (text.length < 150) {
+    text = scope.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  return decode(text).slice(0, 4000);
 }
 
 function decode(s: string | null): string {
