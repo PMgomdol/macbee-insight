@@ -37,22 +37,6 @@ const SLIDES = [
       </svg>
     ),
   },
-  {
-    href: '/insights',
-    badge: 'CONTENT',
-    title: '아티클·영상·가이드 콘텐츠',
-    sub: '기획 실무 지식을 채워줄 콘텐츠를 골라 모았어요.',
-    bg: '#1D4D44',
-    badgeColor: '#8FD6C4',
-    art: (
-      // 재생 버튼 카드
-      <svg viewBox="0 0 120 120" className="w-full h-full" aria-hidden>
-        <rect x="16" y="28" width="88" height="60" rx="10" fill="rgba(255,255,255,0.92)" />
-        <circle cx="60" cy="58" r="16" fill="#1D4D44" />
-        <path d="M56 50l14 8-14 8z" fill="#fff" />
-      </svg>
-    ),
-  },
 ];
 
 const INTERVAL = 5000;
