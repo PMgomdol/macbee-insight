@@ -171,11 +171,11 @@ export default function DesignGuide() {
 
       <Section title="인풋" desc="검색·URL 등 단일행 핵심 인풋 = 필(full). 폼 내부 일반 필드 = @atlaskit Textfield 유지.">
         <div className="flex flex-col gap-2 max-w-md">
-          <div className="flex items-center gap-2 px-4 h-11 rounded-full border-2 border-[var(--border)] bg-[var(--bg)]">
-            <span className="text-[var(--muted)] text-sm">돋보기 아이콘 + 검색 인풋 (h-11, border-2)</span>
+          <div className="flex items-center gap-2 px-4 h-11 rounded-full border border-[var(--border-strong)] bg-[var(--bg)]">
+            <span className="text-[var(--muted)] text-sm">돋보기 아이콘 + 검색 인풋 (h-11, 1px strong)</span>
           </div>
         </div>
-        <Recipe code={`필 인풋: h-11 px-4 rounded-full border-2 border-[var(--border)] bg-[var(--bg)] text-sm focus:border-[var(--focus-ring)] (또는 focus-within)`} />
+        <Recipe code={`필 인풋: h-11 px-4 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] text-sm focus:border-[var(--focus-ring)] (또는 focus-within)`} />
       </Section>
 
       <Section title="카드" desc="app-card 클래스 (라운드 lg 12px, hover 시 그림자+테두리 강조).">

@@ -182,8 +182,8 @@ export function SearchAutocomplete({
     variant === 'header'
       ? 'app-input w-full !rounded-full'
       : variant === 'hero'
-      ? 'flex-1 min-w-0 flex items-center gap-2.5 px-5 sm:px-6 h-12 sm:h-14 rounded-full border-2 border-[var(--border)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]'
-      : 'flex-1 min-w-0 flex items-center gap-2 px-4 h-11 rounded-full border-2 border-[var(--border)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]';
+      ? 'flex-1 min-w-0 flex items-center gap-2.5 px-5 sm:px-6 h-12 sm:h-14 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]'
+      : 'flex-1 min-w-0 flex items-center gap-2 px-4 h-11 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]';
 
   return (
     <div ref={wrapRef} className={wrapCls}>

@@ -134,7 +134,7 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
   return (
     <div className="flex flex-col gap-4">
       {/* 검색 박스 — 검색 페이지(page variant)와 동일 스타일 (focus 시 색만 변경, 두께·높이 고정) */}
-      <div className="flex items-center gap-2 px-4 h-11 rounded-full border-2 border-[var(--border)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]">
+      <div className="flex items-center gap-2 px-4 h-11 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]">
         <Search size={18} className="text-[var(--muted)] shrink-0" aria-hidden />
         <input
           type="search"

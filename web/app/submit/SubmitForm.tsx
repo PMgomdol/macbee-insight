@@ -275,7 +275,7 @@ export function SubmitForm({ categories }: Props) {
               onKeyDown={onUrlKeyDown}
               placeholder="https://..."
               autoFocus
-              className="flex-1 min-w-0 h-11 px-4 rounded-full border-2 border-[var(--border)] bg-[var(--bg)] text-sm focus:border-[var(--focus-ring)] transition-colors"
+              className="flex-1 min-w-0 h-11 px-4 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] text-sm focus:border-[var(--focus-ring)] transition-colors"
             />
             <Button
               type="button"
