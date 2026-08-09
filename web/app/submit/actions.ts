@@ -170,15 +170,39 @@ async function extractXlsxText(buf: Buffer): Promise<string> {
   return decodeXml(text).replace(/\s+/g, ' ').trim().slice(0, 4000);
 }
 
+/** HWP(구 바이너리 CFB): 압축 없는 PrvText 스트림(UTF-16LE 미리보기) 추출 */
+async function extractHwpText(buf: Buffer): Promise<string> {
+  const CFB = (await import('cfb')).default;
+  const cfb = CFB.read(new Uint8Array(buf), { type: 'buffer' });
+  const prv = CFB.find(cfb, 'PrvText');
+  if (!prv || !prv.content) return '';
+  return Buffer.from(prv.content as Uint8Array)
+    .toString('utf16le')
+    .replace(/[<>]/g, ' ') // 필드·셀 구분자 노이즈 제거
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 4000);
+}
+
+/** HWPX(OWPML zip): Contents/section*.xml의 <hp:t> 텍스트 런 추출 */
+async function extractHwpxText(buf: Buffer): Promise<string> {
+  const xmls = await unzipXmls(buf, (n) => /^Contents\/section\d+\.xml$/i.test(n));
+  const text = xmls
+    .map((x) => (x.match(/<hp:t[^>]*>([\s\S]*?)<\/hp:t>/g) ?? []).map((t) => t.replace(/<[^>]+>/g, '')).join(' '))
+    .join('\n');
+  return decodeXml(text).replace(/\s+/g, ' ').trim().slice(0, 4000);
+}
+
 /**
  * 업로드된 파일의 실제 본문 텍스트 추출.
  * - PDF: pdf-parse, 첫 10페이지 (vision 한도 초과 시 폴백용)
- * - DOCX: mammoth / PPTX·XLSX: jszip으로 OOXML 텍스트 추출 (새 의존성 없음)
+ * - DOCX: mammoth / PPTX·XLSX·HWPX: jszip으로 OOXML/OWPML 텍스트 추출
+ * - HWP(구 바이너리): cfb로 PrvText 미리보기 스트림 추출
  * - TXT/MD/CSV: 그대로 utf-8 디코드
- * - 그 외(구 바이너리 doc/xls/ppt, hwp): 빈 문자열 → 파일명 기반 분류
+ * - 그 외(구 바이너리 doc/xls/ppt): 빈 문자열 → 파일명 기반 분류
  */
 async function extractFileText(fileUrl: string, ext: string): Promise<string> {
-  const SUPPORTED = ['pdf', 'docx', 'pptx', 'xlsx', 'xlsm', 'txt', 'md', 'csv'];
+  const SUPPORTED = ['pdf', 'docx', 'pptx', 'xlsx', 'xlsm', 'hwp', 'hwpx', 'txt', 'md', 'csv'];
   if (!SUPPORTED.includes(ext)) return '';
   try {
     const resp = await fetch(fileUrl, { signal: AbortSignal.timeout(20000) });
@@ -204,6 +228,8 @@ async function extractFileText(fileUrl: string, ext: string): Promise<string> {
 
     if (ext === 'pptx') return await extractPptxText(buf);
     if (ext === 'xlsx' || ext === 'xlsm') return await extractXlsxText(buf);
+    if (ext === 'hwp') return await extractHwpText(buf);
+    if (ext === 'hwpx') return await extractHwpxText(buf);
 
     // txt / md / csv
     return buf.toString('utf-8').replace(/\s+/g, ' ').trim().slice(0, 4000);
@@ -463,6 +489,7 @@ const MIME_FALLBACK: Record<string, string> = {
   xls: 'application/vnd.ms-excel',
   xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   hwp: 'application/x-hwp',
+  hwpx: 'application/hwp+zip',
   zip: 'application/zip',
   png: 'image/png',
   jpg: 'image/jpeg',
