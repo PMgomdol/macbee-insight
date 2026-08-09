@@ -40,7 +40,7 @@ export function ListSearchBox({ basePath, placeholder }: { basePath: string; pla
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={placeholder}
-        className="flex-1 min-w-0 bg-transparent outline-none text-sm"
+        className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-sm"
         aria-label={placeholder}
       />
       {q && (

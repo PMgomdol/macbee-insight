@@ -178,7 +178,7 @@ export function FeedbackWidget() {
               <div className="flex gap-2 mt-2">
                 {status?.kind === 'ok' ? (
                   <>
-                    <UIButton variant="secondary" onClick={reset} className="flex-1">하나 더 보낼래요</UIButton>
+                    <UIButton variant="secondary" onClick={reset} className="flex-1">하나 더 보내기</UIButton>
                     <UIButton onClick={close} className="flex-1">닫기</UIButton>
                   </>
                 ) : (

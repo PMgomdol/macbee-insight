@@ -89,7 +89,7 @@ export function MobileNavClient({ isReviewer = false }: { isReviewer?: boolean }
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="자료·Q&A 검색..."
-                className="text-sm"
+                className="text-base"
                 aria-label="검색어"
               />
             </div>

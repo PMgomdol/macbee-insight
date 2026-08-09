@@ -16,7 +16,7 @@ const SLIDES: Slide[] = [
     href: '/submit',
     badge: 'SUGGEST',
     title: '좋은 자료를 알고 계신가요?',
-    sub: '링크만 남겨주세요. 운영진이 검토 후 자료실에 등록해 드려요.',
+    sub: '링크만 남겨주세요. 운영진이 검토 후 자료실에 등록해요.',
     bg: '#E8F3FF',
     fg: '#194086',
     badgeColor: '#3182F6',

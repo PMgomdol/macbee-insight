@@ -43,17 +43,16 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
 
   // 필터 + 검색 + 정렬
   const filtered = useMemo(() => {
-    const kw = q.trim().toLowerCase();
+    // 공백 분리 토큰 AND 매칭 — "화면 기획"이면 두 단어가 각각 어디든 있으면 매칭 (전역 검색과 동일 감각)
+    const kws = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
     let list = items;
     if (main) list = list.filter((it) => it.main_category === main);
     if (sub) list = list.filter((it) => it.sub_category === sub);
-    if (kw) {
-      list = list.filter(
-        (it) =>
-          it.title.toLowerCase().includes(kw) ||
-          (it.summary ?? '').toLowerCase().includes(kw) ||
-          (it.tags ?? []).some((t) => t.toLowerCase().includes(kw))
-      );
+    if (kws.length) {
+      list = list.filter((it) => {
+        const hay = `${it.title} ${it.summary ?? ''} ${(it.tags ?? []).join(' ')}`.toLowerCase();
+        return kws.every((kw) => hay.includes(kw));
+      });
     }
     if (sort === 'popular') {
       list = [...list].sort((a, b) => (b.views ?? 0) - (a.views ?? 0));
@@ -104,7 +103,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
           value={q}
           onChange={(e) => changeQ(e.target.value)}
           placeholder={`${title}에서 제목·설명·태그로 찾아보세요`}
-          className="flex-1 min-w-0 bg-transparent outline-none text-sm"
+          className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-sm"
           aria-label={`${title} 내 검색`}
         />
         {q && (
@@ -117,7 +116,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
       {q && (
         <p className="text-xs text-[var(--muted)]">
           <strong className="text-[var(--fg)]">{q}</strong> 결과 {filtered.length.toLocaleString()}건
-          <button onClick={() => changeQ('')} className="ml-2 text-[var(--accent)] hover:underline">검색 지울게요</button>
+          <button onClick={() => changeQ('')} className="ml-2 text-[var(--accent)] hover:underline">검색 지우기</button>
         </p>
       )}
 

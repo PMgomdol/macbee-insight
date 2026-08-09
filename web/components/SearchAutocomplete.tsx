@@ -189,7 +189,7 @@ export function SearchAutocomplete({
     <div ref={wrapRef} className={wrapCls}>
       <form
         onSubmit={(e) => { e.preventDefault(); go(q); }}
-        className={variant === 'page' ? 'flex flex-col sm:flex-row gap-2 w-full' : 'w-full'}
+        className={variant === 'page' ? 'flex gap-2 w-full' : 'w-full'}
         role="search"
       >
         <div className={inputCls}>
@@ -236,7 +236,7 @@ export function SearchAutocomplete({
         {variant === 'page' && (
           <button
             type="submit"
-            className="shrink-0 h-11 px-5 rounded-full bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
+            className="shrink-0 h-11 px-4 sm:px-5 rounded-full bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
           >
             검색
           </button>
@@ -299,7 +299,7 @@ export function SearchAutocomplete({
             )}
 
             {q && (fresh?.suggestions ?? []).length === 0 && (
-              <div className="px-3 py-4 text-xs text-[var(--muted)]">Enter를 누르면 전체 검색해드려요</div>
+              <div className="px-3 py-4 text-xs text-[var(--muted)]">Enter를 누르면 전체 검색해요</div>
             )}
 
             {q && (fresh?.suggestions ?? []).map((s, i) => {
