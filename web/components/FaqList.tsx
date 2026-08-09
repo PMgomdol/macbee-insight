@@ -4,6 +4,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Search, X, ChevronDown } from 'lucide-react';
 import type { FAQItem } from '@/types/db';
+import { track } from '@/lib/track';
 
 // 답변 접기 — 대략 10줄(15em) 넘으면 잘라서 '더 보기'
 const COLLAPSE_EM = 15;
@@ -71,13 +72,38 @@ function slugify(s: string) {
 
 export function FaqList({ faqs }: { faqs: FAQItem[] }) {
   const [q, setQ] = useState('');
+  const [cat, setCat] = useState<string | null>(null);
 
-  // 전체 카테고리 (검색과 무관 — 점프 메뉴는 항상 노출)
+  // 전체 카테고리 (검색과 무관 — 필터 칩은 항상 노출)
   const allCats = useMemo(() => {
     const m = new Map<string, number>();
     for (const f of faqs) m.set(f.main_category, (m.get(f.main_category) ?? 0) + 1);
     return [...m.entries()];
   }, [faqs]);
+
+  // 딥링크 복원: ?cat= 쿼리 + 구버전 #cat- 앵커(공유된 링크 호환) → 필터 선택으로 변환
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    let target = url.searchParams.get('cat');
+    if (!target && url.hash.startsWith('#cat-')) {
+      target = allCats.map(([c]) => c).find((c) => `#${slugify(c)}` === url.hash) ?? null;
+      if (target) {
+        url.hash = '';
+        url.searchParams.set('cat', target);
+        history.replaceState(null, '', url);
+      }
+    }
+    if (target && allCats.some(([c]) => c === target)) setCat(target);
+  }, [allCats]);
+
+  function selectCat(next: string | null) {
+    setCat(next);
+    const url = new URL(window.location.href);
+    if (next) url.searchParams.set('cat', next);
+    else url.searchParams.delete('cat');
+    history.replaceState(null, '', url);
+    track('filter_change', { type: 'category', value: next ?? 'all', page: 'faq' });
+  }
 
   const k = q.trim().toLowerCase();
 
@@ -129,31 +155,42 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
         )}
       </div>
 
-      {/* 카테고리 점프 메뉴 — 항상 노출 (검색 중에도) */}
+      {/* 카테고리 필터 칩 — ListFilterClient 대분류 칩과 동일 스타일·동작 (같은 모양 = 같은 역할) */}
       {allCats.length > 1 && (
-        <nav
-          aria-label="카테고리 점프"
-          className="sticky top-14 z-30 bg-[var(--bg)] py-2 -mt-2 flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap border-b border-[var(--border)]"
-        >
-          {allCats.map(([cat, total]) => {
-            const hits = matchCount(cat);
-            const disabled = !!k && hits === 0;
+        <div className="sticky top-14 z-30 bg-[var(--bg)] py-2 -mt-2 flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap border-b border-[var(--border)]">
+          <button
+            type="button"
+            onClick={() => selectCat(null)}
+            className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs sm:text-sm border whitespace-nowrap transition ${
+              !cat
+                ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
+            }`}
+          >
+            전체
+          </button>
+          {allCats.map(([c, total]) => {
+            const hits = matchCount(c);
+            const disabled = !!k && hits === 0 && cat !== c;
             return (
-              <a
-                key={cat}
-                href={`#${slugify(cat)}`}
-                aria-disabled={disabled}
+              <button
+                key={c}
+                type="button"
+                onClick={() => selectCat(cat === c ? null : c)}
+                disabled={disabled}
                 className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs sm:text-sm border whitespace-nowrap transition ${
-                  disabled
-                    ? 'border-[var(--border)] text-[var(--muted-2)] opacity-50 pointer-events-none'
-                    : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
+                  cat === c
+                    ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                    : disabled
+                      ? 'border-[var(--border)] text-[var(--muted-2)] opacity-50'
+                      : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
                 }`}
               >
-                {cat} <span className="opacity-70">({k ? hits : total})</span>
-              </a>
+                {c} <span className="opacity-70">({k ? hits : total})</span>
+              </button>
             );
           })}
-        </nav>
+        </div>
       )}
 
       {q && (
@@ -162,17 +199,18 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
         </p>
       )}
 
-      {filtered.length === 0 ? (
+      {filtered.length === 0 || (cat && matchCount(cat) === 0) ? (
         <div className="py-12 text-center text-sm text-[var(--muted)]">결과가 없어요. 다른 키워드로 찾아보세요.</div>
       ) : (
-        // 카테고리 순서는 allCats 기준 (검색해도 그룹 순서 유지)
-        allCats.map(([cat]) => {
-          const items = byCat.get(cat);
+        // 카테고리 순서는 allCats 기준 (검색해도 그룹 순서 유지) — 필터 선택 시 해당 카테고리만
+        allCats.map(([c]) => {
+          if (cat && c !== cat) return null;
+          const items = byCat.get(c);
           if (!items || items.length === 0) return null;
           return (
-            <section key={cat} id={slugify(cat)} className="flex flex-col gap-1.5 scroll-mt-32">
+            <section key={c} id={slugify(c)} className="flex flex-col gap-1.5 scroll-mt-32">
               <h2 className="text-sm font-semibold text-[var(--fg)] tracking-tight pt-2 sticky top-[7.5rem] bg-[var(--bg)] py-1.5 z-20 border-b border-[var(--border)]">
-                {cat} <span className="text-[var(--muted-2)] font-normal">({items.length})</span>
+                {c} <span className="text-[var(--muted-2)] font-normal">({items.length})</span>
               </h2>
               <div className="flex flex-col">
                 {items.map((f) => (
