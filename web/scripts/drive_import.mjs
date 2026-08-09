@@ -115,6 +115,15 @@ async function existingUrlSet() {
   }
   return set;
 }
+
+// id 시퀀스가 과거 대량 import(명시적 No)로 어긋나 있어 명시적으로 max+1 부여
+async function maxItemId() {
+  const r = await fetch(`${SB_URL}/rest/v1/archive_item?select=id&order=id.desc&limit=1`, {
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
+  });
+  const rows = await r.json();
+  return rows.length ? Number(rows[0].id) : 0;
+}
 async function insertItem(item) {
   const r = await fetch(`${SB_URL}/rest/v1/archive_item`, {
     method: 'POST',
@@ -129,6 +138,7 @@ const tok = await driveToken();
 const files = await gatherFiles(tok, FOLDER);
 console.log(`폴더 파일 ${files.length}개${DRY ? ' (DRY RUN)' : ''}\n`);
 const seen = await existingUrlSet();
+let nextId = (await maxItemId()) + 1;
 
 let added = 0, skipped = 0, failed = 0;
 for (const f of files) {
@@ -144,6 +154,7 @@ for (const f of files) {
     if (!cls.aiUsed) { console.log(`보류(분류 실패, 재실행): ${title}`); failed++; await sleep(3500); continue; }
     const format = cls.format || (fileRes ? '템플릿' : '아티클');
     const item = {
+      id: nextId,
       main_category: cls.mainCategory || '미분류',
       sub_category: cls.subCategory || null,
       tags: cls.tags?.length ? cls.tags : null,
@@ -160,7 +171,7 @@ for (const f of files) {
       registered_at: new Date().toISOString(),
     };
     console.log(`${DRY ? '[dry] ' : ''}add: ${title}\n     → ${cls.mainCategory}/${cls.subCategory} · ${format} · ai=${cls.aiUsed}\n     요약: ${cls.summary}`);
-    if (!DRY) { await insertItem(item); seen.add(key); }
+    if (!DRY) { await insertItem(item); seen.add(key); nextId++; }
     added++;
     await sleep(3500); // Gemini free tier 20 RPM 아래로 유지
   } catch (e) {
