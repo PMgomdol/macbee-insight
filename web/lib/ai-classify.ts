@@ -81,8 +81,11 @@ export async function classify(
       { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: AbortSignal.timeout(timeout) }
     );
     // 429(쿼터/레이트리밋)는 잠깐 쉬고 1회 재시도
-    if (resp.status === 429) {
-      await new Promise((r) => setTimeout(r, 2500));
+    // 429(free tier 분당 한도)는 응답의 "retry in Xs"만큼 대기 후 재시도 (최대 2회, 각 60s 상한)
+    for (let attempt = 0; resp.status === 429 && attempt < 2; attempt++) {
+      const msg = await resp.text().catch(() => '');
+      const secs = Number(msg.match(/retry in ([\d.]+)s/)?.[1] ?? msg.match(/"retryDelay":\s*"([\d.]+)s"/)?.[1] ?? 5);
+      await new Promise((r) => setTimeout(r, Math.min(secs * 1000 + 1000, 61000)));
       resp = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`,
         { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: AbortSignal.timeout(timeout) }
