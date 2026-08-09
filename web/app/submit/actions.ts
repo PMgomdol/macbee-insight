@@ -299,9 +299,11 @@ async function analyzeYouTube(url: string): Promise<AnalyzeResult> {
   const [oembed, meta] = await Promise.all([youtubeOembed(url), fetchUrlMeta(url)]);
   const baseTitle = oembed?.title || meta.title || '';
   const baseDesc = meta.description || (oembed?.author ? `${oembed.author} 채널의 영상` : '');
+  // YouTube canonical = 사용자가 붙인 watch/youtu.be URL. meta.finalUrl은 consent월
+  // 리다이렉트(consent.youtube.com 등)일 수 있어 쓰지 않는다.
   const [cls, duplicate] = await Promise.all([
     classify(url, { title: baseTitle, description: baseDesc }, null, url),
-    findDuplicate(meta.ok ? meta.finalUrl : url, ''),
+    findDuplicate(url, ''),
   ]);
   // Gemini 실패(429/timeout 등)해도 oEmbed 제목으로 최소 정보 보장 — 빈 제목/요약 방지
   return {
@@ -314,7 +316,7 @@ async function analyzeYouTube(url: string): Promise<AnalyzeResult> {
     format: '영상',
     isFile: false,
     publishedAt: meta.publishedAt,
-    finalUrl: meta.ok ? meta.finalUrl : url,
+    finalUrl: '',
     aiUsed: cls.aiUsed,
     duplicate,
   };
