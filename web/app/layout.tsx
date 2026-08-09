@@ -75,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
             <Link
               href="/"
-              className="flex items-center gap-2 font-bold text-base sm:text-lg tracking-tight shrink-0 justify-self-start"
+              className="flex items-center gap-1 font-bold text-base sm:text-lg tracking-tight shrink-0 justify-self-start"
             >
               {/* 선반 M 심볼 — currentColor라 라이트/다크 자동 대응 */}
               <svg viewBox="0 0 64 64" className="w-[22px] h-[22px] shrink-0" aria-hidden fill="currentColor">
