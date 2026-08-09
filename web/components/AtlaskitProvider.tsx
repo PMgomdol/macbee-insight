@@ -8,7 +8,6 @@ import { useEffect } from 'react';
  */
 export function AtlaskitProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    let mo: MutationObserver | null = null;
     let cancelled = false;
 
     const idle = (window as any).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 200));
@@ -16,34 +15,21 @@ export function AtlaskitProvider({ children }: { children: React.ReactNode }) {
       if (cancelled) return;
       const mod = await import('@atlaskit/tokens');
       if (cancelled) return;
+      // 라이트 단일 테마 (다크모드 제거, 2026-08-09)
       mod.setGlobalTheme({
-        colorMode: 'auto',
+        colorMode: 'light',
         light: 'light',
-        dark: 'dark',
         spacing: 'spacing',
         typography: 'typography',
         shape: 'shape',
       });
-
-      const syncColorMode = () => {
-        const root = document.documentElement;
-        const t = root.getAttribute('data-theme');
-        if (t === 'light' || t === 'dark') {
-          root.setAttribute('data-color-mode', t);
-        } else {
-          root.removeAttribute('data-color-mode');
-        }
-      };
-      syncColorMode();
-      mo = new MutationObserver(syncColorMode);
-      mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+      document.documentElement.setAttribute('data-color-mode', 'light');
     });
 
     return () => {
       cancelled = true;
       const cancel = (window as any).cancelIdleCallback;
       if (cancel && typeof id !== 'object') cancel(id);
-      mo?.disconnect();
     };
   }, []);
 

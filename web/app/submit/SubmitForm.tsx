@@ -233,25 +233,24 @@ export function SubmitForm({ categories }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full min-w-0">
-      <div role="tablist" aria-label="등록 방식" className="grid grid-cols-2 gap-1 p-0.5 rounded-[var(--r-sm)] bg-[var(--card)] border border-[var(--border)]">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === 'url'}
-          onClick={() => switchMode('url')}
-          className={`px-3 py-2 rounded-[var(--r-sm)] text-sm transition ${mode === 'url' ? 'bg-[var(--bg)] shadow-[var(--shadow-2)] font-semibold' : 'text-[var(--muted)]'}`}
-        >
-          URL 등록
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === 'file'}
-          onClick={() => switchMode('file')}
-          className={`px-3 py-2 rounded-[var(--r-sm)] text-sm transition ${mode === 'file' ? 'bg-[var(--bg)] shadow-[var(--shadow-2)] font-semibold' : 'text-[var(--muted)]'}`}
-        >
-          파일 업로드
-        </button>
+      {/* 등록 방식 — 밑줄 탭 (박스 중첩 회피, UI 규칙: 전환 탭은 탭답게) */}
+      <div role="tablist" aria-label="등록 방식" className="flex gap-1 border-b border-[var(--border)]">
+        {([['url', 'URL 등록'], ['file', '파일 업로드']] as const).map(([m, label]) => (
+          <button
+            key={m}
+            type="button"
+            role="tab"
+            aria-selected={mode === m}
+            onClick={() => switchMode(m)}
+            className={`px-4 py-2.5 text-sm -mb-px border-b-2 transition ${
+              mode === m
+                ? 'border-[var(--accent)] text-[var(--accent)] font-semibold'
+                : 'border-transparent text-[var(--muted)] hover:text-[var(--fg)]'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* URL 입력 + 자동분석 — 첫 단계 */}
@@ -261,24 +260,23 @@ export function SubmitForm({ categories }: Props) {
             URL <span className="text-[var(--danger)]">*</span>
           </label>
           <div className="flex flex-col sm:flex-row gap-2 items-stretch">
-            <div className="flex-1 min-w-0">
-              <Textfield
-                id="url-input"
-                type="url"
-                value={url}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setUrl(e.target.value);
-                  // 링크 바꾸면 이전 분석 결과 파생상태 초기화 — stale finalUrl이 제출되는 것 방지
-                  setFinalUrl('');
-                  setDuplicate(null);
-                  setForceSubmit(false);
-                  if (analyzed) setAnalyzed(false);
-                }}
-                onKeyDown={onUrlKeyDown}
-                placeholder="https://..."
-                autoFocus
-              />
-            </div>
+            <input
+              id="url-input"
+              type="url"
+              value={url}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setUrl(e.target.value);
+                // 링크 바꾸면 이전 분석 결과 파생상태 초기화 — stale finalUrl이 제출되는 것 방지
+                setFinalUrl('');
+                setDuplicate(null);
+                setForceSubmit(false);
+                if (analyzed) setAnalyzed(false);
+              }}
+              onKeyDown={onUrlKeyDown}
+              placeholder="https://..."
+              autoFocus
+              className="flex-1 min-w-0 h-11 px-4 rounded-full border-2 border-[var(--border)] bg-[var(--bg)] text-sm focus:border-[var(--focus-ring)] transition-colors"
+            />
             <Button
               type="button"
               appearance="primary"
@@ -307,7 +305,7 @@ export function SubmitForm({ categories }: Props) {
           <label className="text-sm font-medium">
             파일 <span className="text-[var(--danger)]">*</span>
           </label>
-          <label className="flex items-center gap-2 px-3 py-3 rounded-[var(--r-sm)] border-2 border-dashed border-[var(--border-strong)] bg-[var(--card)] cursor-pointer hover:border-[var(--accent)]">
+          <label className="flex items-center justify-center gap-2 px-4 py-6 rounded-xl border-2 border-dashed border-[var(--border-strong)] bg-[var(--card)] cursor-pointer hover:border-[var(--accent)] transition-colors">
             <input type="file" onChange={onFileChange} className="hidden" />
             {uploading ? <Spinner size="small" /> : <Upload size={16} />}
             <span className="text-sm">

@@ -6,7 +6,6 @@ import { AuthStatus } from '@/components/AuthStatus';
 import { MobileNavServer } from '@/components/MobileNavServer';
 import { HeaderSearch } from '@/components/HeaderSearch';
 import { HeaderNavServer } from '@/components/HeaderNavServer';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { CardClickTracker } from '@/components/CardClickTracker';
 import { NavProgress } from '@/components/NavProgress';
 import { SiteFooter } from '@/components/SiteFooter';
@@ -31,28 +30,15 @@ export const metadata: Metadata = {
   },
 };
 
-const THEME_INIT = `
-(function(){
-  var t = 'light';
-  try {
-    var s = localStorage.getItem('theme');
-    if (s === 'dark' || s === 'light') t = s;
-  } catch(e) {}
-  document.documentElement.setAttribute('data-theme', t);
-})();
-`;
-
 // 외부 CSS 로드 전 FOUC 방지 — 초기 배경/글자색을 인라인으로 잡아둠.
 const EARLY_STYLE = `
 :root { background:#FFFFFF; color:#292A2E; }
-:root[data-theme="dark"] { background:#1F1F21; color:#CECFD2; }
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className="h-full antialiased" data-theme="light" suppressHydrationWarning>
+    <html lang="ko" className="h-full antialiased">
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         <style dangerouslySetInnerHTML={{ __html: EARLY_STYLE }} />
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
         <link
@@ -98,7 +84,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
             <div className="flex justify-end items-center gap-1.5 sm:gap-2">
               <Suspense fallback={null}><HeaderSearch /></Suspense>
-              <ThemeToggle />
               <Suspense fallback={null}><AuthStatus /></Suspense>
               <Suspense fallback={null}><MobileNavServer /></Suspense>
             </div>

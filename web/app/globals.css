@@ -42,32 +42,7 @@
   --r-lg: 8px;
 }
 
-:root[data-theme="dark"] {
-  --bg: #1F1F21;                    /* elevation.surface (dark) */
-  --bg-alt: #242528;
-  --fg: #CECFD2;                    /* color.text (dark) */
-  --muted: #A9ABAF;                 /* text.subtle */
-  --muted-2: #96999E;               /* text.subtlest */
-  --border: #3A3B3F;
-  --border-strong: #7E8188;         /* border.input */
-  --card: #2C2C2F;
-  --card-hover: #3A3B3F;
-  --accent: #669DF1;                /* brand.bold (dark) */
-  --accent-hover: #8FB8F6;
-  --accent-pressed: #4688EC;
-  --accent-bg: #1C2B42;             /* brand.subtlest (dark) */
-  --focus-ring: #8FB8F6;
-  --success: #94C748;
-  --danger: #F87168;
-  --danger-text: #FD9891;
-  --warning: #FBC828;
-  --shadow-2: 0 1px 1px rgba(0,0,0,0.55), 0 0 1px rgba(0,0,0,0.60);
-  --shadow-4: 0 0 1px rgba(0,0,0,0.50), 0 8px 12px rgba(0,0,0,0.55);
-  --shadow-8: 0 0 1px rgba(0,0,0,0.60), 0 8px 12px rgba(0,0,0,0.55);
-  --shadow-16: 0 0 1px rgba(0,0,0,0.60), 0 20px 32px rgba(0,0,0,0.70);
-}
-
-/* 시스템 자동 다크 감지 제거 — data-theme 속성으로만 제어. THEME_INIT script가 SSR 이후 값 적용. */
+/* 다크모드 제거 (2026-08-09) — 라이트 단일 테마 */
 
 @theme inline {
   --color-bg: var(--bg);
