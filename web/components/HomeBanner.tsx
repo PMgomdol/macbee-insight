@@ -3,37 +3,39 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-// openpath.kr 하단 배너 스타일: 라운드 다크 카드 + 좌측 뱃지/타이틀/서브 + 우측 일러스트
-const SLIDES = [
+// 파스텔 배너 (인프런풍): 연한 배경 50 + 진한 텍스트 900 + 중간 뱃지 500 — 단계별 톤 스케일
+// Blue:   50 #E9F2FF · 500 #1868DB · 900 #09326C
+// Yellow: 50 #FFF7D6 · 500 #946F00 · 900 #533F04
+type Slide = {
+  href: string; badge: string; title: string; sub: string;
+  bg: string; fg: string; badgeColor: string;
+  img?: string; art?: React.ReactNode;
+};
+const SLIDES: Slide[] = [
   {
     href: '/submit',
     badge: 'SUGGEST',
     title: '좋은 자료를 알고 계신가요?',
     sub: '링크만 남겨주세요. 운영진이 검토 후 자료실에 등록해 드려요.',
-    bg: '#1868DB',
-    badgeColor: '#8FBFF8',
-    art: (
-      // 말풍선 + 플러스
-      <svg viewBox="0 0 120 120" className="w-full h-full" aria-hidden>
-        <rect x="18" y="26" width="84" height="56" rx="12" fill="rgba(255,255,255,0.92)" />
-        <path d="M44 82l-8 14 22-14z" fill="rgba(255,255,255,0.92)" />
-        <path d="M60 40v20M50 50h20" stroke="#1868DB" strokeWidth="7" strokeLinecap="round" />
-      </svg>
-    ),
+    bg: '#E9F2FF',
+    fg: '#09326C',
+    badgeColor: '#1868DB',
+    img: '/banner/suggest.png',
   },
   {
     href: '/files',
     badge: 'TEMPLATE',
     title: '바로 쓰는 양식·템플릿',
     sub: 'PRD, 기획서, WBS, 정책서… 실무에서 검증된 문서로 시작하세요.',
-    bg: '#1B1C1F',
-    badgeColor: '#9BA0A8',
+    bg: '#FFF7D6',
+    fg: '#533F04',
+    badgeColor: '#946F00',
+    // template.png 생성 대기 — 그때까지 임시 SVG
     art: (
-      // 겹쳐 쌓인 문서
       <svg viewBox="0 0 120 120" className="w-full h-full" aria-hidden>
-        <rect x="34" y="18" width="56" height="72" rx="6" fill="rgba(255,255,255,0.25)" transform="rotate(6 62 54)" />
-        <rect x="30" y="22" width="56" height="72" rx="6" fill="rgba(255,255,255,0.92)" />
-        <path d="M40 38h36M40 50h36M40 62h24" stroke="#1B1C1F" strokeWidth="5" strokeLinecap="round" />
+        <rect x="34" y="18" width="56" height="72" rx="6" fill="#F8E6A0" transform="rotate(6 62 54)" />
+        <rect x="30" y="22" width="56" height="72" rx="6" fill="#FFFFFF" />
+        <path d="M40 38h36M40 50h36M40 62h24" stroke="#946F00" strokeWidth="5" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -75,8 +77,8 @@ export function HomeBanner() {
               href={s.href}
               tabIndex={i === idx ? 0 : -1}
               aria-hidden={i !== idx}
-              className="w-full shrink-0 flex items-center justify-between gap-4 px-6 sm:px-12 py-7 sm:py-10 text-white"
-              style={{ background: s.bg }}
+              className="w-full shrink-0 flex items-center justify-between gap-4 px-6 sm:px-12 py-7 sm:py-10"
+              style={{ background: s.bg, color: s.fg }}
             >
               <div className="flex flex-col items-start gap-2 sm:gap-2.5 min-w-0">
                 <span
@@ -88,10 +90,15 @@ export function HomeBanner() {
                 <strong className="text-lg sm:text-2xl font-bold tracking-tight leading-snug">
                   {s.title}
                 </strong>
-                <p className="text-xs sm:text-sm text-white/75 leading-relaxed">{s.sub}</p>
+                <p className="text-xs sm:text-sm opacity-70 leading-relaxed">{s.sub}</p>
               </div>
-              <div className="w-[72px] h-[72px] sm:w-[110px] sm:h-[110px] shrink-0" aria-hidden>
-                {s.art}
+              <div className="w-[84px] h-[84px] sm:w-[120px] sm:h-[120px] shrink-0" aria-hidden>
+                {s.img ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={s.img} alt="" className="w-full h-full object-contain" />
+                ) : (
+                  s.art
+                )}
               </div>
             </Link>
           ))}
@@ -103,7 +110,7 @@ export function HomeBanner() {
         type="button"
         onClick={() => go(idx - 1)}
         aria-label="이전 배너"
-        className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center rounded-full bg-black/30 text-white opacity-0 group-hover:opacity-100 transition hover:bg-black/50"
+        className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center rounded-full bg-black/15 text-black/70 opacity-0 group-hover:opacity-100 transition hover:bg-black/30"
       >
         <ChevronLeft size={18} />
       </button>
@@ -111,7 +118,7 @@ export function HomeBanner() {
         type="button"
         onClick={() => go(idx + 1)}
         aria-label="다음 배너"
-        className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center rounded-full bg-black/30 text-white opacity-0 group-hover:opacity-100 transition hover:bg-black/50"
+        className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center rounded-full bg-black/15 text-black/70 opacity-0 group-hover:opacity-100 transition hover:bg-black/30"
       >
         <ChevronRight size={18} />
       </button>
@@ -126,7 +133,7 @@ export function HomeBanner() {
             aria-label={`${i + 1}번 배너로 이동`}
             aria-current={i === idx}
             className={`h-1.5 rounded-full transition-all ${
-              i === idx ? 'w-5 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/70'
+              i === idx ? 'w-5 bg-black/60' : 'w-1.5 bg-black/20 hover:bg-black/40'
             }`}
           />
         ))}
