@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { MessageCircle, Video, FolderOpen, Mail, MessageSquare, ExternalLink } from 'lucide-react';
+import { MessageCircle, Video, FolderOpen, ExternalLink } from 'lucide-react';
 import { FooterAdminLink } from './FooterAdminLink';
 
 const ROOMS = [
@@ -23,24 +23,6 @@ export function SiteFooter() {
               </p>
             </div>
 
-            {/* 문의 */}
-            <div className="flex flex-col gap-2">
-              <h3 className="font-bold text-sm text-[var(--fg)]">문의</h3>
-              <ul className="flex flex-col gap-1.5 text-xs text-[var(--muted)]">
-                <li className="inline-flex items-center gap-1.5">
-                  <MessageSquare size={13} aria-hidden /> 톡장(맥비) ID
-                  <code className="px-1.5 py-0.5 rounded bg-[var(--card)] text-[var(--fg)]">iam219</code>
-                </li>
-                <li>
-                  <a
-                    href="mailto:macbe219@naver.com"
-                    className="inline-flex items-center gap-1.5 hover:text-[var(--accent)] w-fit"
-                  >
-                    <Mail size={13} aria-hidden /> macbe219@naver.com
-                  </a>
-                </li>
-              </ul>
-            </div>
           </div>
 
           {/* 맥비기획 채널 */}
