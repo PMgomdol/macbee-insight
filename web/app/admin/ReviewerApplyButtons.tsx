@@ -1,7 +1,7 @@
 'use client';
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import Button from '@atlaskit/button/new';
+import { UIButton } from '@/components/ui/Button';
 import { approveReviewer, rejectReviewer } from '../admin1229/actions';
 
 export function ReviewerApplyButtons({ profileId, isSelf = false }: { profileId: string; isSelf?: boolean }) {
@@ -33,12 +33,12 @@ export function ReviewerApplyButtons({ profileId, isSelf = false }: { profileId:
 
   return (
     <div className="flex gap-1.5 mt-1">
-      <Button appearance="primary" spacing="compact" onClick={onApprove} isDisabled={pending}>
+      <UIButton size="sm" onClick={onApprove} disabled={pending}>
         {pending ? '처리 중…' : '승인'}
-      </Button>
-      <Button appearance="default" spacing="compact" onClick={onReject} isDisabled={pending}>
+      </UIButton>
+      <UIButton variant="secondary" size="sm" onClick={onReject} disabled={pending}>
         거절
-      </Button>
+      </UIButton>
     </div>
   );
 }

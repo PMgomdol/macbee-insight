@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import {
   Sparkles, Upload, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle,
 } from 'lucide-react';
-import Button, { LinkButton } from '@atlaskit/button/new';
+import { UIButton, UILinkButton } from '@/components/ui/Button';
 import Textfield from '@atlaskit/textfield';
 import TextArea from '@atlaskit/textarea';
 import Select from '@atlaskit/select';
@@ -277,17 +277,10 @@ export function SubmitForm({ categories }: Props) {
               autoFocus
               className="flex-1 min-w-0 h-11 px-4 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] text-sm focus:border-[var(--focus-ring)] transition-colors"
             />
-            <Button
-              type="button"
-              appearance="primary"
-              onClick={onAnalyze}
-              isDisabled={analyzing || !url.trim()}
-            >
-              <span className="inline-flex items-center gap-1.5">
-                {analyzing ? <Spinner size="small" /> : <Sparkles size={14} aria-hidden />}
-                {analyzing ? '분석 중…' : '자동 분석'}
-              </span>
-            </Button>
+            <UIButton onClick={onAnalyze} disabled={analyzing || !url.trim()}>
+              {analyzing ? <Spinner size="small" /> : <Sparkles size={14} aria-hidden />}
+              {analyzing ? '분석 중…' : '자동 분석'}
+            </UIButton>
           </div>
           <p className="text-xs text-[var(--muted)]">
             URL만 붙여넣으면 제목·요약·카테고리·태그를 알아서 채워드려요. Enter로 바로 분석할 수 있어요.
@@ -482,14 +475,13 @@ export function SubmitForm({ categories }: Props) {
           )}
 
           <div className="mt-4">
-            <Button
+            <UIButton
               type="submit"
-              appearance="primary"
-              isDisabled={submitting || !title || (!url && !fileUrl) || (!!duplicate && !forceSubmit)}
-              shouldFitContainer
+              disabled={submitting || !title || (!url && !fileUrl) || (!!duplicate && !forceSubmit)}
+              className="w-full"
             >
               {submitting ? '보내고 있어요…' : '등록할게요'}
-            </Button>
+            </UIButton>
           </div>
         </>
       )}
@@ -524,9 +516,9 @@ export function SubmitForm({ categories }: Props) {
               자료를 잘 받았어요. 운영진 두 분이 확인한 뒤 자료실에 올라가요.
               {proposerEmail && ' 결과는 이메일로 알려드릴게요.'}
             </p>
-            <div className="flex gap-2 mt-1 [&>button]:flex-1 [&>a]:flex-1">
-              <Button appearance="primary" onClick={resetForm} shouldFitContainer>하나 더 등록할래요</Button>
-              <LinkButton href="/" appearance="default" shouldFitContainer>홈으로 갈래요</LinkButton>
+            <div className="flex gap-2 mt-1">
+              <UIButton onClick={resetForm} className="flex-1">하나 더 등록할래요</UIButton>
+              <UILinkButton href="/" variant="secondary" className="flex-1">홈으로 갈래요</UILinkButton>
             </div>
           </div>
         </div>

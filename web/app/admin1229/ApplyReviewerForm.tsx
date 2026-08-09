@@ -2,7 +2,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
-import Button from '@atlaskit/button/new';
+import { UIButton } from '@/components/ui/Button';
 import Textfield from '@atlaskit/textfield';
 import TextArea from '@atlaskit/textarea';
 import { applyReviewer } from './actions';
@@ -77,13 +77,9 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
         </div>
       )}
 
-      <Button
-        type="submit"
-        appearance="primary"
-        isDisabled={pending || !name.trim()}
-      >
+      <UIButton type="submit" disabled={pending || !name.trim()}>
         {pending ? '보내고 있어요…' : '운영진 신청'}
-      </Button>
+      </UIButton>
     </form>
   );
 }

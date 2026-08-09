@@ -122,7 +122,7 @@ input[type="search"]::-webkit-search-results-decoration {
   gap: 6px;
   padding: 4px 12px;
   min-height: 32px;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   border: 1px solid transparent;
   font-size: 14px;
   font-weight: 500;

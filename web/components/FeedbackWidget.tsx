@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useTransition } from 'react';
 import { MessageCircle, X, CheckCircle2, AlertCircle } from 'lucide-react';
-import Button from '@atlaskit/button/new';
+import { UIButton } from '@/components/ui/Button';
 import Textfield from '@atlaskit/textfield';
 import TextArea from '@atlaskit/textarea';
 import { submitFeedback, type FeedbackKind } from '@/app/actions/feedback';
@@ -175,23 +175,22 @@ export function FeedbackWidget() {
                 </div>
               )}
 
-              <div className="flex gap-2 mt-2 [&>button]:flex-1">
+              <div className="flex gap-2 mt-2">
                 {status?.kind === 'ok' ? (
                   <>
-                    <Button appearance="default" onClick={reset} shouldFitContainer>하나 더 보낼래요</Button>
-                    <Button appearance="primary" onClick={close} shouldFitContainer>닫기</Button>
+                    <UIButton variant="secondary" onClick={reset} className="flex-1">하나 더 보낼래요</UIButton>
+                    <UIButton onClick={close} className="flex-1">닫기</UIButton>
                   </>
                 ) : (
                   <>
-                    <Button appearance="default" onClick={close} shouldFitContainer>취소</Button>
-                    <Button
+                    <UIButton variant="secondary" onClick={close} className="flex-1">취소</UIButton>
+                    <UIButton
                       type="submit"
-                      appearance="primary"
-                      isDisabled={pending || !message.trim()}
-                      shouldFitContainer
+                      disabled={pending || !message.trim()}
+                      className="flex-1"
                     >
                       {pending ? '보내는 중…' : '보내기'}
-                    </Button>
+                    </UIButton>
                   </>
                 )}
               </div>

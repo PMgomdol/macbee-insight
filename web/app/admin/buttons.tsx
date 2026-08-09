@@ -1,15 +1,14 @@
 'use client';
 import { useState } from 'react';
-import Button from '@atlaskit/button/new';
+import { UIButton } from '@/components/ui/Button';
 import { approveProposal, forceApproveProposal, rejectProposal } from './actions';
 
 export function ApproveButton({ id, disabled }: { id: string; disabled?: boolean }) {
   const [loading, setLoading] = useState(false);
   return (
-    <Button
-      appearance="primary"
-      spacing="compact"
-      isDisabled={disabled || loading}
+    <UIButton
+      size="sm"
+      disabled={disabled || loading}
       onClick={async () => {
         setLoading(true);
         try { await approveProposal(id); }
@@ -18,7 +17,7 @@ export function ApproveButton({ id, disabled }: { id: string; disabled?: boolean
       }}
     >
       {disabled ? '승인했어요' : loading ? '처리 중…' : '승인'}
-    </Button>
+    </UIButton>
   );
 }
 
@@ -26,10 +25,10 @@ export function ForceApproveButton({ id, isAdmin }: { id: string; isAdmin: boole
   const [loading, setLoading] = useState(false);
   if (!isAdmin) return null;
   return (
-    <Button
-      appearance="default"
-      spacing="compact"
-      isDisabled={loading}
+    <UIButton
+      variant="secondary"
+      size="sm"
+      disabled={loading}
       onClick={async () => {
         const reason = window.prompt('단독 승인 사유를 적어주세요 (필수, 기록에 남아요):');
         if (!reason?.trim()) return;
@@ -41,17 +40,17 @@ export function ForceApproveButton({ id, isAdmin }: { id: string; isAdmin: boole
       }}
     >
       {loading ? '처리 중…' : '단독 승인'}
-    </Button>
+    </UIButton>
   );
 }
 
 export function RejectButton({ id }: { id: string }) {
   const [loading, setLoading] = useState(false);
   return (
-    <Button
-      appearance="default"
-      spacing="compact"
-      isDisabled={loading}
+    <UIButton
+      variant="secondary"
+      size="sm"
+      disabled={loading}
       onClick={async () => {
         const note = window.prompt('거절 사유를 적어주세요 (선택):') ?? '';
         if (!confirm('거절할게요. 계속할까요?')) return;
@@ -62,6 +61,6 @@ export function RejectButton({ id }: { id: string }) {
       }}
     >
       {loading ? '처리 중…' : '거절'}
-    </Button>
+    </UIButton>
   );
 }
