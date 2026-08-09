@@ -239,26 +239,73 @@ export async function analyzeFile(fileUrl: string, fileName: string): Promise<An
   };
 }
 
+/** URL 확장자 (쿼리·해시 제거) */
+function urlExt(url: string): string {
+  return (url.split(/[?#]/)[0].split('.').pop() || '').toLowerCase();
+}
+
+/** YouTube oEmbed — API 키 없이 영상 제목·채널명 확보 (데이터센터 IP·consent월에서도 동작) */
+async function youtubeOembed(url: string): Promise<{ title: string; author: string } | null> {
+  try {
+    const r = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return { title: String(j.title || ''), author: String(j.author_name || '') };
+  } catch {
+    return null;
+  }
+}
+
+async function analyzeYouTube(url: string): Promise<AnalyzeResult> {
+  // oEmbed로 확실한 제목 확보 + og 병행. Gemini가 영상을 직접 시청해 요약.
+  const [oembed, meta] = await Promise.all([youtubeOembed(url), fetchUrlMeta(url)]);
+  const baseTitle = oembed?.title || meta.title || '';
+  const baseDesc = meta.description || (oembed?.author ? `${oembed.author} 채널의 영상` : '');
+  const [cls, duplicate] = await Promise.all([
+    classify(url, { title: baseTitle, description: baseDesc }, null, url),
+    findDuplicate(meta.ok ? meta.finalUrl : url, ''),
+  ]);
+  // Gemini 실패(429/timeout 등)해도 oEmbed 제목으로 최소 정보 보장 — 빈 제목/요약 방지
+  return {
+    ok: true,
+    title: cls.title || baseTitle,
+    summary: cls.summary || baseDesc || baseTitle,
+    mainCategory: cls.mainCategory,
+    subCategory: cls.subCategory,
+    tags: cls.tags,
+    format: '영상',
+    isFile: false,
+    publishedAt: meta.publishedAt,
+    finalUrl: meta.ok ? meta.finalUrl : url,
+    aiUsed: cls.aiUsed,
+    duplicate,
+  };
+}
+
 export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
   url = url.trim();
   if (!url) return { ok: false, error: 'URL을 먼저 입력해주세요' };
   if (!/^https?:\/\//i.test(url)) return { ok: false, error: 'URL은 http:// 또는 https://로 시작해요' };
 
-  const isYt = isYouTubeUrl(url);
+  // YouTube → 영상 이해
+  if (isYouTubeUrl(url)) return analyzeYouTube(url);
+
+  // 문서·미디어 URL(.pdf/.png/.xlsx 등)은 파일 분석 경로 재사용 — HTML로 fetch하면 바이트가 깨짐
+  const ext = urlExt(url);
+  if (ext in MIME_FALLBACK) {
+    const name = decodeURIComponent(url.split(/[?#]/)[0].split('/').pop() || `file.${ext}`);
+    return analyzeFile(url, name);
+  }
+
+  // 일반 아티클 — og + 본문 발췌
   const meta = await fetchUrlMeta(url);
-  // YouTube은 fetch가 봇차단·consent월에 막혀도 Gemini 영상분석으로 진행. 일반 URL만 실패 처리.
-  if (!meta.ok && !isYt) return { ok: false, error: `URL을 못 가져왔어요 — ${meta.error ?? '잠시 후 다시 시도'}` };
-
-  const finalUrl = meta.ok ? meta.finalUrl : url;
-
-  // 분류·중복 검사 병렬. YouTube면 영상 자체를 Gemini에 전달, 아티클이면 본문 발췌 전달.
+  if (!meta.ok) return { ok: false, error: `URL을 못 가져왔어요 — ${meta.error ?? '잠시 후 다시 시도'}` };
   const [cls, duplicate] = await Promise.all([
-    isYt
-      ? classify(url, { title: meta.title, description: meta.description }, null, url)
-      : classify(url, { title: meta.title, description: meta.description, body: meta.bodyText }),
-    findDuplicate(finalUrl, ''),
+    classify(url, { title: meta.title, description: meta.description, body: meta.bodyText }),
+    findDuplicate(meta.finalUrl, ''),
   ]);
-
   return {
     ok: true,
     title: cls.title,
@@ -267,9 +314,9 @@ export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
     subCategory: cls.subCategory,
     tags: cls.tags,
     format: cls.format,
-    isFile: isFileUrl(finalUrl),
+    isFile: isFileUrl(meta.finalUrl),
     publishedAt: meta.publishedAt,
-    finalUrl,
+    finalUrl: meta.finalUrl,
     aiUsed: cls.aiUsed,
     duplicate,
   };

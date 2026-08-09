@@ -54,34 +54,40 @@ export async function classify(
   if (inline) parts.push({ inline_data: { mime_type: inline.mime, data: inline.base64 } });
   if (videoUrl) parts.push({ file_data: { file_uri: videoUrl } });
 
+  const body = JSON.stringify({
+    contents: [{ parts }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'object',
+        properties: {
+          title_ko: { type: 'string' },
+          summary_ko: { type: 'string' },
+          main_category: { type: 'string', enum: Object.keys(CATEGORIES) },
+          sub_category: { type: 'string' },
+          tags: { type: 'array', items: { type: 'string' } },
+          format: { type: 'string', enum: FORMATS },
+        },
+        required: ['title_ko', 'summary_ko', 'main_category', 'format', 'tags'],
+      },
+      temperature: 0.2,
+    },
+  });
+  const timeout = inline || videoUrl ? 30000 : 15000;
+
   try {
-    const resp = await fetch(
+    let resp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: 'object',
-              properties: {
-                title_ko: { type: 'string' },
-                summary_ko: { type: 'string' },
-                main_category: { type: 'string', enum: Object.keys(CATEGORIES) },
-                sub_category: { type: 'string' },
-                tags: { type: 'array', items: { type: 'string' } },
-                format: { type: 'string', enum: FORMATS },
-              },
-              required: ['title_ko', 'summary_ko', 'main_category', 'format', 'tags'],
-            },
-            temperature: 0.2,
-          },
-        }),
-        signal: AbortSignal.timeout(inline || videoUrl ? 30000 : 15000),
-      }
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: AbortSignal.timeout(timeout) }
     );
+    // 429(쿼터/레이트리밋)는 잠깐 쉬고 1회 재시도
+    if (resp.status === 429) {
+      await new Promise((r) => setTimeout(r, 2500));
+      resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, signal: AbortSignal.timeout(timeout) }
+      );
+    }
     if (!resp.ok) throw new Error(`Gemini HTTP ${resp.status}`);
     const data = await resp.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
