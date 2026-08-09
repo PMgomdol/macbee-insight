@@ -117,8 +117,8 @@ export function FeedbackWidget() {
                         role="radio"
                         aria-checked={active}
                         onClick={() => setKind(v)}
-                        className={`px-2 py-1.5 rounded-[var(--r-sm)] text-xs transition ${
-                          active ? 'bg-[var(--bg)] shadow-[var(--shadow-2)] font-semibold' : 'text-[var(--muted)] hover:text-[var(--fg)]'
+                        className={`px-2 py-1.5 rounded-[var(--r-sm)] text-xs font-medium transition ${
+                          active ? 'bg-[var(--bg)] shadow-[var(--shadow-2)] text-[var(--fg)]' : 'text-[var(--muted)] hover:text-[var(--fg)]'
                         }`}
                       >
                         {label}

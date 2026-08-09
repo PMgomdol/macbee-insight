@@ -153,8 +153,8 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
         <div className="flex gap-1 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap items-center">
           <button
             onClick={() => selectSub(null)}
-            className={`shrink-0 px-2.5 py-1 rounded-full text-xs ${
-              !sub ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
+            className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition ${
+              !sub ? 'bg-[var(--card)] text-[var(--fg)]' : 'text-[var(--muted)] hover:bg-[var(--card)]'
             }`}
           >
             전체
@@ -163,8 +163,8 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
             <button
               key={s}
               onClick={() => selectSub(s)}
-              className={`shrink-0 px-2.5 py-1 rounded-full text-xs ${
-                sub === s ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
+              className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium transition ${
+                sub === s ? 'bg-[var(--card)] text-[var(--fg)]' : 'text-[var(--muted)] hover:bg-[var(--card)]'
               }`}
             >
               {s} <span className="opacity-60">({n})</span>
@@ -177,7 +177,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
       <div className="flex items-center justify-end gap-1 text-xs">
         <button
           onClick={() => changeSort(sort === 'popular' ? 'default' : 'popular')}
-          className={`px-2.5 py-1 rounded-full ${sort === 'popular' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+          className={`px-2.5 py-1 rounded-full font-medium transition ${sort === 'popular' ? 'bg-[var(--card)] text-[var(--fg)]' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
         >
           인기순
         </button>

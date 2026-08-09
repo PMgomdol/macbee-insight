@@ -204,7 +204,7 @@ function FilterBtn({ active, onClick, children }: { active: boolean; onClick: ()
     <button
       type="button"
       onClick={onClick}
-      className={`px-2.5 py-1.5 rounded-full ${active ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+      className={`px-2.5 py-1.5 rounded-full font-medium transition ${active ? 'bg-[var(--card)] text-[var(--fg)]' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
     >
       {children}
     </button>
@@ -232,8 +232,8 @@ function SubChip({ active, onClick, children }: { active: boolean; onClick: () =
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 px-2.5 py-1.5 rounded-full text-xs ${
-        active ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
+      className={`shrink-0 px-2.5 py-1.5 rounded-full text-xs font-medium transition ${
+        active ? 'bg-[var(--card)] text-[var(--fg)]' : 'text-[var(--muted)] hover:bg-[var(--card)]'
       }`}
     >
       {children}

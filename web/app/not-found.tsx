@@ -14,13 +14,13 @@ export default function NotFound() {
       <div className="flex gap-2 mt-2">
         <Link
           href="/"
-          className="px-4 py-2 rounded-[var(--r-md)] bg-[var(--accent)] text-white hover:text-white text-sm font-medium hover:bg-[var(--accent-hover)]"
+          className="px-4 py-2 rounded-[var(--r-md)] bg-[var(--accent)] text-white hover:text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
         >
           홈으로
         </Link>
         <Link
           href="/search"
-          className="px-4 py-2 rounded-[var(--r-md)] border border-[var(--border)] text-sm hover:bg-[var(--card)]"
+          className="px-4 py-2 rounded-[var(--r-md)] border border-[var(--border)] text-sm hover:bg-[var(--card)] transition-colors"
         >
           자료 검색
         </Link>
