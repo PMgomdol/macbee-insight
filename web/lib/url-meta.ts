@@ -272,8 +272,9 @@ function normalizePublishedDate(raw: string | null): string | null {
 export function guessFormat(url: string): string {
   const u = url.toLowerCase();
   if (/youtube\.com|youtu\.be|vimeo\.com/.test(u)) return '영상';
-  if (/figma\.com\/community|figma\.com\/file/.test(u)) return '템플릿';
   if (/\.pdf($|\?)/.test(u)) return '가이드';
+  // 툴·파일·양식 소스 — 읽는 글이 아니라 복사·활용하는 자료 → 템플릿
+  if (/docs\.google\.com\/(spreadsheets|document|presentation)|drive\.google\.com|figma\.com|miro\.com|canva\.com|notion\.(so|site)|whimsical\.com|dovetail/.test(u)) return '템플릿';
   return '아티클';
 }
 

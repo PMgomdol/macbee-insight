@@ -2,6 +2,7 @@
  * Gemini 2.5 Flash로 자료 자동 분류·요약·태그 생성.
  * GEMINI_API_KEY 환경변수 없으면 휴리스틱 fallback.
  */
+import { guessFormat } from './url-meta';
 
 const MODEL = 'gemini-2.5-flash';
 
@@ -38,14 +39,16 @@ export async function classify(
   url: string,
   meta: { title: string; description: string; body?: string },
   inline?: InlineData | null,
-  videoUrl?: string | null
+  videoUrl?: string | null,
+  formatHint?: string | null
 ): Promise<ClassifyResult> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) return { ...heuristic(url, meta), aiUsed: false };
 
+  const hint = formatHint || guessFormat(url);
   const prompt = videoUrl ? buildVideoPrompt(url, meta)
     : inline ? buildVisionPrompt(url, meta)
-    : buildPrompt(url, meta);
+    : buildPrompt(url, meta, hint);
   const parts: Array<
     { text: string }
     | { inline_data: { mime_type: string; data: string } }
@@ -97,13 +100,17 @@ export async function classify(
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) throw new Error('Gemini: empty response');
     const out = JSON.parse(text);
+    // Gemini가 구체 형식(아티클 외)을 골랐으면 신뢰. '아티클'(신호 부족 시 기본값)로 떨궜는데
+    // URL 힌트가 더 구체적(템플릿·영상·가이드 등)이면 힌트로 보정 — 구글시트/드라이브/미로 등이 아티클로 오분류되던 문제.
+    const g = out.format;
+    const format = (g && g !== '아티클') ? g : (hint && hint !== '아티클' ? hint : (g || '아티클'));
     return {
       title: String(out.title_ko || meta.title).slice(0, 200),
       summary: String(out.summary_ko || meta.description).slice(0, 500),
       mainCategory: out.main_category || '미분류',
       subCategory: out.sub_category || '',
       tags: Array.isArray(out.tags) ? out.tags.slice(0, 6) : [],
-      format: out.format || guessFormat(url),
+      format,
       aiUsed: true,
     };
   } catch (e: unknown) {
@@ -133,7 +140,7 @@ function buildVisionPrompt(url: string, meta: { title: string; description: stri
 - format: ${FORMATS.join(' | ')} 중 1개. 이미지면 보통 '템플릿' 또는 '가이드'`;
 }
 
-function buildPrompt(url: string, meta: { title: string; description: string; body?: string }) {
+function buildPrompt(url: string, meta: { title: string; description: string; body?: string }, hint?: string) {
   return `당신은 맥비기획 자료실 큐레이션 어시스턴트.
 다음 글을 보고 자료실 등록용 정보를 JSON으로 반환.
 
@@ -151,7 +158,12 @@ URL: ${url}
 - main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
 - sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
 - tags: 3~6개. 한글 우선. 고유명사는 한글+영문 병기 가능. 너무 일반적인 단어(UI, 디자인) 단독 금지
-- format: ${FORMATS.join(' | ')} 중 1개`;
+- format: ${FORMATS.join(' | ')} 중 1개. 판단 기준:
+  · 템플릿 = 복사해서 바로 쓰는 양식·샘플·예시 파일. 구글시트/구글드라이브/피그마/미로/캔바/노션 링크나 제목에 "샘플·예시·템플릿·양식·모음"이면 대개 템플릿
+  · 가이드 = 방법·절차·매뉴얼을 설명하는 문서
+  · 기획서 = 실제 서비스/기능 기획 문서(PRD·화면설계 등)
+  · 영상 / 세미나
+  · 아티클 = 위에 안 맞는 읽는 글(블로그·뉴스·칼럼). **템플릿/양식/샘플 성격이면 아티클로 두지 말 것**${hint ? `\n  · URL 기반 형식 힌트: ${hint} (특별한 이유 없으면 참고)` : ''}`;
 }
 
 function buildVideoPrompt(url: string, meta: { title: string; description: string }) {
@@ -256,12 +268,4 @@ function heuristic(url: string, meta: { title: string; description: string }): O
     tags: extractTags(blob),
     format: guessFormat(url),
   };
-}
-
-function guessFormat(url: string): string {
-  const u = url.toLowerCase();
-  if (/youtube\.com|youtu\.be|vimeo\.com/.test(u)) return '영상';
-  if (/figma\.com\/community|figma\.com\/file/.test(u)) return '템플릿';
-  if (/\.pdf($|\?)/.test(u)) return '가이드';
-  return '아티클';
 }
