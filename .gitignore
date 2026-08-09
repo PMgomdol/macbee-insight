@@ -44,3 +44,7 @@ macbee-document/~$*
 
 # 카톡 로그 (개인 대화 · 대용량)
 KakaoTalk_Chat_*.csv
+
+# 내부 회의록·설문 원본 (공개 레포 제외)
+meeting/
+*.xlsx
