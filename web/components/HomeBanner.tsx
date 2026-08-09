@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // 파스텔 배너 (인프런풍): 연한 배경 50 + 진한 텍스트 900 + 중간 뱃지 500 — 단계별 톤 스케일
-// Blue:   50 #E9F2FF · 500 #1868DB · 900 #09326C
+// Blue = 브랜드(Toss Blue) 스케일: 50 #E8F3FF · 500 #3182F6 · 900 #194086
 // Yellow: 50 #FFF7D6 · 500 #946F00 · 900 #533F04
 type Slide = {
   href: string; badge: string; title: string; sub: string;
@@ -17,9 +17,9 @@ const SLIDES: Slide[] = [
     badge: 'SUGGEST',
     title: '좋은 자료를 알고 계신가요?',
     sub: '링크만 남겨주세요. 운영진이 검토 후 자료실에 등록해 드려요.',
-    bg: '#E9F2FF',
-    fg: '#09326C',
-    badgeColor: '#1868DB',
+    bg: '#E8F3FF',
+    fg: '#194086',
+    badgeColor: '#3182F6',
     img: '/banner/suggest.png',
   },
   {

@@ -39,6 +39,71 @@ export default function DesignGuide() {
         컴포넌트 표준 (2026-08-09 정립). 같은 모양 = 같은 역할 — 새 UI는 아래 레시피를 그대로 사용.
       </p>
 
+      <Section title="컬러 — Primary (Toss Blue 스케일)" desc="기본은 시맨틱 토큰(--accent 등)만 사용. 스케일 직접 참조는 배너 등 프로모 영역만.">
+        <div className="flex flex-wrap gap-2 text-[10px]">
+          {[
+            ['50', '#E8F3FF', '--accent-bg · 옅은 배경'],
+            ['100', '#C9E2FF', ''],
+            ['300', '#64A8FF', '--focus-ring'],
+            ['500', '#3182F6', '--accent · primary'],
+            ['600', '#1B64DA', '--accent-hover'],
+            ['700', '#1957C2', '--accent-pressed'],
+            ['900', '#194086', '배너 텍스트'],
+          ].map(([step, hex, role]) => (
+            <div key={step} className="flex flex-col gap-1 w-[76px]">
+              <div className="h-12 rounded-[var(--r-sm)] border border-[var(--border)]" style={{ background: hex }} />
+              <strong>{step}</strong>
+              <span className="text-[var(--muted)]">{hex}</span>
+              {role && <span className="text-[var(--muted-2)]">{role}</span>}
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="컬러 — Neutral · Semantic" desc="글자·면·테두리는 Neutral 토큰, 상태 표시는 Semantic 토큰.">
+        <div className="flex flex-wrap gap-2 text-[10px]">
+          {[
+            ['fg', 'var(--fg)', '본문 텍스트'],
+            ['muted', 'var(--muted)', '보조 텍스트'],
+            ['muted-2', 'var(--muted-2)', '힌트·메타'],
+            ['border', 'var(--border)', '기본 테두리'],
+            ['border-strong', 'var(--border-strong)', '인풋 테두리'],
+            ['card', 'var(--card)', '옅은 면'],
+            ['bg-alt', 'var(--bg-alt)', '구역 배경'],
+          ].map(([name, v, role]) => (
+            <div key={name} className="flex flex-col gap-1 w-[76px]">
+              <div className="h-12 rounded-[var(--r-sm)] border border-[var(--border)]" style={{ background: v }} />
+              <strong>{name}</strong>
+              <span className="text-[var(--muted-2)]">{role}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2 text-[10px]">
+          {[
+            ['success', 'var(--success)', '완료·정상'],
+            ['warning', 'var(--warning)', '주의'],
+            ['danger', 'var(--danger)', '오류·삭제'],
+          ].map(([name, v, role]) => (
+            <div key={name} className="flex flex-col gap-1 w-[76px]">
+              <div className="h-12 rounded-[var(--r-sm)]" style={{ background: v }} />
+              <strong>{name}</strong>
+              <span className="text-[var(--muted-2)]">{role}</span>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="타이포 스케일" desc="Pretendard. 이 6단계 밖의 크기 임의 사용 금지.">
+        <div className="flex flex-col gap-2.5">
+          <p className="text-xl sm:text-2xl font-bold tracking-tight">페이지 제목 — text-xl sm:text-2xl font-bold tracking-tight</p>
+          <p className="text-base font-bold tracking-tight">섹션 제목 — text-base font-bold tracking-tight</p>
+          <p className="text-sm font-medium">항목 제목·라벨 — text-sm font-medium</p>
+          <p className="text-sm">본문 — text-sm (기본 14px)</p>
+          <p className="text-xs text-[var(--muted)]">캡션·설명 — text-xs text-[var(--muted)]</p>
+          <p className="text-[11px] text-[var(--muted-2)]">마이크로·메타 — text-[11px] text-[var(--muted-2)]</p>
+        </div>
+      </Section>
+
       <Section title="라운드 스케일" desc="3단계 토큰 + full. 임의 px 값 금지 — 반드시 토큰 사용.">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           {[
@@ -56,13 +121,16 @@ export default function DesignGuide() {
         </div>
       </Section>
 
-      <Section title="버튼" desc="라운드 md(8px). 파란 버튼 글자는 항상 흰색 (hover 포함).">
+      <Section title="버튼 — 3위계" desc="화면당 프라이머리는 1개 원칙. 파란 버튼 글자는 항상 흰색 (hover 포함).">
         <div className="flex flex-wrap items-center gap-2">
-          <button className="px-4 py-2 rounded-[var(--r-md)] bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)]">
-            프라이머리
+          <button className="px-4 py-2 rounded-[var(--r-md)] bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] active:bg-[var(--accent-pressed)]">
+            프라이머리 — 핵심 행동
           </button>
           <button className="px-4 py-2 rounded-[var(--r-md)] border border-[var(--border)] text-sm hover:bg-[var(--card)]">
-            세컨더리
+            세컨더리 — 대안 행동
+          </button>
+          <button className="px-3 py-2 rounded-[var(--r-md)] text-sm text-[var(--accent)] font-medium hover:bg-[var(--accent-bg)]">
+            터시어리 — 보조 행동
           </button>
           <button className="px-2 py-1 rounded-[var(--r-sm)] border border-[var(--border)] text-xs text-[var(--muted)] hover:bg-[var(--card)]">
             소형 (로그아웃 등)
@@ -71,8 +139,9 @@ export default function DesignGuide() {
             비활성
           </button>
         </div>
-        <Recipe code={`프라이머리: px-4 py-2 rounded-[var(--r-md)] bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)]
-세컨더리:   px-4 py-2 rounded-[var(--r-md)] border border-[var(--border)] text-sm hover:bg-[var(--card)]`} />
+        <Recipe code={`프라이머리: px-4 py-2 rounded-[var(--r-md)] bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] active:bg-[var(--accent-pressed)]
+세컨더리:   px-4 py-2 rounded-[var(--r-md)] border border-[var(--border)] text-sm hover:bg-[var(--card)]
+터시어리:   px-3 py-2 rounded-[var(--r-md)] text-sm text-[var(--accent)] font-medium hover:bg-[var(--accent-bg)]`} />
       </Section>
 
       <Section title="칩 (필터 전용)" desc="rounded-full. 누르면 목록이 좁혀지는 필터에만 사용 — 네비게이션 금지.">
@@ -126,8 +195,8 @@ export default function DesignGuide() {
 
       <Section title="색 단계 (배너 등 프로모 영역)" desc="같은 계열 3단: 배경 50 / 포인트 500 / 텍스트 900.">
         <div className="flex flex-wrap gap-3 text-xs">
-          <div className="rounded-[var(--r-lg)] px-5 py-4" style={{ background: '#E9F2FF', color: '#09326C' }}>
-            <span className="px-2 py-0.5 rounded-full border text-[10px] font-semibold tracking-wider" style={{ color: '#1868DB', borderColor: '#1868DB' }}>BLUE</span>
+          <div className="rounded-[var(--r-lg)] px-5 py-4" style={{ background: '#E8F3FF', color: '#194086' }}>
+            <span className="px-2 py-0.5 rounded-full border text-[10px] font-semibold tracking-wider" style={{ color: '#3182F6', borderColor: '#3182F6' }}>BLUE</span>
             <p className="font-bold mt-1.5">50 배경 · 500 뱃지 · 900 텍스트</p>
           </div>
           <div className="rounded-[var(--r-lg)] px-5 py-4" style={{ background: '#FFF7D6', color: '#533F04' }}>
