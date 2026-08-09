@@ -39,15 +39,18 @@ const INTERVAL = 5000;
 export function HomeBanner() {
   const [idx, setIdx] = useState(0);
   const [paused, setPaused] = useState(false);
+  // 재개 시점마다 증가 — 진행 바 애니메이션과 타이머를 함께 리셋해 항상 동기 유지
+  const [epoch, setEpoch] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (paused) return;
     timer.current = setInterval(() => setIdx((i) => (i + 1) % SLIDES.length), INTERVAL);
     return () => { if (timer.current) clearInterval(timer.current); };
-  }, [paused]);
+  }, [paused, idx, epoch]);
 
   const go = (i: number) => setIdx((i + SLIDES.length) % SLIDES.length);
+  const resume = () => { setPaused(false); setEpoch((e) => e + 1); };
 
   return (
     <section
@@ -55,11 +58,22 @@ export function HomeBanner() {
       aria-label="바로가기 배너"
       className="w-full relative group"
       onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseLeave={resume}
       onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
+      onBlur={resume}
     >
-      <div className="overflow-hidden rounded-xl">
+      <div className="overflow-hidden rounded-xl relative">
+        {/* 다음 슬라이드까지 남은 시간 진행 바 (인프런식) — hover 시 정지, 벗어나면 처음부터 */}
+        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-black/10 z-10" aria-hidden>
+          <div
+            key={`${idx}-${epoch}`}
+            className="h-full bg-black/45"
+            style={{
+              animation: `banner-progress ${INTERVAL}ms linear forwards`,
+              animationPlayState: paused ? 'paused' : 'running',
+            }}
+          />
+        </div>
         <div
           className="flex transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${idx * 100}%)` }}

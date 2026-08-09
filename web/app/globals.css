@@ -288,3 +288,9 @@ input[type="search"]::-webkit-search-results-decoration {
 .faq-answer th, .faq-answer td { border: 1px solid var(--border); padding: 0.35em 0.6em; text-align: left; }
 .faq-answer th { background: var(--card); color: var(--fg); font-weight: 600; }
 .faq-answer hr { border: none; border-top: 1px solid var(--border); margin: 1em 0; }
+
+/* 홈 배너 슬라이드 진행 바 */
+@keyframes banner-progress {
+  from { width: 0; }
+  to { width: 100%; }
+}
