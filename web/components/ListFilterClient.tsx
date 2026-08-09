@@ -97,7 +97,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
       </section>
 
       {/* 페이지 내 검색 */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)] focus-within:border-b-2">
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)]">
         <Search size={16} className="text-[var(--muted)] shrink-0" aria-hidden />
         <input
           type="search"

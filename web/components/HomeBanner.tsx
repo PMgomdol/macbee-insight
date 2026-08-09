@@ -41,13 +41,19 @@ export function HomeBanner() {
   const [paused, setPaused] = useState(false);
   // 재개 시점마다 증가 — 진행 바 애니메이션과 타이머를 함께 리셋해 항상 동기 유지
   const [epoch, setEpoch] = useState(0);
+  // 움직임 축소 설정 사용자: 자동재생·게이지 애니메이션 끔 (수동 이동만)
+  const [reduced, setReduced] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (paused) return;
+    setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }, []);
+
+  useEffect(() => {
+    if (paused || reduced) return;
     timer.current = setInterval(() => setIdx((i) => (i + 1) % SLIDES.length), INTERVAL);
     return () => { if (timer.current) clearInterval(timer.current); };
-  }, [paused, idx, epoch]);
+  }, [paused, idx, epoch, reduced]);
 
   const go = (i: number) => setIdx((i + SLIDES.length) % SLIDES.length);
   const resume = () => { setPaused(false); setEpoch((e) => e + 1); };
@@ -119,8 +125,9 @@ export function HomeBanner() {
         <ChevronRight size={18} />
       </button>
 
-      {/* 게이지 도트 — 활성 도트가 필로 늘어나고 안에 남은 시간 게이지가 채워짐 (위치+시간+이동 통합) */}
-      <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+      {/* 게이지 도트 — 활성 도트가 필로 늘어나고 안에 남은 시간 게이지가 채워짐 (위치+시간+이동 통합).
+          버튼 히트 영역은 44px 확보, 보이는 도트는 그대로 작게. */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex items-center">
         {SLIDES.map((s, i) => (
           <button
             key={s.href}
@@ -128,20 +135,25 @@ export function HomeBanner() {
             onClick={() => go(i)}
             aria-label={`${i + 1}번 배너로 이동`}
             aria-current={i === idx}
-            className={`h-1.5 rounded-full transition-all overflow-hidden ${
-              i === idx ? 'w-8 bg-black/15' : 'w-1.5 bg-black/20 hover:bg-black/40'
-            }`}
+            className="flex items-center justify-center h-11 px-1.5"
           >
-            {i === idx && (
-              <span
-                key={`${idx}-${epoch}`}
-                className="block h-full bg-black/60 rounded-full"
-                style={{
-                  animation: `banner-progress ${INTERVAL}ms linear forwards`,
-                  animationPlayState: paused ? 'paused' : 'running',
-                }}
-              />
-            )}
+            <span
+              className={`block h-1.5 rounded-full transition-all overflow-hidden ${
+                i === idx ? 'w-8 bg-black/15' : 'w-1.5 bg-black/20 hover:bg-black/40'
+              }`}
+            >
+              {i === idx && !reduced && (
+                <span
+                  key={`${idx}-${epoch}`}
+                  className="block h-full bg-black/60 rounded-full"
+                  style={{
+                    animation: `banner-progress ${INTERVAL}ms linear forwards`,
+                    animationPlayState: paused ? 'paused' : 'running',
+                  }}
+                />
+              )}
+              {i === idx && reduced && <span className="block h-full w-full bg-black/60 rounded-full" />}
+            </span>
           </button>
         ))}
       </div>
