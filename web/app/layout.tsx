@@ -17,14 +17,14 @@ import './globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://macbee-insight.vercel.app'),
-  title: '맥비기획 자료실',
+  title: '맥비 자료실',
   description: '기획자에게 필요한 양식·템플릿과 아티클·영상·가이드 콘텐츠, 실무 Q&A를 한 곳에 모았어요.',
   // 카톡·슬랙 공유 미리보기 — 톡방 공유가 주 유입 경로라 필수
   openGraph: {
-    title: '맥비기획 자료실',
+    title: '맥비 자료실',
     description: '기획자에게 필요한 양식·템플릿, 아티클·영상 콘텐츠, 실무 Q&A 596건을 한 곳에.',
     url: 'https://macbee-insight.vercel.app',
-    siteName: '맥비기획 자료실',
+    siteName: '맥비 자료실',
     locale: 'ko_KR',
     type: 'website',
   },
@@ -73,8 +73,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CardClickTracker />
         <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)] z-50">
           <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
-            <Link href="/" className="font-bold text-base sm:text-lg tracking-tight shrink-0 justify-self-start">
-              맥비기획 자료실
+            <Link
+              href="/"
+              className="flex items-center gap-2 font-bold text-base sm:text-lg tracking-tight shrink-0 justify-self-start"
+            >
+              {/* 선반 M 심볼 — currentColor라 라이트/다크 자동 대응 */}
+              <svg viewBox="0 0 64 64" className="w-[22px] h-[22px] shrink-0" aria-hidden fill="currentColor">
+                <path d="M10 44V10h13l9 17 9-17h13v34H42V28l-7 13h-6l-7-13v16z" />
+                <rect x="10" y="50" width="44" height="6" rx="2" />
+              </svg>
+              맥비 자료실
             </Link>
             <div className="flex justify-center">
               <Suspense fallback={null}><HeaderNavServer /></Suspense>

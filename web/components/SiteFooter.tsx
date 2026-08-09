@@ -17,7 +17,7 @@ export function SiteFooter() {
           {/* 사이트 소개 + 문의 */}
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-              <h3 className="font-bold text-sm text-[var(--fg)]">맥비기획 자료실</h3>
+              <h3 className="font-bold text-sm text-[var(--fg)]">맥비 자료실</h3>
               <p className="text-xs text-[var(--muted)] leading-relaxed">
                 맥비기획 톡방에서 지식 공유의 일환으로 기획 관련 자료를 모은 곳이에요.
               </p>
@@ -102,7 +102,7 @@ export function SiteFooter() {
         </div>
 
         <div className="border-t border-[var(--border)] mt-8 pt-5 flex flex-col sm:flex-row gap-2 sm:gap-4 justify-between text-xs text-[var(--muted-2)]">
-          <div>© 2026 맥비기획 자료실 운영팀</div>
+          <div>© 2026 맥비 자료실 운영팀</div>
           <div className="flex flex-wrap gap-3">
             <Suspense fallback={null}><FooterAdminLink /></Suspense>
           </div>

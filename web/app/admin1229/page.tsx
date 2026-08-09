@@ -27,7 +27,7 @@ function Guest() {
       <header className="flex flex-col gap-2 text-center">
         <h1 className="text-2xl font-bold tracking-tight">운영진 진입</h1>
         <p className="text-sm text-[var(--muted)]">
-          맥비기획 자료실 운영진 전용 입구예요.<br />
+          맥비 자료실 운영진 전용 입구예요.<br />
           Google 계정으로 로그인하면 운영진 신청을 할 수 있어요.
         </p>
       </header>

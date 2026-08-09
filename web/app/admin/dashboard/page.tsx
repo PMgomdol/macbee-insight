@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { DashboardTabs } from './DashboardTabs';
 
 export const metadata = {
-  title: '지표 대시보드 · 맥비기획 자료실',
+  title: '지표 대시보드 · 맥비 자료실',
 };
 
 export default async function AdminDashboardPage() {
