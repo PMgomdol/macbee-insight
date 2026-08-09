@@ -326,7 +326,7 @@ export function SubmitForm({ categories }: Props) {
           role={analyzeMsg.kind === 'error' ? 'alert' : 'status'}
           className={`flex items-start gap-2 p-3 rounded-[var(--r-sm)] border text-sm ${
             analyzeMsg.kind === 'error'
-              ? 'border-[var(--danger)]/40 bg-[var(--danger)]/10 text-[var(--fg)]'
+              ? 'bg-[var(--danger)]/10 text-[var(--fg)]'
               : 'border-[var(--accent)]/40 bg-[var(--accent-bg)] text-[var(--fg)]'
           }`}
         >
@@ -353,7 +353,7 @@ export function SubmitForm({ categories }: Props) {
       )}
 
       {duplicate && (
-        <div role="alert" className="flex flex-col gap-2 p-3 rounded-[var(--r-sm)] border border-[var(--warning)]/50 bg-[var(--warning)]/10 text-sm">
+        <div role="alert" className="flex flex-col gap-2 p-3 rounded-[var(--r-md)] bg-[var(--warning)]/10 text-sm">
           <div className="flex items-start gap-2">
             <AlertTriangle size={16} className="text-[var(--warning)] shrink-0 mt-0.5" aria-hidden />
             <div className="flex-1 min-w-0">
@@ -475,7 +475,7 @@ export function SubmitForm({ categories }: Props) {
           </div>
 
           {submitError && (
-            <div role="alert" className="flex items-start gap-2 p-3 rounded-[var(--r-sm)] border border-[var(--danger)]/40 bg-[var(--danger)]/10 text-sm">
+            <div role="alert" className="flex items-start gap-2 p-3 rounded-[var(--r-md)] bg-[var(--danger)]/10 text-sm">
               <AlertCircle size={16} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
               <span>{submitError}</span>
             </div>

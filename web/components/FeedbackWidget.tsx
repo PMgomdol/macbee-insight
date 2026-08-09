@@ -162,8 +162,8 @@ export function FeedbackWidget() {
                   role={status.kind === 'error' ? 'alert' : 'status'}
                   className={`flex items-start gap-2 p-2.5 rounded-[var(--r-sm)] border text-xs ${
                     status.kind === 'error'
-                      ? 'border-[var(--danger)]/40 bg-[var(--danger)]/10 text-[var(--fg)]'
-                      : 'border-[var(--success)]/40 bg-[var(--success)]/10 text-[var(--fg)]'
+                      ? 'bg-[var(--danger)]/10 text-[var(--fg)]'
+                      : 'bg-[var(--success)]/10 text-[var(--fg)]'
                   }`}
                 >
                   {status.kind === 'error' ? (

@@ -32,7 +32,7 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
 
   if (done) {
     return (
-      <div className="flex flex-col gap-2 p-4 rounded-[var(--r-md)] border border-[var(--success)]/40 bg-[var(--success)]/10 text-sm">
+      <div className="flex flex-col gap-2 p-4 rounded-[var(--r-md)] border bg-[var(--success)]/10 text-sm">
         <div className="flex items-center gap-2 font-semibold">
           <CheckCircle2 size={16} className="text-[var(--success)]" aria-hidden />
           잘 보냈어요
@@ -71,7 +71,7 @@ export function ApplyReviewerForm({ defaultName }: { defaultName: string }) {
       </div>
 
       {error && (
-        <div role="alert" className="flex items-start gap-2 p-2.5 rounded-[var(--r-sm)] border border-[var(--danger)]/40 bg-[var(--danger)]/10 text-xs">
+        <div role="alert" className="flex items-start gap-2 p-2.5 rounded-[var(--r-md)] bg-[var(--danger)]/10 text-xs">
           <AlertCircle size={14} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
           <span>{error}</span>
         </div>

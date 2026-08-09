@@ -35,7 +35,7 @@ export default async function SearchPage({
       </section>
 
       {q && result.synonymCanonical && result.expanded.length > 1 && (
-        <div className="flex items-start gap-2 p-3 rounded-[var(--r-sm)] border border-[var(--accent)]/30 bg-[var(--accent-bg)] text-xs">
+        <div className="flex items-start gap-2 p-3 rounded-[var(--r-md)] bg-[var(--accent-bg)] text-xs">
           <Sparkles size={14} className="text-[var(--accent)] shrink-0 mt-0.5" aria-hidden />
           {/* 정보성 표시만 — 링크로 만들면 원 질의를 잃고 결과가 오히려 줄어듦 (이미 함께 검색된 키워드) */}
           <span className="flex-1">
@@ -51,7 +51,7 @@ export default async function SearchPage({
 
       {/* 오타/초성 폴백 안내 — 정확 매칭이 없어서 비슷한 자료를 보여줄 때 */}
       {q && result.fallback && result.archives.length > 0 && (
-        <div className="flex items-start gap-2 p-3 rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--card)] text-xs">
+        <div className="flex items-start gap-2 p-3 rounded-[var(--r-sm)] bg-[var(--card)] text-xs">
           <SearchX size={14} className="text-[var(--muted)] shrink-0 mt-0.5" aria-hidden />
           <span className="flex-1 text-[var(--muted)]">
             <strong className="text-[var(--fg)]">{q}</strong>

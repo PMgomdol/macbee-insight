@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Info, AlertTriangle, AlertCircle } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: '디자인 가이드 — 맥비 자료실',
@@ -185,12 +186,23 @@ export default function DesignGuide() {
         </div>
       </Section>
 
-      <Section title="알림 박스" desc="라운드 sm(6px), 시맨틱 컬러 30~50% 테두리 + 10% 배경.">
+      <Section title="알림 박스" desc="테두리 없음 — 옅은 배경(틴트 10%) + 아이콘에만 시맨틱 색, 텍스트는 중립색. 라운드 md.">
         <div className="flex flex-col gap-2 max-w-md text-sm">
-          <div className="p-3 rounded-[var(--r-sm)] border border-[var(--accent)]/30 bg-[var(--accent-bg)]">안내 — accent</div>
-          <div className="p-3 rounded-[var(--r-sm)] border border-[var(--warning)]/50 bg-[var(--warning)]/10">주의 — warning</div>
-          <div className="p-3 rounded-[var(--r-sm)] border border-[var(--danger)]/40 bg-[var(--danger)]/10">오류 — danger</div>
+          <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--r-md)] bg-[var(--accent-bg)]">
+            <Info size={16} className="text-[var(--accent)] shrink-0 mt-0.5" aria-hidden />
+            <span>안내 — 아이콘만 파란색, 글자는 본문색</span>
+          </div>
+          <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--r-md)] bg-[var(--warning)]/10">
+            <AlertTriangle size={16} className="text-[var(--warning)] shrink-0 mt-0.5" aria-hidden />
+            <span>주의 — 중복 자료일 수 있어요</span>
+          </div>
+          <div className="flex items-start gap-2.5 p-3.5 rounded-[var(--r-md)] bg-[var(--danger)]/10">
+            <AlertCircle size={16} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
+            <span>오류 — 등록하지 못했어요</span>
+          </div>
         </div>
+        <Recipe code={`틀:    flex items-start gap-2.5 p-3.5 rounded-[var(--r-md)] bg-[var(--accent-bg)] | bg-[var(--warning)]/10 | bg-[var(--danger)]/10
+아이콘: lucide 16px, text-[시맨틱색] shrink-0 mt-0.5 — 색은 아이콘에만, 본문은 중립`} />
       </Section>
 
       <Section title="색 단계 (배너 등 프로모 영역)" desc="같은 계열 3단: 배경 50 / 포인트 500 / 텍스트 900.">

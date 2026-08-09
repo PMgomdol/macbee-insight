@@ -62,7 +62,7 @@ function Logged({ user, displayName, role }: { user: { email?: string }; display
       </div>
 
       {isPending ? (
-        <div className="flex flex-col gap-2 p-4 rounded-[var(--r-md)] border border-[var(--warning)]/40 bg-[var(--warning)]/10 text-sm">
+        <div className="flex flex-col gap-2 p-4 rounded-[var(--r-md)] bg-[var(--warning)]/10 text-sm">
           <div className="flex items-center gap-2 font-semibold">
             <Clock size={16} className="text-[var(--warning)]" aria-hidden />
             승인을 기다리고 있어요
