@@ -143,11 +143,12 @@ function decodeXml(s: string): string {
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&#x27;/g, "'");
 }
 
-/** OOXML(zip) 안에서 조건 맞는 XML 파일들의 내용을 이름순으로 반환 */
+/** OOXML(zip) 안에서 조건 맞는 XML 파일들의 내용을 자연수 순(slide2 < slide10)으로 반환 */
 async function unzipXmls(buf: Buffer, match: (name: string) => boolean): Promise<string[]> {
   const JSZip = (await import('jszip')).default;
   const zip = await JSZip.loadAsync(buf);
-  const names = Object.keys(zip.files).filter(match).sort();
+  const num = (s: string) => Number(s.match(/(\d+)\.xml$/)?.[1] ?? 0);
+  const names = Object.keys(zip.files).filter(match).sort((a, b) => num(a) - num(b) || a.localeCompare(b));
   return Promise.all(names.map((n) => zip.files[n].async('string')));
 }
 
