@@ -75,7 +75,7 @@ export function HomeBanner() {
             >
               <div className="flex flex-col items-start gap-2 sm:gap-2.5 min-w-0">
                 <span
-                  className="text-[10px] sm:text-[11px] font-bold tracking-[0.08em] px-2.5 py-1 rounded-full border"
+                  className="text-[9px] sm:text-[10px] font-semibold tracking-[0.08em] px-2 py-0.5 rounded-full border"
                   style={{ color: s.badgeColor, borderColor: s.badgeColor }}
                 >
                   {s.badge}
