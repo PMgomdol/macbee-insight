@@ -18,13 +18,13 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <button
           type="button"
           onClick={reset}
-          className="px-4 py-2 rounded-[var(--r-sm)] bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)]"
+          className="px-4 py-2 rounded-lg bg-[var(--accent)] text-white hover:text-white text-sm font-medium hover:bg-[var(--accent-hover)]"
         >
           다시 시도
         </button>
         <a
           href="/"
-          className="px-4 py-2 rounded-[var(--r-sm)] border border-[var(--border)] text-sm hover:bg-[var(--card)]"
+          className="px-4 py-2 rounded-lg border border-[var(--border)] text-sm hover:bg-[var(--card)]"
         >
           홈으로
         </a>
