@@ -11,9 +11,6 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       <p className="text-sm text-[var(--muted)] max-w-sm">
         잠시 후 다시 시도해 주세요. 계속 반복되면 하단 의견 보내기로 알려주시면 빠르게 고칠게요.
       </p>
-      {error.digest && (
-        <p className="text-[11px] text-[var(--muted-2)]">오류 코드: {error.digest}</p>
-      )}
       <div className="flex gap-2 mt-2">
         <button
           type="button"
