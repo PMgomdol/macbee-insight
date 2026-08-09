@@ -273,8 +273,9 @@ export function guessFormat(url: string): string {
   const u = url.toLowerCase();
   if (/youtube\.com|youtu\.be|vimeo\.com/.test(u)) return '영상';
   if (/\.pdf($|\?)/.test(u)) return '가이드';
-  // 툴·파일·양식 소스 — 읽는 글이 아니라 복사·활용하는 자료 → 템플릿
-  if (/docs\.google\.com\/(spreadsheets|document|presentation)|drive\.google\.com|figma\.com|miro\.com|canva\.com|notion\.(so|site)|whimsical\.com|dovetail/.test(u)) return '템플릿';
+  // 디자인·협업 툴 + 스프레드시트 = 거의 항상 활용 자료(보드·양식·시트) → 템플릿.
+  // 구글 Docs/Slides·Drive·Notion은 글·가이드·양식이 섞여 도메인만으론 못 정함 → 제목·내용(프롬프트)으로 판단.
+  if (/figma\.com|miro\.com|canva\.com|whimsical\.com|dovetail\.com|docs\.google\.com\/spreadsheets/.test(u)) return '템플릿';
   return '아티클';
 }
 
