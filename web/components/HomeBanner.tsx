@@ -62,7 +62,7 @@ export function HomeBanner() {
       onFocus={() => setPaused(true)}
       onBlur={resume}
     >
-      <div className="overflow-hidden rounded-xl relative">
+      <div className="overflow-hidden rounded-[var(--r-lg)] relative">
         <div
           className="flex transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${idx * 100}%)` }}

@@ -13,3 +13,4 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **검색창**: 라운드 풀 pill + 좌측 돋보기 아이콘, focus 시 색만 변경 (두께·높이 고정).
 - 새 인터랙션 요소를 만들 땐 기존 컴포넌트에서 같은 모양이 어떤 동작을 하는지 먼저 확인하고 맞추거나, 다르게 동작해야 하면 모양도 다르게.
 - 필터 상태는 URL(`?cat=` 등)에 반영해 공유 가능하게 하고, `filter_change` 이벤트로 트래킹한다.
+- **컴포넌트 레시피의 단일 기준 = `/design` 페이지** (`app/design/page.tsx`). 버튼·칩·탭·인풋·카드·알림 박스의 클래스를 거기서 복사해 쓴다. 라운드는 토큰(`--r-sm` 6 / `--r-md` 8 / `--r-lg` 12 / full)만 사용, 임의 px·rounded-lg 등 하드코딩 금지.

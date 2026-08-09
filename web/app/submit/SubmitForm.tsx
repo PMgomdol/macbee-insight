@@ -305,7 +305,7 @@ export function SubmitForm({ categories }: Props) {
           <label className="text-sm font-medium">
             파일 <span className="text-[var(--danger)]">*</span>
           </label>
-          <label className="flex items-center justify-center gap-2 px-4 py-6 rounded-xl border-2 border-dashed border-[var(--border-strong)] bg-[var(--card)] cursor-pointer hover:border-[var(--accent)] transition-colors">
+          <label className="flex items-center justify-center gap-2 px-4 py-6 rounded-[var(--r-lg)] border-2 border-dashed border-[var(--border-strong)] bg-[var(--card)] cursor-pointer hover:border-[var(--accent)] transition-colors">
             <input type="file" onChange={onFileChange} className="hidden" />
             {uploading ? <Spinner size="small" /> : <Upload size={16} />}
             <span className="text-sm">
