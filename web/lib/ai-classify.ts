@@ -113,8 +113,9 @@ function buildVisionPrompt(url: string, meta: { title: string; description: stri
 
 규칙:
 - title_ko, summary_ko는 한글. 파일에 영문이 보이면 번역해서 한글 제목/요약 작성.
-- summary_ko는 1~2문장. 파일에 보이는 실제 내용("어떤 자료이고 무슨 주제를 다루는지")을 구체적으로.
+- summary_ko는 1문장. 파일에 보이는 실제 내용("어떤 자료이고 무슨 주제를 다루는지")을 구체적으로.
   파일명만 가지고 추측하지 말 것 — 본문/이미지에서 본 것만 기술.
+  **명사구로 마무리** — "~을 정리한 자료", "~용 템플릿", "~을 담은 가이드" 형태. "~합니다/~입니다" 종결어미 금지.
   내용이 흐릿하거나 알 수 없으면 "확인 불가" 명시.
 - main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
 - sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
@@ -133,6 +134,8 @@ URL: ${url}
 규칙:
 - title_ko, summary_ko는 한글. 영문 원본이면 번역.
 - summary_ko는 1문장. "이 글이 무엇에 대한 무슨 내용인지" 명확히.
+  **명사구로 마무리** — "~하는 글", "~을 다루는 아티클", "~을 정리한 글" 형태.
+  "~합니다/~입니다/~한다" 같은 종결어미로 끝내지 말 것.
   ${meta.body ? '**본문 발췌를 기준으로 작성**. og 설명이 사이트 소개/광고문구면 무시하고 본문 내용 우선.' : '알 수 없으면 "확인 불가".'}
 - title_ko도 본문과 og 제목이 다르면 실제 글 내용에 맞는 쪽으로.
 - main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
@@ -152,7 +155,8 @@ function buildVideoPrompt(url: string, meta: { title: string; description: strin
 
 규칙:
 - title_ko: 영상 실제 내용을 반영한 한글 제목. 원제목이 적절하면 그대로/번역, 낚시성이면 내용 기반으로 재작성.
-- summary_ko: 1~2문장. 영상이 실제로 다루는 핵심(무슨 주제를 어떻게 설명·시연하는지)을 구체적으로. 제목 반복 금지. 힌트만 베끼지 말고 영상에서 본 내용 기술.
+- summary_ko: 1문장. 영상이 실제로 다루는 핵심(무슨 주제를 어떻게 설명·시연하는지)을 구체적으로. 제목 반복 금지. 힌트만 베끼지 말고 영상에서 본 내용 기술.
+  **명사구로 마무리** — "~을 설명하는 영상", "~을 시연하는 강의" 형태. "~합니다/~입니다" 종결어미 금지.
 - main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
 - sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
 - tags: 3~6개. 영상 핵심 키워드. 한글 우선. 너무 일반적인 단어 단독 금지
