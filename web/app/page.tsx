@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { ItemCard } from '@/components/ItemCard';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
 import { SearchAutocomplete } from '@/components/SearchAutocomplete';
-import { getMonthlyPopularItems, getCategoryCounts, getTopTags } from '@/lib/queries';
+import { HomeBanner } from '@/components/HomeBanner';
+import { getMonthlyPopularItems, getTopTags } from '@/lib/queries';
 
 // 카톡 실제 요청 패턴에서 뽑은 순환 힌트 (2년치 대화 상위 요청 문구)
 const PLACEHOLDERS = [
@@ -13,12 +14,6 @@ const PLACEHOLDERS = [
   '결제 화면 참고자료',
   'AI 프롬프트 예시',
   '와이어프레임 레퍼런스',
-];
-
-const FOOTER_LINKS = [
-  { href: '/submit', label: '+ 자료 제안하기' },
-  { href: '/files', label: '양식·템플릿 전체' },
-  { href: '/insights', label: '콘텐츠 전체' },
 ];
 
 // 월간 인기 = Date.now() 기반(동적) → cacheComponents 하에선 Suspense 안에서만 접근 가능.
@@ -50,11 +45,7 @@ async function PopularCarousel() {
 }
 
 export default async function Home() {
-  const [counts, topTags] = await Promise.all([
-    getCategoryCounts(),
-    getTopTags(5),
-  ]);
-  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  const topTags = await getTopTags(5);
 
   return (
     <div className="flex flex-col items-center gap-10 sm:gap-16 pt-8 sm:pt-20 pb-10">
@@ -68,9 +59,7 @@ export default async function Home() {
             무엇을 찾아드릴까요?
           </h1>
           <p className="text-xs sm:text-sm text-[var(--muted)] max-w-md">
-            {total > 0
-              ? `${total.toLocaleString()}건의 실무 자료 · 카톡방 공유 아카이브`
-              : '기획자에게 필요한 실무 자료'}
+            기획에 필요한 자료를 검색해 보세요.
           </p>
         </div>
 
@@ -99,17 +88,8 @@ export default async function Home() {
         <PopularCarousel />
       </Suspense>
 
-      {/* 하단 링크 */}
-      <nav
-        aria-label="빠른 이동"
-        className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-[var(--muted)] pt-2"
-      >
-        {FOOTER_LINKS.map((l) => (
-          <Link key={l.href} href={l.href} className="hover:text-[var(--fg)] whitespace-nowrap">
-            {l.label}
-          </Link>
-        ))}
-      </nav>
+      {/* 하단 슬라이드 배너 — 제안/양식·템플릿/콘텐츠 바로가기 */}
+      <HomeBanner />
     </div>
   );
 }
