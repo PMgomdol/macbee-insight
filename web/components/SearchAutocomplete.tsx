@@ -236,8 +236,7 @@ export function SearchAutocomplete({
         {variant === 'page' && (
           <button
             type="submit"
-            className="slds-button slds-button_brand shrink-0 h-11 px-5"
-            style={{ minHeight: 44 }}
+            className="shrink-0 h-11 px-5 rounded-full bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
           >
             검색
           </button>

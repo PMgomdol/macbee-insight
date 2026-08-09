@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { UILinkButton } from '@/components/ui/Button';
 import { getAuthState } from '@/lib/auth';
 import { ArrowLeft } from 'lucide-react';
 import { DashboardTabs } from './DashboardTabs';
@@ -15,9 +16,9 @@ export default async function AdminDashboardPage() {
       <div className="flex flex-col gap-3 max-w-md py-8 mx-auto">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">지표 대시보드</h1>
         <p className="text-sm text-[var(--muted)]">운영진만 볼 수 있어요.</p>
-        <Link href="/admin1229" className="slds-button slds-button_brand w-fit px-4 py-2.5">
+        <UILinkButton href="/admin1229" className="w-fit">
           로그인
-        </Link>
+        </UILinkButton>
       </div>
     );
   }

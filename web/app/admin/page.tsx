@@ -1,6 +1,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { getAuthState } from '@/lib/auth';
 import Link from 'next/link';
+import { UILinkButton } from '@/components/ui/Button';
 import { BarChart3, ExternalLink, UserPlus } from 'lucide-react';
 import { ApproveButton, ForceApproveButton, RejectButton } from './buttons';
 import { ReviewerApplyButtons } from './ReviewerApplyButtons';
@@ -21,7 +22,7 @@ export default async function AdminPage() {
       <div className="flex flex-col gap-3 max-w-md py-8 mx-auto">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">운영진 검토</h1>
         <p className="text-sm text-[var(--muted)]">검토 페이지를 보려면 운영진으로 로그인해주세요.</p>
-        <Link href="/admin1229" className="slds-button slds-button_brand w-fit px-4 py-2.5">진입점으로 가기</Link>
+        <UILinkButton href="/admin1229" className="w-fit">진입점으로 가기</UILinkButton>
       </div>
     );
   }

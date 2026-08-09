@@ -95,8 +95,7 @@ export default async function SearchPage({
             <p className="text-xs text-[var(--muted-2)]">찾는 자료가 커뮤니티에 아직 없나 봐요.</p>
             <Link
               href="/submit"
-              className="slds-button slds-button_brand inline-flex items-center gap-1.5 px-4"
-              style={{ minHeight: 40 }}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-[var(--r-md)] bg-[var(--accent)] text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
             >
               <Send size={13} aria-hidden />
               이 주제 자료 제안하기
