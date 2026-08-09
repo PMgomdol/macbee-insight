@@ -5,7 +5,7 @@ export async function FooterAdminLink() {
   const { isReviewer } = await getAuthState();
   if (!isReviewer) return null;
   return (
-    <Link href="/admin" className="hover:text-[var(--fg)]">
+    <Link href="/admin" className="hover:text-white transition-colors">
       운영진
     </Link>
   );

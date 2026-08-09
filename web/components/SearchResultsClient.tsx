@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { ChevronDown } from 'lucide-react';
 import { ItemCard } from './ItemCard';
 import { CollapsibleAnswer } from './FaqList';
 import { track } from '@/lib/track';
@@ -184,10 +185,13 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
           <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">실무 Q&A</h2>
           <div className="flex flex-col" onClick={(e) => trackResultClick(e, 'details', 'faq')}>
             {faqs.map((f) => (
-              <details key={f.id} className="border-b border-[var(--border)]">
+              <details key={f.id} className="group border-b border-[var(--border)]">
                 <summary className="cursor-pointer py-3 text-sm font-medium select-none flex items-start justify-between gap-3 hover:text-[var(--accent)] list-none">
                   <span className="flex-1 min-w-0">{f.question}</span>
-                  <span className="text-xs text-[var(--muted-2)] shrink-0">{f.main_category}</span>
+                  <span className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-[var(--muted-2)]">{f.main_category}</span>
+                    <ChevronDown size={16} className="text-[var(--muted-2)] group-open:rotate-180 transition" aria-hidden />
+                  </span>
                 </summary>
                 <CollapsibleAnswer answer={f.answer} />
               </details>
