@@ -50,6 +50,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--fg)]">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-2 focus:bg-[var(--accent)] focus:text-white focus:rounded-[var(--r-sm)]"
+        >
+          본문 바로가기
+        </a>
         <AtlaskitProvider>
         <Suspense fallback={null}><AnalyticsProvider /></Suspense>
         <VercelAnalytics />
@@ -71,7 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </header>
-        <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">
+        <main id="main" className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">
           {children}
         </main>
         <SiteFooter />

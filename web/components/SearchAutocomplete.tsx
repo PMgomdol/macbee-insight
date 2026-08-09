@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X, Sparkles, Tag, Folder, Clock, TrendingUp } from 'lucide-react';
 import { track } from '@/lib/track';
@@ -68,6 +68,7 @@ export function SearchAutocomplete({
   const [rotIdx, setRotIdx] = useState(0);
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listboxId = useId();
   const debouncer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 최초 마운트 — 최근 검색 로드
@@ -213,8 +214,10 @@ export function SearchAutocomplete({
                 : 'text-base'
             }`}
             aria-label="검색어"
+            role="combobox"
             aria-autocomplete="list"
             aria-expanded={open}
+            aria-controls={listboxId}
             autoComplete="off"
             autoFocus={autoFocus}
           />
@@ -243,6 +246,7 @@ export function SearchAutocomplete({
 
       {open && (
         <div
+          id={listboxId}
           role="listbox"
           className="absolute left-0 right-0 top-full mt-1.5 z-50 app-card overflow-hidden shadow-[var(--shadow-16)] max-h-[70vh] overflow-y-auto"
         >
