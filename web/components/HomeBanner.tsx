@@ -63,17 +63,6 @@ export function HomeBanner() {
       onBlur={resume}
     >
       <div className="overflow-hidden rounded-xl relative">
-        {/* 다음 슬라이드까지 남은 시간 진행 바 (인프런식) — hover 시 정지, 벗어나면 처음부터 */}
-        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-black/10 z-10" aria-hidden>
-          <div
-            key={`${idx}-${epoch}`}
-            className="h-full bg-black/45"
-            style={{
-              animation: `banner-progress ${INTERVAL}ms linear forwards`,
-              animationPlayState: paused ? 'paused' : 'running',
-            }}
-          />
-        </div>
         <div
           className="flex transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${idx * 100}%)` }}
@@ -130,8 +119,8 @@ export function HomeBanner() {
         <ChevronRight size={18} />
       </button>
 
-      {/* 인디케이터 */}
-      <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1.5">
+      {/* 게이지 도트 — 활성 도트가 필로 늘어나고 안에 남은 시간 게이지가 채워짐 (위치+시간+이동 통합) */}
+      <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
         {SLIDES.map((s, i) => (
           <button
             key={s.href}
@@ -139,10 +128,21 @@ export function HomeBanner() {
             onClick={() => go(i)}
             aria-label={`${i + 1}번 배너로 이동`}
             aria-current={i === idx}
-            className={`h-1.5 rounded-full transition-all ${
-              i === idx ? 'w-5 bg-black/60' : 'w-1.5 bg-black/20 hover:bg-black/40'
+            className={`h-1.5 rounded-full transition-all overflow-hidden ${
+              i === idx ? 'w-8 bg-black/15' : 'w-1.5 bg-black/20 hover:bg-black/40'
             }`}
-          />
+          >
+            {i === idx && (
+              <span
+                key={`${idx}-${epoch}`}
+                className="block h-full bg-black/60 rounded-full"
+                style={{
+                  animation: `banner-progress ${INTERVAL}ms linear forwards`,
+                  animationPlayState: paused ? 'paused' : 'running',
+                }}
+              />
+            )}
+          </button>
         ))}
       </div>
     </section>
