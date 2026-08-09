@@ -16,8 +16,18 @@ import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://macbee-insight.vercel.app'),
   title: '맥비기획 자료실',
   description: '기획자에게 필요한 양식·템플릿과 아티클·영상·가이드 콘텐츠, 실무 Q&A를 한 곳에 모았어요.',
+  // 카톡·슬랙 공유 미리보기 — 톡방 공유가 주 유입 경로라 필수
+  openGraph: {
+    title: '맥비기획 자료실',
+    description: '기획자에게 필요한 양식·템플릿, 아티클·영상 콘텐츠, 실무 Q&A 596건을 한 곳에.',
+    url: 'https://macbee-insight.vercel.app',
+    siteName: '맥비기획 자료실',
+    locale: 'ko_KR',
+    type: 'website',
+  },
 };
 
 const THEME_INIT = `
