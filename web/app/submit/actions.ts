@@ -136,15 +136,48 @@ async function fetchInlineForVision(fileUrl: string, ext: string): Promise<Inlin
   }
 }
 
+/** XML 엔티티 최소 디코드 */
+function decodeXml(s: string): string {
+  return s
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&#x27;/g, "'");
+}
+
+/** OOXML(zip) 안에서 조건 맞는 XML 파일들의 내용을 이름순으로 반환 */
+async function unzipXmls(buf: Buffer, match: (name: string) => boolean): Promise<string[]> {
+  const JSZip = (await import('jszip')).default;
+  const zip = await JSZip.loadAsync(buf);
+  const names = Object.keys(zip.files).filter(match).sort();
+  return Promise.all(names.map((n) => zip.files[n].async('string')));
+}
+
+/** PPTX: 슬라이드별 <a:t> 텍스트 런 추출 */
+async function extractPptxText(buf: Buffer): Promise<string> {
+  const xmls = await unzipXmls(buf, (n) => /^ppt\/slides\/slide\d+\.xml$/.test(n));
+  const text = xmls
+    .map((x) => (x.match(/<a:t>([\s\S]*?)<\/a:t>/g) ?? []).map((t) => t.replace(/<[^>]+>/g, '')).join(' '))
+    .join('\n');
+  return decodeXml(text).replace(/\s+/g, ' ').trim().slice(0, 4000);
+}
+
+/** XLSX: sharedStrings + 시트 inlineStr <t> 텍스트 추출 (라벨·헤더 위주) */
+async function extractXlsxText(buf: Buffer): Promise<string> {
+  const xmls = await unzipXmls(buf, (n) => n === 'xl/sharedStrings.xml' || /^xl\/worksheets\/sheet\d+\.xml$/.test(n));
+  const text = xmls
+    .map((x) => (x.match(/<t[^>]*>([\s\S]*?)<\/t>/g) ?? []).map((t) => t.replace(/<[^>]+>/g, '')).join(' '))
+    .join(' ');
+  return decodeXml(text).replace(/\s+/g, ' ').trim().slice(0, 4000);
+}
+
 /**
  * 업로드된 파일의 실제 본문 텍스트 추출.
  * - PDF: pdf-parse, 첫 10페이지 (vision 한도 초과 시 폴백용)
- * - DOCX: mammoth
+ * - DOCX: mammoth / PPTX·XLSX: jszip으로 OOXML 텍스트 추출 (새 의존성 없음)
  * - TXT/MD/CSV: 그대로 utf-8 디코드
- * - 그 외: 빈 문자열
+ * - 그 외(구 바이너리 doc/xls/ppt, hwp): 빈 문자열 → 파일명 기반 분류
  */
 async function extractFileText(fileUrl: string, ext: string): Promise<string> {
-  const SUPPORTED = ['pdf', 'docx', 'txt', 'md', 'csv'];
+  const SUPPORTED = ['pdf', 'docx', 'pptx', 'xlsx', 'xlsm', 'txt', 'md', 'csv'];
   if (!SUPPORTED.includes(ext)) return '';
   try {
     const resp = await fetch(fileUrl, { signal: AbortSignal.timeout(20000) });
@@ -167,6 +200,9 @@ async function extractFileText(fileUrl: string, ext: string): Promise<string> {
       const r = await mammoth.extractRawText({ buffer: buf });
       return (r.value || '').replace(/\s+/g, ' ').trim().slice(0, 4000);
     }
+
+    if (ext === 'pptx') return await extractPptxText(buf);
+    if (ext === 'xlsx' || ext === 'xlsm') return await extractXlsxText(buf);
 
     // txt / md / csv
     return buf.toString('utf-8').replace(/\s+/g, ' ').trim().slice(0, 4000);
