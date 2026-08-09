@@ -285,7 +285,7 @@ export function SearchAutocomplete({
                       <button
                         key={t}
                         onClick={() => go(t)}
-                        className={`px-2.5 py-1 rounded-[var(--r-sm)] text-xs border transition ${
+                        className={`px-2.5 py-1 rounded-full text-xs border transition ${
                           activeIdx === idx
                             ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
                             : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'

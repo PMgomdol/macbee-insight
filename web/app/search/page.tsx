@@ -84,7 +84,7 @@ export default async function SearchPage({
               <Link
                 key={t}
                 href={`/search?q=${encodeURIComponent(t)}`}
-                className="px-3 py-1.5 rounded-[var(--r-sm)] text-xs border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                className="px-3 py-1.5 rounded-full text-xs border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
               >
                 {t}
               </Link>
@@ -114,7 +114,7 @@ export default async function SearchPage({
               <Link
                 key={t}
                 href={`/search?q=${encodeURIComponent(t)}`}
-                className="px-3 py-1.5 rounded-[var(--r-sm)] text-xs border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                className="px-3 py-1.5 rounded-full text-xs border border-[var(--border)] text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
               >
                 {t}
               </Link>

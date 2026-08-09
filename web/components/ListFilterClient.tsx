@@ -125,7 +125,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
       <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap">
         <button
           onClick={() => selectMain(null)}
-          className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs sm:text-sm border whitespace-nowrap transition ${
+          className={`shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm border whitespace-nowrap transition ${
             !main
               ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
               : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
@@ -137,7 +137,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
           <button
             key={cat}
             onClick={() => selectMain(cat)}
-            className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs sm:text-sm border whitespace-nowrap transition ${
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm border whitespace-nowrap transition ${
               main === cat
                 ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
                 : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
@@ -153,7 +153,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
         <div className="flex gap-1 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap items-center">
           <button
             onClick={() => selectSub(null)}
-            className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${
+            className={`shrink-0 px-2.5 py-1 rounded-full text-xs ${
               !sub ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
             }`}
           >
@@ -163,7 +163,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
             <button
               key={s}
               onClick={() => selectSub(s)}
-              className={`shrink-0 px-2.5 py-1 rounded-[var(--r-sm)] text-xs ${
+              className={`shrink-0 px-2.5 py-1 rounded-full text-xs ${
                 sub === s ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
               }`}
             >
@@ -177,7 +177,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
       <div className="flex items-center justify-end gap-1 text-xs">
         <button
           onClick={() => changeSort(sort === 'popular' ? 'default' : 'popular')}
-          className={`px-2.5 py-1 rounded-[var(--r-sm)] ${sort === 'popular' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+          className={`px-2.5 py-1 rounded-full ${sort === 'popular' ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
         >
           인기순
         </button>

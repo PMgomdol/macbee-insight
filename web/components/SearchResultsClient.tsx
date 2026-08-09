@@ -204,7 +204,7 @@ function FilterBtn({ active, onClick, children }: { active: boolean; onClick: ()
     <button
       type="button"
       onClick={onClick}
-      className={`px-2.5 py-1.5 rounded-[var(--r-sm)] ${active ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+      className={`px-2.5 py-1.5 rounded-full ${active ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
     >
       {children}
     </button>
@@ -216,7 +216,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs border whitespace-nowrap transition ${
+      className={`shrink-0 px-3 py-1.5 rounded-full text-xs border whitespace-nowrap transition ${
         active
           ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
           : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
@@ -232,7 +232,7 @@ function SubChip({ active, onClick, children }: { active: boolean; onClick: () =
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 px-2.5 py-1.5 rounded-[var(--r-sm)] text-xs ${
+      className={`shrink-0 px-2.5 py-1.5 rounded-full text-xs ${
         active ? 'bg-[var(--card)] text-[var(--fg)] font-medium' : 'text-[var(--muted)] hover:bg-[var(--card)]'
       }`}
     >

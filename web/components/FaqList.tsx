@@ -161,7 +161,7 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
           <button
             type="button"
             onClick={() => selectCat(null)}
-            className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs sm:text-sm border whitespace-nowrap transition ${
+            className={`shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm border whitespace-nowrap transition ${
               !cat
                 ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
                 : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
@@ -178,7 +178,7 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
                 type="button"
                 onClick={() => selectCat(cat === c ? null : c)}
                 disabled={disabled}
-                className={`shrink-0 px-3 py-1.5 rounded-[var(--r-sm)] text-xs sm:text-sm border whitespace-nowrap transition ${
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs sm:text-sm border whitespace-nowrap transition ${
                   cat === c
                     ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
                     : disabled
