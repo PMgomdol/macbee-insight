@@ -73,7 +73,10 @@ body {
   line-height: 1.4285;                /* ADS body line-height */
 }
 
-a { color: inherit; text-decoration: none; }
+/* base 레이어 안에 둬야 유틸리티(text-white 등)가 이김 — 레이어 밖이면 <a> 버튼 글자색이 전부 검정이 되는 버그 */
+@layer base {
+  a { color: inherit; text-decoration: none; }
+}
 
 /* outline은 요소 자체 라운드를 따라감 — border-radius 강제 지정 금지 (포커스 시 라운드 튐 원인) */
 *:focus-visible {
