@@ -274,8 +274,7 @@ export function SubmitForm({ categories }: Props) {
               }}
               onKeyDown={onUrlKeyDown}
               placeholder="https://..."
-              autoFocus
-              className="flex-1 min-w-0 h-11 px-4 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] text-sm focus:border-[var(--focus-ring)] transition-colors"
+              className="flex-1 min-w-0 h-12 sm:h-11 px-4 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] text-base sm:text-sm focus:border-[var(--focus-ring)] transition-colors"
             />
             <UIButton onClick={onAnalyze} disabled={analyzing || !url.trim()}>
               {analyzing ? <Spinner size="small" /> : <Sparkles size={14} aria-hidden />}
@@ -283,7 +282,7 @@ export function SubmitForm({ categories }: Props) {
             </UIButton>
           </div>
           <p className="text-xs text-[var(--muted)]">
-            URL만 붙여넣으면 제목·요약·카테고리·태그를 알아서 채워드려요. Enter로 바로 분석할 수 있어요.
+            URL만 붙여넣으면 제목·요약·카테고리·태그가 자동으로 채워져요. Enter로 바로 분석할 수 있어요.
           </p>
           {finalUrl && finalUrl !== url && (
             <p className="text-[11px] text-[var(--muted-2)] break-all">
@@ -367,7 +366,7 @@ export function SubmitForm({ categories }: Props) {
               onChange={(e) => setForceSubmit(e.target.checked)}
               className="accent-[var(--warning)]"
             />
-            그래도 등록할게요 (운영진이 다시 판단해요)
+            그래도 등록하기 (운영진이 다시 판단해요)
           </label>
         </div>
       )}
@@ -435,7 +434,7 @@ export function SubmitForm({ categories }: Props) {
                 placeholder="YYYY-MM-DD"
               />
             </div>
-            <span className="text-[11px] text-[var(--muted-2)]">원본에 발행일이 있으면 알아서 채워드려요. 없으면 비워둬도 괜찮아요.</span>
+            <span className="text-[11px] text-[var(--muted-2)]">원본에 발행일이 있으면 자동으로 채워져요. 없으면 비워둬도 괜찮아요.</span>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -480,7 +479,7 @@ export function SubmitForm({ categories }: Props) {
               disabled={submitting || !title || (!url && !fileUrl) || (!!duplicate && !forceSubmit)}
               className="w-full"
             >
-              {submitting ? '보내고 있어요…' : '등록할게요'}
+              {submitting ? '보내고 있어요…' : '등록하기'}
             </UIButton>
           </div>
         </>
@@ -517,7 +516,7 @@ export function SubmitForm({ categories }: Props) {
               {proposerEmail && ' 결과는 이메일로 알려드릴게요.'}
             </p>
             <div className="flex gap-2 mt-1">
-              <UIButton onClick={resetForm} className="flex-1">하나 더 등록할래요</UIButton>
+              <UIButton onClick={resetForm} className="flex-1">하나 더 등록하기</UIButton>
               <UILinkButton href="/" variant="secondary" className="flex-1">홈으로 갈래요</UILinkButton>
             </div>
           </div>
@@ -532,6 +531,6 @@ function dupStatusLabel(status: string | null): string {
     case 'pending': return '검토 대기 중';
     case 'approved': return '승인됐어요';
     case 'rejected': return '거절됐어요';
-    default: return status ?? '상태를 모르겠어요';
+    default: return status ?? '상태를 확인할 수 없어요';
   }
 }

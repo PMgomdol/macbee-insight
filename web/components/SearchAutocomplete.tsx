@@ -188,7 +188,22 @@ export function SearchAutocomplete({
   return (
     <div ref={wrapRef} className={wrapCls}>
       <form
-        onSubmit={(e) => { e.preventDefault(); go(q); }}
+        action="/search"
+        method="get"
+        onSubmit={(e) => {
+          if (variant === 'page') {
+            // 네이티브 GET 제출 — 카톡 등 인앱 웹뷰에서 클라이언트 라우팅이 막혀도 동작.
+            // 기록·트래킹만 남기고 브라우저 내비게이션에 맡김
+            const k = q.trim();
+            if (!k) { e.preventDefault(); return; }
+            saveRecent(k);
+            track('search_submit', { query: k, source: variant });
+            setOpen(false);
+            return;
+          }
+          e.preventDefault();
+          go(q);
+        }}
         className={variant === 'page' ? 'flex gap-2 w-full' : 'w-full'}
         role="search"
       >
@@ -200,6 +215,7 @@ export function SearchAutocomplete({
           />
           <input
             ref={inputRef}
+            name="q"
             type="search"
             value={q}
             onChange={(e) => { setQ(e.target.value); setOpen(true); setActiveIdx(-1); }}
