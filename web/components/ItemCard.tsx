@@ -104,7 +104,9 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
           )}
           {media}
         </span>
-        {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
+        {fileExt && !video && (
+          <span className="text-[11px] font-medium text-[var(--muted-2)]">{fileExt}</span>
+        )}
       </div>
 
       {/* ② 타이틀 — 가장 강조 */}
@@ -170,7 +172,9 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
           >
             {media}
           </span>
-          {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
+          {fileExt && !video && (
+          <span className="text-[11px] font-medium text-[var(--muted-2)]">{fileExt}</span>
+        )}
         </div>
       </div>
     </a>
