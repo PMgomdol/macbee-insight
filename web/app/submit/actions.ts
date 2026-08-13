@@ -500,48 +500,32 @@ const MIME_FALLBACK: Record<string, string> = {
   txt: 'text/plain',
 };
 
-export async function uploadFile(formData: FormData): Promise<{ ok: boolean; url?: string; error?: string }> {
-  try {
-    const file = formData.get('file');
-    if (!(file instanceof File)) return { ok: false, error: '파일이 첨부되지 않음' };
-    if (file.size === 0) return { ok: false, error: '비어있는 파일이에요' };
-    if (file.size > 50 * 1024 * 1024) {
-      return { ok: false, error: `파일이 ${(file.size / 1024 / 1024).toFixed(1)}MB예요. 50MB까지 올릴 수 있어요.` };
-    }
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB — 버킷 file_size_limit과 일치
 
-    const ext = (file.name.split('.').pop() || '').toLowerCase();
-    const safeName = file.name.replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ\.\-]/g, '_').slice(0, 80);
-    const path = `${new Date().toISOString().slice(0, 10)}/${randomUUID()}-${safeName}`;
-    const contentType = file.type || MIME_FALLBACK[ext] || 'application/octet-stream';
-
-    const sb = createAdminClient();
-    const buf = Buffer.from(await file.arrayBuffer());
-    const { error } = await sb.storage.from(BUCKET).upload(path, buf, {
-      contentType,
-      upsert: false,
-    });
-    if (error) {
-      const msg = error.message || '';
-      if (msg.toLowerCase().includes('exceeded') || msg.toLowerCase().includes('size')) {
-        return { ok: false, error: `용량을 초과했어요 — ${msg}` };
-      }
-      if (msg.toLowerCase().includes('mime') || msg.toLowerCase().includes('type')) {
-        return { ok: false, error: `못 올리는 파일 형식이에요 (${ext})` };
-      }
-      if (msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('bucket')) {
-        return { ok: false, error: `저장소에 문제가 있어요. 운영진에게 알려주세요.` };
-      }
-      return { ok: false, error: msg };
-    }
-
-    const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
-    return { ok: true, url: data.publicUrl };
-  } catch (e: any) {
-    // Server Action body size 초과는 throw로 옴
-    const msg = e?.message ?? String(e);
-    if (msg.toLowerCase().includes('body') && msg.toLowerCase().includes('size')) {
-      return { ok: false, error: `요청 크기가 너무 커요. 파일을 줄이거나 운영진에게 알려주세요.` };
-    }
-    return { ok: false, error: `서버에 문제가 생겼어요: ${msg.slice(0, 200)}` };
+/**
+ * 업로드 허가증(signed upload URL) 발급.
+ * 파일 바이트는 브라우저 → Supabase로 직접 올리므로 Vercel 서버액션 본문 4.5MB 캡을 우회.
+ * 서버는 경로·용량만 검증하고 토큰만 반환(응답 수 바이트).
+ */
+export async function createUploadTicket(
+  name: string,
+  size: number
+): Promise<{ ok: true; path: string; token: string; publicUrl: string } | { ok: false; error: string }> {
+  if (!name) return { ok: false, error: '파일 이름이 없어요' };
+  if (!size || size <= 0) return { ok: false, error: '비어있는 파일이에요' };
+  if (size > MAX_UPLOAD_BYTES) {
+    return { ok: false, error: `파일이 ${(size / 1024 / 1024).toFixed(1)}MB예요. 10MB까지 올릴 수 있어요. 더 큰 파일은 Google Drive 링크를 URL로 등록해주세요.` };
   }
+
+  const safeName = name.replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ\.\-]/g, '_').slice(0, 80);
+  const path = `${new Date().toISOString().slice(0, 10)}/${randomUUID()}-${safeName}`;
+
+  const sb = createAdminClient();
+  const { data, error } = await sb.storage.from(BUCKET).createSignedUploadUrl(path);
+  if (error || !data) {
+    const msg = error?.message ?? '업로드 준비에 실패했어요';
+    return { ok: false, error: msg.toLowerCase().includes('bucket') ? '저장소에 문제가 있어요. 운영진에게 알려주세요.' : msg };
+  }
+  const { data: pub } = sb.storage.from(BUCKET).getPublicUrl(path);
+  return { ok: true, path, token: data.token, publicUrl: pub.publicUrl };
 }

@@ -10,10 +10,13 @@ import TextArea from '@atlaskit/textarea';
 import Select from '@atlaskit/select';
 import Spinner from '@atlaskit/spinner';
 import {
-  analyzeUrl, analyzeFile, submitProposal, uploadFile,
+  analyzeUrl, analyzeFile, submitProposal, createUploadTicket,
   type AnalyzeResult, type DuplicateMatch,
 } from './actions';
+import { createClient as createBrowserSupabase } from '@/lib/supabase/client';
 import { track } from '@/lib/track';
+
+const UPLOAD_BUCKET = 'archive-files';
 
 type Props = { categories: { main_category: string; sub_category: string | null }[] };
 
@@ -127,7 +130,7 @@ export function SubmitForm({ categories }: Props) {
     }
   }
 
-  const MAX_BYTES = 50 * 1024 * 1024;
+  const MAX_BYTES = 10 * 1024 * 1024;
   function fmtMB(b: number) { return (b / 1024 / 1024).toFixed(1) + 'MB'; }
 
   function switchMode(next: 'url' | 'file') {
@@ -166,28 +169,34 @@ export function SubmitForm({ categories }: Props) {
     if (f.size > MAX_BYTES) {
       setAnalyzeMsg({
         kind: 'error',
-        text: `${f.name} — ${fmtMB(f.size)}로 너무 커요. 50MB까지 올릴 수 있어요. PDF로 압축하거나 Google Drive 링크를 URL로 등록해보세요.`,
+        text: `${f.name} — ${fmtMB(f.size)}로 너무 커요. 10MB까지 올릴 수 있어요. PDF로 압축하거나 Google Drive 링크를 URL로 등록해보세요.`,
       });
       return;
     }
 
     track('submit_start', { mode: 'file' });
-    const fd = new FormData();
-    fd.append('file', f);
     startUpload(async () => {
-      const r = await uploadFile(fd);
-      if (!r.ok) {
+      // 1) 서버에서 업로드 허가증만 발급 (응답 수 바이트 — Vercel 4.5MB 캡 무관)
+      const ticket = await createUploadTicket(f.name, f.size);
+      if (!ticket.ok) {
+        setAnalyzeMsg({ kind: 'error', text: `파일을 못 올렸어요 — ${ticket.error}` });
+        return;
+      }
+      // 2) 파일 바이트는 브라우저 → Supabase로 직접 업로드
+      const sb = createBrowserSupabase();
+      const { error } = await sb.storage
+        .from(UPLOAD_BUCKET)
+        .uploadToSignedUrl(ticket.path, ticket.token, f, {
+          contentType: f.type || undefined,
+        });
+      if (error) {
         setAnalyzeMsg({
           kind: 'error',
-          text: `파일을 못 올렸어요 — ${r.error ?? '서버에 문제가 생겼어요'}. ${
-            r.error?.includes('Body exceeded') || r.error?.includes('body size')
-              ? '크기가 너무 커요. Google Drive 링크를 URL로 등록해보세요.'
-              : '크기와 확장자를 확인하고 다시 시도해주세요.'
-          }`,
+          text: `파일을 못 올렸어요 — ${error.message}. 크기(10MB 이하)와 인터넷 연결을 확인하고 다시 시도해주세요.`,
         });
         return;
       }
-      const uploadedUrl = r.url ?? '';
+      const uploadedUrl = ticket.publicUrl;
       setFileUrl(uploadedUrl);
       setAnalyzeMsg({ kind: 'ok', text: `파일을 올렸어요 (${fmtMB(f.size)}) · 분석 중...` });
 
@@ -301,7 +310,7 @@ export function SubmitForm({ categories }: Props) {
             <input type="file" onChange={onFileChange} className="hidden" />
             {uploading ? <Spinner size="small" /> : <Upload size={16} />}
             <span className="text-sm">
-              {uploading ? '올리고 있어요...' : fileName ?? '파일 고르기 (50MB까지)'}
+              {uploading ? '올리고 있어요...' : fileName ?? '파일 고르기 (10MB까지)'}
             </span>
           </label>
           {fileUrl && (
