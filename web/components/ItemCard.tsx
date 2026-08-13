@@ -1,6 +1,5 @@
 import type { ArchiveItem } from '@/types/db';
 import { ExternalLink, Download, PlayCircle, FileText } from 'lucide-react';
-import { TagLink } from './TagLink';
 
 // 카드 배지 라벨 — 메뉴(kind)와 무관하게 실제 매체 기준.
 // 콘텐츠 메뉴 안의 PDF 가이드도 '파일' 배지를 달아야 다운로드 여부를 즉시 알 수 있음.
@@ -119,7 +118,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-[var(--muted-2)]">
           {tags.map((t) => (
-            <TagLink key={t} tag={t} />
+            <span key={t}>#{t}</span>
           ))}
         </div>
       )}
