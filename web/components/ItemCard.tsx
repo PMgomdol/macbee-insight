@@ -2,12 +2,16 @@ import type { ArchiveItem } from '@/types/db';
 import { ExternalLink, Download, PlayCircle, FileText } from 'lucide-react';
 import { TagLink } from './TagLink';
 
-// 카드 배지 라벨 — 메뉴(kind)와 무관하게 실제 매체 기준.
-// 콘텐츠 메뉴 안의 PDF 가이드도 '파일' 배지를 달아야 다운로드 여부를 즉시 알 수 있음.
-function mediaLabel(item: ArchiveItem): '영상' | '파일' | '아티클' {
+// 카드 배지 라벨 — 클릭 시 실제 동작 기준.
+// 다운로드(파일이 내려받아짐) vs 바로 보기(브라우저에서 열림)를 즉시 알 수 있게.
+// 맥비 의견 반영(2026-08-13): '파일'→'다운로드', 구글 드라이브/독스 링크→'바로 보기'.
+function mediaLabel(item: ArchiveItem): '영상' | '다운로드' | '바로 보기' {
   if (isVideo(item)) return '영상';
-  if (item.file_url || item.file_ext) return '파일';
-  return '아티클';
+  const eff = unwrapRedirect(item.file_url || item.external_url || '').toLowerCase();
+  if (/docs\.google\.com|drive\.google\.com/.test(eff)) return '바로 보기';
+  const isDirectFile = /\.(pdf|docx?|pptx?|key|xlsx?|csv|hwpx?|zip|odt|odp|ods)($|[?#])/.test(eff);
+  if (item.file_url || isDirectFile) return '다운로드';
+  return '바로 보기';
 }
 
 function formatDate(s: string | null): string | null {
@@ -47,7 +51,7 @@ function fileExtBadge(item: ArchiveItem): string | null {
   if (/docs\.google\.com\/document/.test(u)) return '구글 문서';
   if (/docs\.google\.com\/spreadsheets/.test(u)) return '구글 시트';
   if (/docs\.google\.com\/presentation/.test(u)) return '구글 슬라이드';
-  if (/drive\.google\.com/.test(u)) return '구글 드라이브';
+  if (/drive\.google\.com/.test(u)) return null; // 맥비 의견: 액션 배지 '바로 보기'로 충분 — 중복 칩 제거
   if (/\.pdf($|[?#])/.test(u)) return 'PDF';
   if (/\.(docx?|odt)($|[?#])/.test(u)) return '워드';
   if (/\.(pptx?|key|odp)($|[?#])/.test(u)) return 'PPT';
@@ -68,7 +72,7 @@ function fileExtBadge(item: ArchiveItem): string | null {
 export function ItemCard({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
   const media = mediaLabel(item);
-  const isFile = media === '파일';
+  const isFile = media === '다운로드';
   const video = isVideo(item);
   const fileExt = fileExtBadge(item);
   const tags = (item.tags ?? []).slice(0, 2);
@@ -138,7 +142,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
 export function ItemRow({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
   const media = mediaLabel(item);
-  const isFile = media === '파일';
+  const isFile = media === '다운로드';
   const video = isVideo(item);
   const fileExt = fileExtBadge(item);
   return (

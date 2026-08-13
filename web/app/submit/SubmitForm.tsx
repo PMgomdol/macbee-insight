@@ -512,7 +512,7 @@ export function SubmitForm({ categories }: Props) {
               </button>
             </div>
             <p className="text-sm text-[var(--muted)] leading-relaxed">
-              자료를 잘 받았어요. 운영진 두 분이 확인한 뒤 자료실에 올라가요.
+              자료를 잘 받았어요. 운영진이 확인한 뒤 자료실에 올라가요.
               {proposerEmail && ' 결과는 이메일로 알려드릴게요.'}
             </p>
             <div className="flex gap-2 mt-1">
