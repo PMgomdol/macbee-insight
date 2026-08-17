@@ -20,9 +20,15 @@ const args = process.argv.slice(2);
 const DRY = args.includes('--dry');
 const FOLDER = args.find((a) => !a.startsWith('--')) || DEFAULT_FOLDER;
 
+// 이미 설정된 env(쉘 export)는 유지 — 임시 유료 키를 파일에 안 써도 export로 쓸 수 있게
 for (const line of readFileSync('.env.local', 'utf8').split('\n')) {
   const m = line.match(/^([A-Z_]+)=(.*)$/);
-  if (m) process.env[m[1]] = m[2];
+  if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2];
+}
+// 초기 벌크 세팅용 유료 키 — 있으면 이 스크립트 실행에만 사용. 사이트/무료 GEMINI_API_KEY는 그대로.
+if (process.env.GEMINI_IMPORT_KEY) {
+  process.env.GEMINI_API_KEY = process.env.GEMINI_IMPORT_KEY;
+  console.log('유료 키(GEMINI_IMPORT_KEY) 사용');
 }
 const SB_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -83,6 +89,27 @@ async function driveExport(tok, id, mime) {
 async function driveDownload(tok, id) {
   const r = await fetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media&supportsAllDrives=true`, { headers: { Authorization: `Bearer ${tok}` } });
   return r.ok ? Buffer.from(await r.arrayBuffer()) : null;
+}
+
+// mimeType/파일명 → 카드 배지용 형식 라벨 (구글 문서·PDF·오피스 등)
+function extLabel(mimeType, name = '') {
+  const mt = (mimeType || '').toLowerCase();
+  if (mt.includes('vnd.google-apps.document')) return '구글 문서';
+  if (mt.includes('vnd.google-apps.spreadsheet')) return '구글 시트';
+  if (mt.includes('vnd.google-apps.presentation')) return '구글 슬라이드';
+  if (mt.includes('pdf')) return 'PDF';
+  if (mt.includes('zip')) return 'ZIP';
+  if (mt.includes('presentationml') || mt.includes('ms-powerpoint')) return 'PPT';
+  if (mt.includes('spreadsheetml') || mt.includes('ms-excel')) return '엑셀';
+  if (mt.includes('wordprocessingml') || mt.includes('msword')) return '워드';
+  if (mt.includes('hwp')) return '한글';
+  const m = name.match(/\.([a-z0-9]{2,5})$/i);
+  if (m) {
+    const e = m[1].toLowerCase();
+    const map = { pdf: 'PDF', zip: 'ZIP', pptx: 'PPT', ppt: 'PPT', xlsx: '엑셀', xls: '엑셀', csv: '엑셀', docx: '워드', doc: '워드', hwp: '한글', hwpx: '한글' };
+    return map[e] ?? e.toUpperCase();
+  }
+  return null;
 }
 
 // 파일 → { body(분류 근거 텍스트), fileRes(다운로드 자료면 true) }
@@ -169,6 +196,7 @@ for (const f of files) {
       summary: cls.summary || null,
       external_url: fileRes ? null : link,
       file_url: fileRes ? link : null,
+      file_ext: extLabel(f.mimeType, f.name),
       format,
       status: 'public',
       exposure_grade: 'free',

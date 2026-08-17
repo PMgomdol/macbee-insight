@@ -1,8 +1,8 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown } from 'lucide-react';
-import { ItemCard } from './ItemCard';
+import { ChevronDown, LayoutGrid, LayoutList } from 'lucide-react';
+import { ItemCard, ItemRow } from './ItemCard';
 import { CollapsibleAnswer } from './FaqList';
 import { track } from '@/lib/track';
 import type { ArchiveItem, FAQItem } from '@/types/db';
@@ -39,6 +39,18 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
   const [main, setMain] = useState<string | undefined>(initialMain);
   const [sub, setSub] = useState<string | undefined>(initialSub);
   const [sort, setSort] = useState<Sort>(initialSort ?? 'relevance');
+  const [view, setView] = useState<'card' | 'list'>('card');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('archive_view');
+    if (saved === 'list' || saved === 'card') setView(saved);
+  }, []);
+
+  function changeView(next: 'card' | 'list') {
+    setView(next);
+    localStorage.setItem('archive_view', next);
+    track('filter_change', { type: 'view', value: next, page: 'search' });
+  }
 
   // 계단식 필터 — 분포는 자기보다 상위 필터만 적용된 집합 기준
   const byKind = useMemo(() => (kind ? archives.filter((it) => it.kind === kind) : archives), [archives, kind]);
@@ -127,9 +139,29 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
           <FilterBtn onClick={() => pickKind('files')} active={kind === 'files'}>양식·템플릿 ({kindCounts.files})</FilterBtn>
           <FilterBtn onClick={() => pickKind('insights')} active={kind === 'insights'}>콘텐츠 ({kindCounts.insights})</FilterBtn>
         </div>
-        <div className="flex gap-1 text-xs">
-          <FilterBtn onClick={() => pickSort('relevance')} active={sort === 'relevance'}>관련도</FilterBtn>
-          <FilterBtn onClick={() => pickSort('popular')} active={sort === 'popular'}>인기순</FilterBtn>
+        <div className="flex items-center gap-2 text-xs">
+          <div className="flex gap-1">
+            <FilterBtn onClick={() => pickSort('relevance')} active={sort === 'relevance'}>관련도</FilterBtn>
+            <FilterBtn onClick={() => pickSort('popular')} active={sort === 'popular'}>인기순</FilterBtn>
+          </div>
+          <div className="inline-flex items-center rounded-full border border-[var(--border)] p-0.5">
+            <button
+              onClick={() => changeView('card')}
+              aria-pressed={view === 'card'}
+              aria-label="카드 보기"
+              className={`inline-flex items-center px-2 py-1 rounded-full transition ${view === 'card' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
+            >
+              <LayoutGrid size={13} aria-hidden />
+            </button>
+            <button
+              onClick={() => changeView('list')}
+              aria-pressed={view === 'list'}
+              aria-label="목록 보기"
+              className={`inline-flex items-center px-2 py-1 rounded-full transition ${view === 'list' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
+            >
+              <LayoutList size={13} aria-hidden />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -162,11 +194,11 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
         <section className="flex flex-col gap-2.5 mt-2">
           <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">자료</h2>
           <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+            className={view === 'list' ? 'flex flex-col divide-y divide-[var(--border)] border-y border-[var(--border)]' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'}
             onClick={(e) => trackResultClick(e, '[data-card-id]', 'archive')}
             onAuxClick={(e) => trackResultClick(e, '[data-card-id]', 'archive')}
           >
-            {sorted.map((it) => <ItemCard key={it.id} item={it} />)}
+            {sorted.map((it) => view === 'list' ? <ItemRow key={it.id} item={it} /> : <ItemCard key={it.id} item={it} />)}
           </div>
         </section>
       )}

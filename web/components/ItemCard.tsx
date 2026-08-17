@@ -1,5 +1,5 @@
 import type { ArchiveItem } from '@/types/db';
-import { ExternalLink, Download, PlayCircle, FileText } from 'lucide-react';
+import { ExternalLink, Download, PlayCircle } from 'lucide-react';
 
 // 카드 배지 라벨 — 메뉴(kind)와 무관하게 실제 매체 기준.
 // 콘텐츠 메뉴 안의 PDF 가이드도 '파일' 배지를 달아야 다운로드 여부를 즉시 알 수 있음.
@@ -164,16 +164,11 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
       data-card-id={item.id}
       data-card-kind={item.kind}
       data-card-category={item.main_category}
-      className="group flex items-center gap-3 px-3 py-2.5 rounded-[var(--r-sm)] hover:bg-[var(--card)] transition"
+      className="group flex items-start justify-between gap-3 px-3 py-3 min-h-[44px] hover:bg-[var(--card)] transition"
     >
-      <span className={video ? 'text-[var(--danger)] shrink-0' : 'text-[var(--muted-2)] shrink-0'}>
-        {video ? <PlayCircle size={18} /> : <FileText size={16} />}
-      </span>
-      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <span className="font-semibold text-[14px] truncate group-hover:text-[var(--accent)]">
-          {item.title}
-        </span>
-        <div className="flex items-center gap-2 text-[11px] text-[var(--muted-2)]">
+      <div className="min-w-0 flex flex-col gap-1">
+        {/* 배지(형식) 위로 */}
+        <div className="flex items-center gap-1.5 flex-wrap text-[11px] text-[var(--muted-2)]">
           <span
             className={`slds-badge ${
               video ? 'app-badge-video' : isFile ? 'app-badge-file' : 'app-badge-insight'
@@ -181,9 +176,18 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
           >
             {topBadge}
           </span>
+          <span className="truncate">{item.main_category}{item.sub_category ? ` · ${item.sub_category}` : ''}</span>
         </div>
+        <h3 className="font-semibold text-[14px] leading-snug truncate group-hover:text-[var(--accent)] transition">
+          {item.title}
+        </h3>
+        {item.summary && (
+          <p className="text-[12px] text-[var(--muted)] line-clamp-1 leading-relaxed">
+            {item.summary}
+          </p>
+        )}
       </div>
-      <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted-2)] group-hover:text-[var(--accent)] transition shrink-0">
+      <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted-2)] group-hover:text-[var(--accent)] transition shrink-0 pt-0.5">
         <ActionIcon size={14} aria-hidden />
         {actionLabel}
       </span>
