@@ -1,10 +1,8 @@
 import Link from 'next/link';
 import { UILinkButton } from '@/components/ui/Button';
 import { getAuthState } from '@/lib/auth';
-import { createAdminClient } from '@/lib/supabase/server';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { DashboardTabs } from './DashboardTabs';
-import type { FeedbackRow } from './feedback-actions';
 
 export const metadata = {
   title: '지표 대시보드 · 맥비 자료실',
@@ -39,12 +37,6 @@ export default async function AdminDashboardPage() {
     );
   }
 
-  const sb = createAdminClient();
-  const { data: feedback } = await sb
-    .from('feedback')
-    .select('id, kind, message, email, page_url, submitted_at, resolved, reviewer_note')
-    .order('submitted_at', { ascending: false });
-
   return (
     <div className="flex flex-col gap-4">
       <section className="flex flex-col gap-1">
@@ -60,12 +52,20 @@ export default async function AdminDashboardPage() {
             {displayName ?? user.email} · {role === 'admin' ? '관리자' : '운영진'}
           </span>
         </div>
-        <p className="text-sm text-[var(--muted)]">
-          PostHog 실시간 지표. 트래픽·콘텐츠·전환 세 관점으로 정리했어요.
-        </p>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-sm text-[var(--muted)]">
+            PostHog 실시간 지표. 트래픽·콘텐츠·전환 세 관점으로 정리했어요.
+          </p>
+          <Link
+            href="/admin/feedback"
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--accent)] hover:underline"
+          >
+            <MessageSquare size={14} aria-hidden /> 의견 관리 (VOC)
+          </Link>
+        </div>
       </section>
 
-      <DashboardTabs feedback={(feedback ?? []) as FeedbackRow[]} />
+      <DashboardTabs />
     </div>
   );
 }

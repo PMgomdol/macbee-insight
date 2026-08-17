@@ -1,9 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Tabs, { Tab, TabList, TabPanel } from '@atlaskit/tabs';
-import { BarChart3, MousePointerClick, TrendingUp, ExternalLink, MessageSquare } from 'lucide-react';
-import { FeedbackList } from './FeedbackList';
-import type { FeedbackRow } from './feedback-actions';
+import { BarChart3, MousePointerClick, TrendingUp, ExternalLink } from 'lucide-react';
 
 type Board = {
   key: string;
@@ -41,9 +39,8 @@ const BOARDS: Board[] = [
   },
 ];
 
-export function DashboardTabs({ feedback }: { feedback: FeedbackRow[] }) {
+export function DashboardTabs() {
   const [selected, setSelected] = useState(0);
-  const openCount = feedback.filter((f) => !f.resolved).length;
 
   return (
     <div className="flex flex-col gap-3">
@@ -60,12 +57,6 @@ export function DashboardTabs({ feedback }: { feedback: FeedbackRow[] }) {
               </Tab>
             );
           })}
-          <Tab key="feedback">
-            <span className="inline-flex items-center gap-1.5">
-              <MessageSquare size={14} aria-hidden />
-              의견{openCount > 0 ? ` ${openCount}` : ''}
-            </span>
-          </Tab>
         </TabList>
         {BOARDS.map((b) => (
           <TabPanel key={b.key}>
@@ -93,9 +84,6 @@ export function DashboardTabs({ feedback }: { feedback: FeedbackRow[] }) {
             </div>
           </TabPanel>
         ))}
-        <TabPanel key="feedback">
-          <FeedbackList feedback={feedback} />
-        </TabPanel>
       </Tabs>
 
       <p className="text-[11px] text-[var(--muted-2)]">
