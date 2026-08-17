@@ -18,6 +18,8 @@ const PRIORITY: { key: 'low' | 'normal' | 'high'; label: string; cls: string }[]
   { key: 'normal', label: '보통', cls: 'text-[var(--muted)]' },
   { key: 'low', label: '낮음', cls: 'text-[var(--muted-2)]' },
 ];
+const PRI_ORDER: Record<string, number> = { high: 0, normal: 1, low: 2 };
+const OPEN_STATUSES: FeedbackStatus[] = ['new', 'in_progress', 'hold'];
 
 function fmt(s: string | null): string {
   if (!s) return '';
@@ -43,6 +45,9 @@ export function CSBoard({ tickets: initial, assignees }: { tickets: FeedbackTick
       ),
     [tickets, fAssignee, fKind, q]
   );
+
+  const openCount = tickets.filter((t) => OPEN_STATUSES.includes(t.status)).length;
+  const highCount = tickets.filter((t) => t.priority === 'high' && t.status !== 'closed').length;
 
   function patchLocal(id: number, p: Partial<FeedbackTicket>) {
     setTickets((prev) => prev.map((t) => (t.id === id ? { ...t, ...p } : t)));
@@ -87,13 +92,18 @@ export function CSBoard({ tickets: initial, assignees }: { tickets: FeedbackTick
             <option key={a} value={a}>{a}</option>
           ))}
         </select>
-        <span className="text-[11px] text-[var(--muted-2)] ml-auto">총 {tickets.length}건 · 표시 {filtered.length}건</span>
+        <span className="text-[11px] text-[var(--muted-2)] ml-auto">
+          미처리 <b className="text-[var(--fg)]">{openCount}</b> · 높음{' '}
+          <b className={highCount ? 'text-[var(--danger-text)]' : 'text-[var(--fg)]'}>{highCount}</b> · 전체 {tickets.length}
+        </span>
       </div>
 
       {/* 칸반 */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
         {COLUMNS.map((col) => {
-          const items = filtered.filter((t) => t.status === col.key);
+          const items = filtered
+            .filter((t) => t.status === col.key)
+            .sort((a, b) => PRI_ORDER[a.priority] - PRI_ORDER[b.priority]); // 높은 우선순위 먼저 (동순위는 최신순 유지)
           return (
             <div
               key={col.key}
@@ -147,7 +157,10 @@ export function CSBoard({ tickets: initial, assignees }: { tickets: FeedbackTick
         })}
       </div>
 
-      <p className="text-[11px] text-[var(--muted-2)]">카드를 다른 칸으로 끌어다 놓으면 상태가 바뀌어요. 카드를 누르면 상세·답변을 볼 수 있어요.</p>
+      <p className="text-[11px] text-[var(--muted-2)]">
+        카드를 다른 칸으로 끌어다 놓으면 상태가 바뀌어요. 카드를 누르면 상세에서 담당자·상태·답변을 처리할 수 있어요.
+        (모바일에선 카드를 눌러 상태를 바꿔주세요.)
+      </p>
 
       {open && (
         <Drawer

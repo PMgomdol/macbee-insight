@@ -34,9 +34,11 @@ type Patch = Partial<Pick<FeedbackTicket, 'status' | 'assignee' | 'priority' | '
 export async function updateTicket(id: number, patch: Patch): Promise<{ ok: boolean; error?: string }> {
   await guard();
   const sb = createAdminClient();
+  // 레거시 resolved 컬럼을 status와 동기화 (종료=처리완료)
+  const extra = patch.status ? { resolved: patch.status === 'closed' } : {};
   const { error } = await sb
     .from('feedback')
-    .update({ ...patch, updated_at: new Date().toISOString() })
+    .update({ ...patch, ...extra, updated_at: new Date().toISOString() })
     .eq('id', id);
   if (error) return { ok: false, error: error.message };
   return { ok: true };
@@ -53,7 +55,7 @@ export async function saveAnswer(
   const answeredAt = new Date().toISOString();
   const { error } = await sb
     .from('feedback')
-    .update({ answer, answered_at: answeredAt, answered_by: answeredBy, status: 'answered', updated_at: answeredAt })
+    .update({ answer, answered_at: answeredAt, answered_by: answeredBy, status: 'answered', resolved: false, updated_at: answeredAt })
     .eq('id', id);
   if (error) return { ok: false, error: error.message };
   return { ok: true, answeredBy, answeredAt };
