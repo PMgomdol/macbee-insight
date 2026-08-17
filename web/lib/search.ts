@@ -16,6 +16,8 @@ export type SearchOpts = {
   sort?: 'relevance' | 'recent' | 'popular';
 };
 
+export type ScoredArchive = { item: ArchiveItem; score: number };
+
 export type SearchResult = {
   archives: ArchiveItem[];
   faqs: FAQItem[];
@@ -23,6 +25,8 @@ export type SearchResult = {
   synonymCanonical?: string;
   /** 정확 매칭 0건 → 초성/유사도 폴백으로 찾은 결과임을 표시 */
   fallback?: 'chosung' | 'fuzzy';
+  /** 관련도 점수 동봉 (컷오프 실험용 — prod /search는 사용 안 함) */
+  archivesScored?: ScoredArchive[];
 };
 
 function clean(s: string) {
@@ -75,7 +79,7 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
     const index = await getSearchIndex();
     const ids = chosungMatch(index, safe);
     const archives = await fetchByIds(sb, ids, opts);
-    return { archives, faqs: [], expanded: [safe], fallback: 'chosung' };
+    return { archives, archivesScored: archives.map((item) => ({ item, score: 0 })), faqs: [], expanded: [safe], fallback: 'chosung' };
   }
 
   const archP = Promise.all(
@@ -164,13 +168,14 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
     if (ids.length > 0) {
       const archives = await fetchByIds(sb, ids, opts);
       if (archives.length > 0) {
-        return { archives, faqs: [], expanded: terms, synonymCanonical: syn?.canonical, fallback: 'fuzzy' };
+        return { archives, archivesScored: archives.map((item) => ({ item, score: 0 })), faqs: [], expanded: terms, synonymCanonical: syn?.canonical, fallback: 'fuzzy' };
       }
     }
   }
 
   return {
     archives: archivesArr.map((x) => x.item),
+    archivesScored: archivesArr,
     faqs,
     expanded: terms,
     synonymCanonical: syn?.canonical,
