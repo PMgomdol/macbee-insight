@@ -2,6 +2,15 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function proxy(request: NextRequest) {
+  // 옛 도메인(중복 프로젝트) 유입 → 신규 canonical로 영구 리다이렉트.
+  // 같은 레포가 여러 Vercel 프로젝트에 배포돼 macbee-insight.vercel.app 등이 살아있음 —
+  // 실사이트(macbe-archive.*) 호스트는 매칭 안 되니 영향 없음. 경로·쿼리 보존.
+  const host = request.headers.get('host') ?? '';
+  if (host.includes('macbee-insight')) {
+    const { pathname, search } = new URL(request.url);
+    return NextResponse.redirect(`https://macbe-archive.com${pathname}${search}`, 308);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   // 세션 쿠키 없는 게스트는 Supabase Auth 호출 스킵 — 매 nav마다 ~150ms 네트워크 콜 제거
