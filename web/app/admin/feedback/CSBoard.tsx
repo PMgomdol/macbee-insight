@@ -185,11 +185,16 @@ function Drawer({
     });
   }
 
-  function onSaveAnswer() {
+  // 답변 = 기록 + 메일앱 열기를 한 번에. 실제 발송은 담당자 개인 메일에서.
+  function onReply() {
     start(async () => {
       const r = await saveAnswer(ticket.id, answer);
-      if (r.ok) onPatch(ticket.id, { answer, status: 'answered', answered_by: r.answeredBy ?? null, answered_at: r.answeredAt ?? null });
-      else alert('저장 실패: ' + r.error);
+      if (!r.ok) {
+        alert('저장 실패: ' + r.error);
+        return;
+      }
+      onPatch(ticket.id, { answer, status: 'answered', answered_by: r.answeredBy ?? null, answered_at: r.answeredAt ?? null });
+      if (mailto) window.location.href = mailto;
     });
   }
 
@@ -272,50 +277,44 @@ function Drawer({
           </label>
         </div>
 
-        {/* 답변 */}
+        {/* 처리 메모 (내부 기록) — 항상 */}
         <div className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-semibold text-[var(--muted)]">답변</span>
-          <textarea
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            rows={5}
-            placeholder="제출자에게 보낼 답변을 작성하세요."
-            className="app-input text-sm p-2 rounded-[var(--r-sm)] resize-y"
-          />
-          <div className="flex items-center gap-2 flex-wrap">
-            <UIButton size="sm" onClick={onSaveAnswer} disabled={pending || !answer.trim()}>
-              답변 저장
-            </UIButton>
-            {mailto ? (
-              <a
-                href={mailto}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--r-md)] text-xs border border-[var(--border)] hover:bg-[var(--card)] transition-colors"
-              >
-                <Send size={12} aria-hidden /> 메일로 답장
-              </a>
-            ) : (
-              <span className="text-[11px] text-[var(--muted-2)]">이메일이 없어 메일 발송 불가</span>
-            )}
-          </div>
-          {ticket.answered_by && (
-            <span className="text-[11px] text-[var(--muted-2)]">최근 답변: {ticket.answered_by} · {fmt(ticket.answered_at)}</span>
-          )}
-        </div>
-
-        {/* 내부 메모 */}
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[11px] font-semibold text-[var(--muted)]">내부 메모 (운영진만)</span>
+          <span className="text-[11px] font-semibold text-[var(--muted)]">처리 메모 (내부 기록)</span>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            rows={2}
-            placeholder="담당자·처리 내용 등 내부 기록"
+            rows={3}
+            placeholder="이 의견을 어떻게 처리했는지 기록 (예: 카드 태그 수정 반영함 / 메일로 답변 완료)"
             className="app-input text-sm p-2 rounded-[var(--r-sm)] resize-y"
           />
           <UIButton variant="secondary" size="sm" onClick={onSaveNote} disabled={pending} className="w-fit">
             메모 저장
           </UIButton>
         </div>
+
+        {/* 답변 (제출자에게 메일) — 이메일 있을 때만 */}
+        {ticket.email ? (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-semibold text-[var(--muted)]">답변 (제출자에게 메일)</span>
+            <textarea
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              rows={5}
+              placeholder="제출자에게 보낼 답변. '메일로 답장 보내기'를 누르면 기록되고, 내 메일앱이 열려요(보내기는 직접)."
+              className="app-input text-sm p-2 rounded-[var(--r-sm)] resize-y"
+            />
+            <UIButton size="sm" onClick={onReply} disabled={pending || !answer.trim()} className="w-fit">
+              <Send size={12} aria-hidden /> 메일로 답장 보내기
+            </UIButton>
+            {ticket.answered_by && (
+              <span className="text-[11px] text-[var(--muted-2)]">최근 답변: {ticket.answered_by} · {fmt(ticket.answered_at)}</span>
+            )}
+          </div>
+        ) : (
+          <p className="text-[11px] text-[var(--muted-2)]">
+            제출자 이메일이 없어 메일 답변은 불가해요(수정 요청형). 위 처리 메모에 기록하고 상태만 바꿔주세요.
+          </p>
+        )}
       </div>
     </div>
   );
