@@ -20,11 +20,19 @@ const PRIORITY: { key: 'low' | 'normal' | 'high'; label: string; cls: string }[]
 ];
 const PRI_ORDER: Record<string, number> = { high: 0, normal: 1, low: 2 };
 const OPEN_STATUSES: FeedbackStatus[] = ['new', 'in_progress', 'hold'];
+// '종료' 칼럼은 최근 N일만 펼쳐 보이고 지난 건은 '더 보기'로 접는다 (DB엔 그대로 보존)
+const RECENT_DAYS = 14;
+const RECENT_MS = RECENT_DAYS * 86400000;
 
 function fmt(s: string | null): string {
   if (!s) return '';
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
   return m ? `${m[2]}.${m[3]} ${m[4]}:${m[5]}` : s;
+}
+
+function toTime(s: string | null): number {
+  const t = s ? new Date(s).getTime() : 0;
+  return Number.isNaN(t) ? 0 : t;
 }
 
 export function CSBoard({ tickets: initial, assignees }: { tickets: FeedbackTicket[]; assignees: string[] }) {
@@ -34,6 +42,7 @@ export function CSBoard({ tickets: initial, assignees }: { tickets: FeedbackTick
   const [fAssignee, setFAssignee] = useState('');
   const [fKind, setFKind] = useState('');
   const [q, setQ] = useState('');
+  const [showOldClosed, setShowOldClosed] = useState(false);
 
   const filtered = useMemo(
     () =>
@@ -101,9 +110,16 @@ export function CSBoard({ tickets: initial, assignees }: { tickets: FeedbackTick
       {/* 칸반 */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
         {COLUMNS.map((col) => {
-          const items = filtered
+          const all = filtered
             .filter((t) => t.status === col.key)
             .sort((a, b) => PRI_ORDER[a.priority] - PRI_ORDER[b.priority]); // 높은 우선순위 먼저 (동순위는 최신순 유지)
+          // '종료'는 최근 2주만 펼쳐 보이고 지난 건은 접는다
+          const collapsible = col.key === 'closed';
+          const cutoff = Date.now() - RECENT_MS;
+          const oldCount = collapsible ? all.filter((t) => toTime(t.updated_at ?? t.submitted_at) < cutoff).length : 0;
+          const items = collapsible && !showOldClosed
+            ? all.filter((t) => toTime(t.updated_at ?? t.submitted_at) >= cutoff)
+            : all;
           return (
             <div
               key={col.key}
@@ -116,7 +132,7 @@ export function CSBoard({ tickets: initial, assignees }: { tickets: FeedbackTick
             >
               <div className="flex items-center justify-between px-1">
                 <span className="text-xs font-bold text-[var(--fg)]">{col.label}</span>
-                <span className="text-[11px] text-[var(--muted-2)]">{items.length}</span>
+                <span className="text-[11px] text-[var(--muted-2)]">{all.length}</span>
               </div>
               {items.map((t) => {
                 const pri = PRIORITY.find((p) => p.key === t.priority);
@@ -151,7 +167,16 @@ export function CSBoard({ tickets: initial, assignees }: { tickets: FeedbackTick
                   </button>
                 );
               })}
-              {items.length === 0 && <span className="text-[11px] text-[var(--muted-2)] px-1 py-2">비어 있음</span>}
+              {collapsible && oldCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowOldClosed((v) => !v)}
+                  className="text-[11px] text-[var(--accent)] hover:underline px-1 py-1 text-left"
+                >
+                  {showOldClosed ? '지난 종료 접기' : `지난 종료 ${oldCount}건 더 보기`}
+                </button>
+              )}
+              {all.length === 0 && <span className="text-[11px] text-[var(--muted-2)] px-1 py-2">비어 있음</span>}
             </div>
           );
         })}

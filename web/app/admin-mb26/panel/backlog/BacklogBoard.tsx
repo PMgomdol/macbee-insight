@@ -18,11 +18,18 @@ const PRIORITY: { key: 'low' | 'normal' | 'high'; label: string; cls: string }[]
 const PRI_ORDER: Record<string, number> = { high: 0, normal: 1, low: 2 };
 // 운영 백로그 기본 분류 — 기존 데이터의 분류와 합쳐 드롭다운에 노출
 const PRESET_CATEGORIES = ['자료 등록', '자료 정리/분류', '기능 개선', '버그 수정', '문의 대응', '운영', '기타'];
+// '완료' 칼럼은 최근 N일만 펼쳐 보이고 지난 건은 '더 보기'로 접는다 (DB엔 그대로 보존)
+const RECENT_MS = 14 * 86400000;
 
 function fmt(s: string | null): string {
   if (!s) return '';
   const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m ? `${m[2]}.${m[3]}` : s;
+}
+
+function toTime(s: string | null): number {
+  const t = s ? new Date(s).getTime() : 0;
+  return Number.isNaN(t) ? 0 : t;
 }
 
 export function BacklogBoard({ items: initial, assignees }: { items: BacklogItem[]; assignees: string[] }) {
@@ -31,6 +38,7 @@ export function BacklogBoard({ items: initial, assignees }: { items: BacklogItem
   const [dragId, setDragId] = useState<number | null>(null);
   const [fAssignee, setFAssignee] = useState('');
   const [q, setQ] = useState('');
+  const [showOldDone, setShowOldDone] = useState(false);
   const [adding, startAdd] = useTransition();
 
   // 추가 폼
@@ -146,9 +154,16 @@ export function BacklogBoard({ items: initial, assignees }: { items: BacklogItem
       {/* 칸반 */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         {COLUMNS.map((col) => {
-          const list = filtered
+          const all = filtered
             .filter((t) => t.status === col.key)
             .sort((a, b) => PRI_ORDER[a.priority] - PRI_ORDER[b.priority]);
+          // '완료'는 최근 2주만 펼쳐 보이고 지난 건은 접는다
+          const collapsible = col.key === 'done';
+          const cutoff = Date.now() - RECENT_MS;
+          const oldCount = collapsible ? all.filter((t) => toTime(t.updated_at ?? t.created_at) < cutoff).length : 0;
+          const list = collapsible && !showOldDone
+            ? all.filter((t) => toTime(t.updated_at ?? t.created_at) >= cutoff)
+            : all;
           return (
             <div
               key={col.key}
@@ -158,7 +173,7 @@ export function BacklogBoard({ items: initial, assignees }: { items: BacklogItem
             >
               <div className="flex items-center justify-between px-1">
                 <span className="text-xs font-bold text-[var(--fg)]">{col.label}</span>
-                <span className="text-[11px] text-[var(--muted-2)]">{list.length}</span>
+                <span className="text-[11px] text-[var(--muted-2)]">{all.length}</span>
               </div>
               {list.map((t) => {
                 const pri = PRIORITY.find((p) => p.key === t.priority);
@@ -189,7 +204,16 @@ export function BacklogBoard({ items: initial, assignees }: { items: BacklogItem
                   </button>
                 );
               })}
-              {list.length === 0 && <span className="text-[11px] text-[var(--muted-2)] px-1 py-2">비어 있음</span>}
+              {collapsible && oldCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowOldDone((v) => !v)}
+                  className="text-[11px] text-[var(--accent)] hover:underline px-1 py-1 text-left"
+                >
+                  {showOldDone ? '지난 완료 접기' : `지난 완료 ${oldCount}건 더 보기`}
+                </button>
+              )}
+              {all.length === 0 && <span className="text-[11px] text-[var(--muted-2)] px-1 py-2">비어 있음</span>}
             </div>
           );
         })}
