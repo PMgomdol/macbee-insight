@@ -1,7 +1,9 @@
 'use client';
 import { useState } from 'react';
 import Tabs, { Tab, TabList, TabPanel } from '@atlaskit/tabs';
-import { BarChart3, MousePointerClick, TrendingUp, ExternalLink } from 'lucide-react';
+import { BarChart3, MousePointerClick, TrendingUp, ExternalLink, MessageSquare } from 'lucide-react';
+import { FeedbackList } from './FeedbackList';
+import type { FeedbackRow } from './feedback-actions';
 
 type Board = {
   key: string;
@@ -39,9 +41,9 @@ const BOARDS: Board[] = [
   },
 ];
 
-export function DashboardTabs() {
+export function DashboardTabs({ feedback }: { feedback: FeedbackRow[] }) {
   const [selected, setSelected] = useState(0);
-  const current = BOARDS[selected];
+  const openCount = feedback.filter((f) => !f.resolved).length;
 
   return (
     <div className="flex flex-col gap-3">
@@ -58,6 +60,12 @@ export function DashboardTabs() {
               </Tab>
             );
           })}
+          <Tab key="feedback">
+            <span className="inline-flex items-center gap-1.5">
+              <MessageSquare size={14} aria-hidden />
+              의견{openCount > 0 ? ` ${openCount}` : ''}
+            </span>
+          </Tab>
         </TabList>
         {BOARDS.map((b) => (
           <TabPanel key={b.key}>
@@ -85,10 +93,13 @@ export function DashboardTabs() {
             </div>
           </TabPanel>
         ))}
+        <TabPanel key="feedback">
+          <FeedbackList feedback={feedback} />
+        </TabPanel>
       </Tabs>
 
       <p className="text-[11px] text-[var(--muted-2)]">
-        데이터는 최대 몇 분 지연될 수 있어요. 실제 트래픽이 쌓여야 그래프가 채워집니다.
+        데이터는 최대 몇 분 지연될 수 있어요. 실제 트래픽이 쌓이면 그래프가 채워져요.
       </p>
     </div>
   );

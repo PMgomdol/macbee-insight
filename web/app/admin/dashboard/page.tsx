@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { UILinkButton } from '@/components/ui/Button';
 import { getAuthState } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/server';
 import { ArrowLeft } from 'lucide-react';
 import { DashboardTabs } from './DashboardTabs';
+import type { FeedbackRow } from './feedback-actions';
 
 export const metadata = {
   title: '지표 대시보드 · 맥비 자료실',
@@ -37,6 +39,12 @@ export default async function AdminDashboardPage() {
     );
   }
 
+  const sb = createAdminClient();
+  const { data: feedback } = await sb
+    .from('feedback')
+    .select('id, kind, message, email, page_url, submitted_at, resolved, reviewer_note')
+    .order('submitted_at', { ascending: false });
+
   return (
     <div className="flex flex-col gap-4">
       <section className="flex flex-col gap-1">
@@ -57,7 +65,7 @@ export default async function AdminDashboardPage() {
         </p>
       </section>
 
-      <DashboardTabs />
+      <DashboardTabs feedback={(feedback ?? []) as FeedbackRow[]} />
     </div>
   );
 }
