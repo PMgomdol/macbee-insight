@@ -42,7 +42,8 @@ export default async function AdminPage() {
   // 3개 쿼리 병렬 — 순차 round-trip 제거 (이전: 직렬 → ~800ms+, 병렬 → ~200ms)
   const sbaShared = createAdminClient();
   const [reviewerCountRes, pendingRes, pendingAppsRes] = await Promise.all([
-    sb.from('profile').select('id', { count: 'exact', head: true }).in('role', ['reviewer', 'admin']),
+    // RLS(profile_self_select)로 본인 행만 보여 count가 1로 나오던 버그 → admin 클라이언트로 전체 집계
+    sbaShared.from('profile').select('id', { count: 'exact', head: true }).in('role', ['reviewer', 'admin']),
     sb
       .from('staging_proposal')
       .select('id, title, summary, external_url, file_url, main_category, sub_category, tags, format, proposer, proposed_at, approvers')
@@ -128,7 +129,7 @@ export default async function AdminPage() {
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <span className="font-semibold text-sm">{app.display_name}</span>
                     <span className="text-[11px] text-[var(--muted)]">
-                      {at ? new Date(at).toLocaleString('ko-KR') : '신청 시각을 모르겠어요'}
+                      {at ? new Date(at).toLocaleString('ko-KR') : '신청 시각 정보가 없어요'}
                     </span>
                   </div>
                   {reason && (
