@@ -45,6 +45,7 @@ export function SubmitForm({ categories }: Props) {
   const [forceSubmit, setForceSubmit] = useState(false);
   const [submitDone, setSubmitDone] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   // 점진적 노출 — URL 분석 성공·파일 업로드 완료·직접 입력 선택 시점부터 상세 필드 노출.
   // 분석이 실패해도 (브런치·페이월·JS 렌더 사이트) 직접 입력으로 등록할 수 있어야 함
@@ -157,7 +158,17 @@ export function SubmitForm({ categories }: Props) {
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
-    if (!f) return;
+    if (f) handleFile(f);
+  }
+
+  function onDrop(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    setDragOver(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) handleFile(f);
+  }
+
+  function handleFile(f: File) {
     setFileName(f.name);
     setFileUrl('');
     setAnalyzeMsg(null);
@@ -306,11 +317,22 @@ export function SubmitForm({ categories }: Props) {
           <label className="text-sm font-medium">
             파일 <span className="text-[var(--danger)]">*</span>
           </label>
-          <label className="flex items-center justify-center gap-2 px-4 py-6 rounded-[var(--r-lg)] border-2 border-dashed border-[var(--border-strong)] bg-[var(--card)] cursor-pointer hover:border-[var(--accent)] transition-colors">
+          <label
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+            className={`flex items-center justify-center gap-2 px-4 py-8 rounded-[var(--r-lg)] border-2 border-dashed bg-[var(--card)] cursor-pointer transition-colors ${
+              dragOver ? 'border-[var(--accent)] bg-[var(--accent-bg)]' : 'border-[var(--border-strong)] hover:border-[var(--accent)]'
+            }`}
+          >
             <input type="file" onChange={onFileChange} className="hidden" />
             {uploading ? <Spinner size="small" /> : <Upload size={16} />}
             <span className="text-sm">
-              {uploading ? '올리고 있어요...' : fileName ?? '파일 고르기 (10MB까지)'}
+              {uploading
+                ? '올리고 있어요...'
+                : dragOver
+                  ? '여기에 놓으면 올라가요'
+                  : fileName ?? '파일을 끌어다 놓거나 눌러서 고르기 (10MB까지)'}
             </span>
           </label>
           {fileUrl && (
