@@ -1,11 +1,40 @@
 'use server';
 
 import { after } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath, updateTag } from 'next/cache';
 import { notifyProposalResult } from '@/lib/notify';
 
 const MIN_APPROVALS = 2;
+
+/** 승인 전 제안 내용 보정 — 운영진이 제목·요약·분류·태그·형식을 다듬어 저장. */
+export async function updateProposal(
+  id: string,
+  fields: { title: string; summary: string; main_category: string; sub_category: string; tags: string[]; format: string }
+) {
+  const me = await getCurrentUser();
+  if (!me) throw new Error('로그인해주세요');
+  const role = await getRole();
+  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
+  const title = fields.title.trim();
+  if (!title) throw new Error('제목은 비울 수 없어요');
+
+  const sb = createAdminClient();
+  const { error } = await sb
+    .from('staging_proposal')
+    .update({
+      title,
+      summary: fields.summary.trim() || null,
+      main_category: fields.main_category.trim() || null,
+      sub_category: fields.sub_category.trim() || null,
+      tags: fields.tags.length ? fields.tags : null,
+      format: fields.format.trim() || null,
+    })
+    .eq('id', id)
+    .eq('status', 'pending'); // 이미 처리된 건 수정 금지
+  if (error) throw new Error('수정에 실패했어요 — ' + error.message);
+  revalidatePath('/admin-mb26/panel');
+}
 
 async function getCurrentUser(): Promise<{ email: string; id: string } | null> {
   const sb = await createClient();

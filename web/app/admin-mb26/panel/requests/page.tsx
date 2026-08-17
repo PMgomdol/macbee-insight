@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { getAuthState } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/server';
+import { getCategories } from '@/lib/queries';
 import { UILinkButton } from '@/components/ui/Button';
 import { ExternalLink } from 'lucide-react';
 import { ApproveButton, ForceApproveButton, RejectButton } from '../buttons';
+import { ProposalEditor } from '../ProposalEditor';
 
 export const metadata = { title: '자료등록요청 · 운영/관리' };
 
@@ -36,14 +38,16 @@ export default async function RequestsPage() {
   }
 
   const sb = createAdminClient();
-  const [countRes, pendingRes] = await Promise.all([
+  const [countRes, pendingRes, cats] = await Promise.all([
     sb.from('profile').select('id', { count: 'exact', head: true }).in('role', ['reviewer', 'admin']),
     sb
       .from('staging_proposal')
       .select('id, title, summary, external_url, file_url, main_category, sub_category, tags, format, proposer, proposed_at, approvers')
       .eq('status', 'pending')
       .order('proposed_at', { ascending: true }),
+    getCategories(),
   ]);
+  const categories = cats.map((c) => ({ main_category: c.main_category, sub_category: c.sub_category }));
   const reviewerCount = countRes.count ?? 0;
   const items = (pendingRes.data ?? []) as Proposal[];
 
@@ -85,13 +89,7 @@ export default async function RequestsPage() {
               id={`p-${p.id}`}
               className="app-card flex flex-col gap-2 p-3 sm:p-4 min-w-0 bg-[var(--card)] scroll-mt-20 target:ring-2 target:ring-[var(--accent)]"
             >
-              <div className="flex items-center gap-2 text-[11px] text-[var(--muted-2)] flex-wrap">
-                <span className="font-medium">{p.main_category ?? '미분류'}</span>
-                {p.sub_category && <span>· {p.sub_category}</span>}
-                {p.format && <span className="slds-badge">{p.format}</span>}
-              </div>
-              <h3 className="font-semibold text-sm break-words">{p.title}</h3>
-              {p.summary && <p className="text-xs text-[var(--muted)] leading-relaxed break-words">{p.summary}</p>}
+              <ProposalEditor proposal={p} categories={categories} />
               {(p.external_url || p.file_url) && (
                 <a
                   href={p.external_url ?? p.file_url ?? '#'}
@@ -102,13 +100,6 @@ export default async function RequestsPage() {
                   <ExternalLink size={12} className="shrink-0 mt-0.5" aria-hidden />
                   <span>{p.external_url ?? p.file_url}</span>
                 </a>
-              )}
-              {p.tags && p.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {p.tags.map((t) => (
-                    <span key={t} className="slds-badge">{t}</span>
-                  ))}
-                </div>
               )}
               <div className="flex items-center justify-between gap-2 mt-1 pt-2 border-t border-[var(--border)] flex-wrap">
                 <div className="text-[11px] text-[var(--muted-2)] flex flex-col gap-0.5">
