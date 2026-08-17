@@ -16,6 +16,8 @@ const PRIORITY: { key: 'low' | 'normal' | 'high'; label: string; cls: string }[]
   { key: 'low', label: '낮음', cls: 'text-[var(--muted-2)]' },
 ];
 const PRI_ORDER: Record<string, number> = { high: 0, normal: 1, low: 2 };
+// 운영 백로그 기본 분류 — 기존 데이터의 분류와 합쳐 드롭다운에 노출
+const PRESET_CATEGORIES = ['자료 등록', '자료 정리/분류', '기능 개선', '버그 수정', '문의 대응', '운영', '기타'];
 
 function fmt(s: string | null): string {
   if (!s) return '';
@@ -34,10 +36,12 @@ export function BacklogBoard({ items: initial, assignees }: { items: BacklogItem
   // 추가 폼
   const [nTitle, setNTitle] = useState('');
   const [nCategory, setNCategory] = useState('');
+  const [nAssignee, setNAssignee] = useState('');
   const [nPriority, setNPriority] = useState<BacklogItem['priority']>('normal');
 
+  // 프리셋 + 실제 데이터에 쓰인 분류 합쳐서 드롭다운 목록
   const categories = useMemo(
-    () => [...new Set(items.map((i) => i.category).filter((c): c is string => !!c))],
+    () => [...new Set([...PRESET_CATEGORIES, ...items.map((i) => i.category).filter((c): c is string => !!c)])],
     [items]
   );
 
@@ -75,7 +79,7 @@ export function BacklogBoard({ items: initial, assignees }: { items: BacklogItem
   function addItem() {
     if (!nTitle.trim()) return;
     startAdd(async () => {
-      const r = await createBacklog({ title: nTitle, category: nCategory || undefined, priority: nPriority });
+      const r = await createBacklog({ title: nTitle, category: nCategory || undefined, assignee: nAssignee || undefined, priority: nPriority });
       if (!r.ok || !r.item) {
         alert('추가 실패: ' + r.error);
         return;
@@ -83,6 +87,7 @@ export function BacklogBoard({ items: initial, assignees }: { items: BacklogItem
       setItems((prev) => [r.item!, ...prev]);
       setNTitle('');
       setNCategory('');
+      setNAssignee('');
       setNPriority('normal');
     });
   }
@@ -100,17 +105,15 @@ export function BacklogBoard({ items: initial, assignees }: { items: BacklogItem
           placeholder="할 일 추가 (예: 게임기획 면접자료 카테고리 재분류)"
           className="app-input flex-1 min-w-[180px] text-sm py-1.5 px-2 rounded-[var(--r-sm)]"
         />
-        <input
-          value={nCategory}
-          onChange={(e) => setNCategory(e.target.value)}
-          list="backlog-cats"
-          placeholder="분류(선택)"
-          className="app-input text-xs py-1.5 px-2 rounded-[var(--r-sm)] w-28"
-        />
-        <datalist id="backlog-cats">
-          {categories.map((c) => <option key={c} value={c} />)}
-        </datalist>
-        <select value={nPriority} onChange={(e) => setNPriority(e.target.value as BacklogItem['priority'])} className="app-input text-xs py-1.5 rounded-[var(--r-sm)]">
+        <select value={nCategory} onChange={(e) => setNCategory(e.target.value)} className="app-input text-xs py-1.5 rounded-[var(--r-sm)]" aria-label="분류">
+          <option value="">분류(선택)</option>
+          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select value={nAssignee} onChange={(e) => setNAssignee(e.target.value)} className="app-input text-xs py-1.5 rounded-[var(--r-sm)]" aria-label="담당자">
+          <option value="">담당자(선택)</option>
+          {assignees.map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
+        <select value={nPriority} onChange={(e) => setNPriority(e.target.value as BacklogItem['priority'])} className="app-input text-xs py-1.5 rounded-[var(--r-sm)]" aria-label="우선순위">
           {PRIORITY.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
         </select>
         <UIButton size="sm" onClick={addItem} disabled={adding || !nTitle.trim()}>
@@ -280,16 +283,15 @@ function Drawer({
             className="app-input text-sm font-semibold py-1.5 px-2 rounded-[var(--r-sm)]"
             placeholder="제목"
           />
-          <input
+          <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            list="backlog-cats-drawer"
-            className="app-input text-xs py-1.5 px-2 rounded-[var(--r-sm)]"
-            placeholder="분류(선택)"
-          />
-          <datalist id="backlog-cats-drawer">
-            {categories.map((c) => <option key={c} value={c} />)}
-          </datalist>
+            className="app-input text-xs py-1.5 rounded-[var(--r-sm)]"
+            aria-label="분류"
+          >
+            <option value="">분류 없음</option>
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
           <textarea
             value={detail}
             onChange={(e) => setDetail(e.target.value)}
