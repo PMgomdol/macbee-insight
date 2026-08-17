@@ -49,6 +49,15 @@ type ResultPayload = {
   note?: string | null;
 };
 
+type FeedbackPayload = {
+  kind: string;
+  kindLabel: string;
+  message: string;
+  name?: string | null;
+  email?: string | null;
+  pageUrl?: string | null;
+};
+
 async function post(event: string, data: Record<string, unknown>) {
   const url = process.env.MAIL_WEBAPP_URL;
   const secret = process.env.MAIL_WEBAPP_SECRET;
@@ -82,4 +91,11 @@ export async function notifyProposalSubmitted(d: SubmittedPayload) {
 /** 승인/반려 결과 → 제안자에게 알림 */
 export function notifyProposalResult(d: ResultPayload) {
   return post('proposal_result', d);
+}
+
+/** 사용자 의견([의견 보내기]) → 운영진에게 알림 (수신자 자동 조회) */
+export async function notifyFeedbackSubmitted(d: FeedbackPayload) {
+  const admins = await reviewerEmails();
+  if (!admins.length) return; // 수신자 없음 — 발송 스킵
+  return post('feedback_submitted', { ...d, admins });
 }

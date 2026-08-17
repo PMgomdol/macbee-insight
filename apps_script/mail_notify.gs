@@ -4,6 +4,7 @@
  * 이벤트:
  *   proposal_submitted → 운영진에게 "새 자료 제안" 알림
  *   proposal_result    → 제안자에게 승인/반려 결과 알림
+ *   feedback_submitted → 운영진에게 "새 의견([의견 보내기])" 알림
  *
  * 보안:
  *   Script Property MAIL_SECRET과 일치해야 발송.
@@ -68,6 +69,7 @@ function doPost(e) {
   try {
     if (body.event === 'proposal_submitted') return mailJson_(sendProposalSubmitted_(data));
     if (body.event === 'proposal_result') return mailJson_(sendProposalResult_(data));
+    if (body.event === 'feedback_submitted') return mailJson_(sendFeedbackSubmitted_(data));
     return mailJson_({ ok: false, error: 'unknown event: ' + body.event });
   } catch (err) {
     return mailJson_({ ok: false, error: String(err) });
@@ -109,6 +111,44 @@ function sendProposalSubmitted_(d) {
   MailApp.sendEmail({
     to: recipients.join(','),
     subject: '[맥비 자료실] 새 자료 제안: ' + title,
+    body: lines.join('\n'),
+    name: MAIL_NOTIFY.SENDER_NAME,
+  });
+  return { ok: true, sent: recipients.join(',') };
+}
+
+/** 운영진에게 새 의견([의견 보내기]) 알림 */
+function sendFeedbackSubmitted_(d) {
+  var recipients = resolveRecipients_(d.admins);
+  if (!recipients.length) return { ok: false, error: 'no recipients' };
+
+  var kindLabel = String(d.kindLabel || d.kind || '의견');
+  var msg = String(d.message || '');
+  var snippet = msg.length > 50 ? msg.slice(0, 50) + '…' : msg;
+
+  var lines = [
+    '새 의견이 들어왔어요.',
+    '',
+    '종류: ' + kindLabel,
+    '',
+    '내용:',
+    msg,
+    '',
+  ];
+  var who = d.name ? String(d.name) : '';
+  if (d.email) who += (who ? ' ' : '') + '(' + d.email + ')';
+  lines.push('보낸 사람: ' + (who || '익명'));
+  if (d.email) lines.push('답장할 메일: ' + d.email);
+  else lines.push('(답장받을 이메일 없음 — 수정요청형)');
+  if (d.pageUrl) lines.push('남긴 페이지: ' + d.pageUrl);
+  lines.push('');
+  lines.push('처리하기: ' + MAIL_NOTIFY.SITE_URL + '/admin-mb26/panel/feedback');
+  lines.push('');
+  lines.push('— 맥비기획 자료실 자동 알림');
+
+  MailApp.sendEmail({
+    to: recipients.join(','),
+    subject: '[맥비 자료실] 새 의견(' + kindLabel + '): ' + snippet,
     body: lines.join('\n'),
     name: MAIL_NOTIFY.SENDER_NAME,
   });

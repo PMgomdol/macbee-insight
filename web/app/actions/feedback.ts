@@ -1,10 +1,12 @@
 'use server';
 
 import { createAdminClient } from '@/lib/supabase/server';
+import { notifyFeedbackSubmitted } from '@/lib/notify';
 
 export type FeedbackKind = 'suggestion' | 'bug' | 'inquiry' | 'praise';
 
 const KIND_SET: Set<FeedbackKind> = new Set(['suggestion', 'bug', 'inquiry', 'praise']);
+const KIND_LABEL: Record<FeedbackKind, string> = { suggestion: '제안', bug: '오류', inquiry: '문의', praise: '칭찬' };
 
 export async function submitFeedback(input: {
   kind: string;
@@ -39,6 +41,15 @@ export async function submitFeedback(input: {
       ({ error } = await sb.from('feedback').insert(base));
     }
     if (error) return { ok: false, error: '보내지 못했어요 — ' + error.message };
+    // 운영진 알림 — 실패해도 제출은 성공 처리 (notify는 throw 안 함)
+    await notifyFeedbackSubmitted({
+      kind,
+      kindLabel: KIND_LABEL[kind],
+      message,
+      name,
+      email,
+      pageUrl: input.pageUrl ?? null,
+    });
     return { ok: true };
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
