@@ -242,6 +242,11 @@ function Drawer({
 
         {/* 제출자 */}
         <div className="flex items-center gap-3 text-xs text-[var(--muted)] flex-wrap">
+          {ticket.name && (
+            <span className="inline-flex items-center gap-1 font-medium text-[var(--fg)]">
+              <User size={12} aria-hidden /> {ticket.name}
+            </span>
+          )}
           {ticket.email ? (
             <a href={`mailto:${ticket.email}`} className="inline-flex items-center gap-1 hover:text-[var(--accent)]">
               <Mail size={12} aria-hidden /> {ticket.email}

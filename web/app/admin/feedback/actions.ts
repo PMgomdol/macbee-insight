@@ -9,6 +9,7 @@ export type FeedbackTicket = {
   id: number;
   kind: string;
   message: string;
+  name: string | null;
   email: string | null;
   page_url: string | null;
   submitted_at: string | null;

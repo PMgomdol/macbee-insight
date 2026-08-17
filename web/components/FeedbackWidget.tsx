@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useTransition } from 'react';
 import { MessageCircle, X, CheckCircle2, AlertCircle } from 'lucide-react';
-import { UIButton } from '@/components/ui/Button';
+import { UIButton, UILinkButton } from '@/components/ui/Button';
 import Textfield from '@atlaskit/textfield';
 import TextArea from '@atlaskit/textarea';
 import { submitFeedback, type FeedbackKind } from '@/app/actions/feedback';
@@ -18,6 +18,7 @@ export function FeedbackWidget() {
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<FeedbackKind>('suggestion');
   const [message, setMessage] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [pending, startTransition] = useTransition();
   const [status, setStatus] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
@@ -43,6 +44,7 @@ export function FeedbackWidget() {
   function reset() {
     setKind('suggestion');
     setMessage('');
+    setName('');
     setEmail('');
     setStatus(null);
   }
@@ -55,6 +57,7 @@ export function FeedbackWidget() {
       const r = await submitFeedback({
         kind,
         message,
+        name: name || undefined,
         email: email || undefined,
         pageUrl: typeof window !== 'undefined' ? window.location.pathname + window.location.search : undefined,
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
@@ -97,13 +100,32 @@ export function FeedbackWidget() {
             <div className="flex items-start justify-between gap-3 p-4 border-b border-[var(--border)]">
               <div className="flex flex-col">
                 <h2 id="feedback-title" className="font-bold text-base">의견 보내기</h2>
-                <p className="text-xs text-[var(--muted)] mt-0.5">개선 제안·버그·문의 뭐든 편하게 보내주세요.</p>
+                {status?.kind !== 'ok' && (
+                  <p className="text-xs text-[var(--muted)] mt-0.5">개선 제안·버그·문의 뭐든 편하게 보내주세요.</p>
+                )}
               </div>
               <button type="button" onClick={close} aria-label="닫기" className="p-1 -m-1 text-[var(--muted)] hover:text-[var(--fg)]">
                 <X size={18} aria-hidden />
               </button>
             </div>
 
+            {status?.kind === 'ok' ? (
+              <div className="p-6 flex flex-col items-center text-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-[var(--success)]/12 flex items-center justify-center">
+                  <CheckCircle2 size={28} className="text-[var(--success)]" aria-hidden />
+                </div>
+                <h3 className="font-bold text-lg">의견을 보냈어요</h3>
+                <p className="text-sm text-[var(--muted)] leading-relaxed">
+                  소중한 의견 고마워요. 운영진이 꼭 확인할게요.
+                  {email.trim() ? ' 남겨주신 이메일로 답변드릴게요.' : ''}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2 w-full mt-2">
+                  <UIButton variant="secondary" onClick={reset} className="flex-1">의견 하나 더 보내기</UIButton>
+                  <UILinkButton href="/" onClick={close} className="flex-1">홈으로</UILinkButton>
+                </div>
+                <button type="button" onClick={close} className="text-xs text-[var(--muted)] hover:text-[var(--fg)] mt-1">닫기</button>
+              </div>
+            ) : (
             <form onSubmit={onSubmit} className="p-4 flex flex-col gap-3">
               {/* 종류 세그먼트 */}
               <div>
@@ -145,57 +167,52 @@ export function FeedbackWidget() {
                 <div className="text-[10px] text-[var(--muted-2)] text-right mt-1">{message.length}/5000</div>
               </div>
 
-              <div>
-                <label htmlFor="fb-email" className="text-xs font-medium text-[var(--muted)] block mb-1.5">
-                  이메일 <span className="text-[var(--muted-2)] font-normal">(답변 받고 싶으면)</span>
-                </label>
-                <Textfield
-                  id="fb-email"
-                  type="email"
-                  value={email}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="fb-name" className="text-xs font-medium text-[var(--muted)] block mb-1.5">
+                    이름 <span className="text-[var(--muted-2)] font-normal">· 선택</span>
+                  </label>
+                  <Textfield
+                    id="fb-name"
+                    value={name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
+                    maxLength={80}
+                    placeholder="닉네임 또는 이름"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="fb-email" className="text-xs font-medium text-[var(--muted)] block mb-1.5">
+                    이메일 <span className="text-[var(--muted-2)] font-normal">· 선택</span>
+                  </label>
+                  <Textfield
+                    id="fb-email"
+                    type="email"
+                    value={email}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                </div>
               </div>
+              <p className="text-[11px] text-[var(--muted-2)] -mt-1.5">답변이 필요하시면 이메일을 남겨주세요. 남겨주신 주소로 운영진이 회신드려요.</p>
 
-              {status && (
+              {status?.kind === 'error' && (
                 <div
-                  role={status.kind === 'error' ? 'alert' : 'status'}
-                  className={`flex items-start gap-2 p-2.5 rounded-[var(--r-sm)] border text-xs ${
-                    status.kind === 'error'
-                      ? 'bg-[var(--danger)]/10 text-[var(--fg)]'
-                      : 'bg-[var(--success)]/10 text-[var(--fg)]'
-                  }`}
+                  role="alert"
+                  className="flex items-start gap-2 p-2.5 rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--danger)]/10 text-xs text-[var(--fg)]"
                 >
-                  {status.kind === 'error' ? (
-                    <AlertCircle size={14} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
-                  ) : (
-                    <CheckCircle2 size={14} className="text-[var(--success)] shrink-0 mt-0.5" aria-hidden />
-                  )}
+                  <AlertCircle size={14} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
                   <span className="flex-1">{status.text}</span>
                 </div>
               )}
 
               <div className="flex gap-2 mt-2">
-                {status?.kind === 'ok' ? (
-                  <>
-                    <UIButton variant="secondary" onClick={reset} className="flex-1">하나 더 보내기</UIButton>
-                    <UIButton onClick={close} className="flex-1">닫기</UIButton>
-                  </>
-                ) : (
-                  <>
-                    <UIButton variant="secondary" onClick={close} className="flex-1">취소</UIButton>
-                    <UIButton
-                      type="submit"
-                      disabled={pending || !message.trim()}
-                      className="flex-1"
-                    >
-                      {pending ? '보내는 중…' : '보내기'}
-                    </UIButton>
-                  </>
-                )}
+                <UIButton variant="secondary" onClick={close} className="flex-1">취소</UIButton>
+                <UIButton type="submit" disabled={pending || !message.trim()} className="flex-1">
+                  {pending ? '보내는 중…' : '보내기'}
+                </UIButton>
               </div>
             </form>
+            )}
           </div>
         </div>
       )}

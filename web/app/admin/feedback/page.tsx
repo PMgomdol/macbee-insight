@@ -8,8 +8,9 @@ import type { FeedbackTicket } from './actions';
 
 export const metadata = { title: '의견 관리 · 맥비 자료실' };
 
-const SELECT =
+const SELECT_BASE =
   'id, kind, message, email, page_url, submitted_at, status, assignee, priority, answer, answered_at, answered_by, reviewer_note, updated_at';
+const SELECT = 'name, ' + SELECT_BASE;
 
 export default async function FeedbackPage() {
   const { user, isReviewer, displayName, role } = await getAuthState();
@@ -25,7 +26,17 @@ export default async function FeedbackPage() {
   }
 
   const sb = createAdminClient();
-  const { data, error } = await sb.from('feedback').select(SELECT).order('submitted_at', { ascending: false });
+  const primary = await sb.from('feedback').select(SELECT).order('submitted_at', { ascending: false });
+  let rows: Record<string, unknown>[] = (primary.data as Record<string, unknown>[] | null) ?? [];
+  let error = primary.error;
+  // name 컬럼 미생성(마이그레이션 전)일 수 있음 → 이름 없이 재조회
+  if (error) {
+    const retry = await sb.from('feedback').select(SELECT_BASE).order('submitted_at', { ascending: false });
+    if (!retry.error) {
+      rows = ((retry.data as Record<string, unknown>[] | null) ?? []).map((r) => ({ ...r, name: null }));
+      error = null;
+    }
+  }
 
   const header = (
     <section className="flex flex-col gap-1">
@@ -68,7 +79,7 @@ create index if not exists idx_feedback_status on feedback (status, submitted_at
 
   const { data: profs } = await sb.from('profile').select('display_name').in('role', ['reviewer', 'admin']);
   const assignees = (profs ?? []).map((p) => p.display_name).filter((n): n is string => !!n);
-  const tickets = (data ?? []) as FeedbackTicket[];
+  const tickets = rows as unknown as FeedbackTicket[];
 
   return (
     <div className="flex flex-col gap-4">
