@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BarChart3, Inbox, MessageSquare, UserPlus } from 'lucide-react';
+import { Home, BarChart3, Inbox, MessageSquare, UserPlus, KanbanSquare } from 'lucide-react';
 
 type NavItem = { href: string; label: string; icon: typeof Home; exact?: boolean };
 
@@ -11,6 +11,7 @@ const ITEMS: NavItem[] = [
   { href: '/admin/dashboard', label: '대시보드', icon: BarChart3 },
   { href: '/admin/requests', label: '자료등록요청', icon: Inbox },
   { href: '/admin/feedback', label: 'VOC', icon: MessageSquare },
+  { href: '/admin/backlog', label: '백로그', icon: KanbanSquare },
   { href: '/admin/invite', label: '운영진 초대', icon: UserPlus },
 ];
 

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getAuthState } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/server';
 import { UILinkButton } from '@/components/ui/Button';
-import { Inbox, MessageSquare, UserPlus, ChevronRight } from 'lucide-react';
+import { Inbox, MessageSquare, UserPlus, KanbanSquare, ChevronRight } from 'lucide-react';
 
 function roleLabel(r: string | null): string {
   if (r === 'admin') return '관리자';
@@ -35,17 +35,20 @@ export default async function AdminHome() {
   }
 
   const sb = createAdminClient();
-  const [req, voc, apps, revs] = await Promise.all([
+  const [req, voc, apps, revs, back] = await Promise.all([
     sb.from('staging_proposal').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     sb.from('feedback').select('id', { count: 'exact', head: true }).in('status', ['new', 'in_progress', 'hold']),
     sb.from('profile').select('id', { count: 'exact', head: true }).eq('role', 'pending'),
     sb.from('profile').select('id', { count: 'exact', head: true }).in('role', ['reviewer', 'admin']),
+    // 백로그 테이블 미생성 시 count=null → 0 (에러는 결과에 담겨 페이지는 안 깨짐)
+    sb.from('backlog').select('id', { count: 'exact', head: true }).neq('status', 'done'),
   ]);
   const reviewerCount = revs.count ?? 0;
 
   const rows = [
     { href: '/admin/requests', icon: Inbox, label: '자료 등록요청', count: req.count ?? 0, hint: '멤버가 제안한 자료 검토·승인' },
     { href: '/admin/feedback', icon: MessageSquare, label: '미처리 VOC', count: voc.count ?? 0, hint: '사용자 의견 처리·답변' },
+    { href: '/admin/backlog', icon: KanbanSquare, label: '진행 중 백로그', count: back.count ?? 0, hint: '운영진 공용 작업 보드' },
     { href: '/admin/invite', icon: UserPlus, label: '운영진 신청', count: apps.count ?? 0, hint: '새 운영진 승인·초대' },
   ];
 
