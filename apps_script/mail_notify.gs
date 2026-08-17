@@ -19,7 +19,7 @@
  */
 
 var MAIL_NOTIFY = {
-  SITE_URL: 'https://macbee-insight.vercel.app',
+  SITE_URL: 'https://macbe-archive.com',
   SENDER_NAME: '맥비기획 자료실',
   // Vercel이 운영진 목록(data.admins)을 넘기지 못한 경우의 폴백만.
   DEFAULT_ADMINS: ['asa067714@gmail.com'],

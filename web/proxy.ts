@@ -27,8 +27,14 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // 로그인 사용자만 세션 갱신
-  await supabase.auth.getUser();
+  // 세션 갱신 — 매 nav마다 getUser() 네트워크 검증하면 로그인 사용자(운영진)의
+  // 모든 탭 이동이 ~수백ms씩 느려진다. 토큰이 아직 싱싱하면 쿠키 로컬 확인만 하고,
+  // 만료 임박(2분 이내)·세션 없음일 때만 getUser로 검증+토큰 갱신(setAll로 새 쿠키 기록).
+  const { data: { session } } = await supabase.auth.getSession();
+  const now = Math.floor(Date.now() / 1000);
+  if (!session || (session.expires_at ?? 0) - now < 120) {
+    await supabase.auth.getUser();
+  }
 
   return supabaseResponse;
 }

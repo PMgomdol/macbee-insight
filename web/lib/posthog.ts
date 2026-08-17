@@ -25,6 +25,9 @@ export function getPosthog(): Promise<any> | null {
           capture_pageview: false,
           capture_pageleave: true,
           persistence: 'localStorage+cookie',
+          // 세션 리코딩(rrweb) OFF — 대시보드는 전량 이벤트 기반이라 녹화 불필요.
+          // 켜두면 admin(테이블·칸반 등 DOM 변화 큰 화면)에서 심한 렉 유발.
+          disable_session_recording: true,
           autocapture: {
             dom_event_allowlist: ['click', 'submit', 'change'],
           },
