@@ -250,8 +250,10 @@ function heuristic(url: string, meta: { title: string; description: string }): O
   const t = meta.title.toLowerCase();
   const d = meta.description.toLowerCase();
   const blob = `${url} ${t} ${d}`;
-  let main = '기획/PM';
-  let sub = '프로세스';
+  // 신호 없으면 분류를 지어내지 않고 빈값 — 폼에서 '선택' 안내로 두고 사용자가 직접 고른다.
+  // (기존엔 기획/PM·프로세스를 강제해 잘못된 값이 미리 선택돼 보였음)
+  let main = '';
+  let sub = '';
 
   if (/figma|피그마|sketch|스케치|ui|ux|디자인|design/.test(blob)) {
     main = 'UX/디자인';

@@ -102,6 +102,7 @@ export type AnalyzeResult = {
   publishedAt?: string | null;
   finalUrl?: string;
   aiUsed?: boolean;
+  lowConfidence?: boolean;
   duplicate?: DuplicateMatch | null;
 };
 
@@ -263,19 +264,6 @@ export async function analyzeFile(fileUrl: string, fileName: string): Promise<An
     findDuplicate('', fileUrl),
   ]);
 
-  let cls;
-  if (inline) {
-    // 시각 분석 — Gemini가 파일을 직접 본다
-    cls = await classify(fileUrl, { title: base, description: '' }, inline);
-  } else {
-    // 폴백: 본문 텍스트 추출 (PDF가 18MB 초과거나 DOCX/TXT 등)
-    const bodyText = await extractFileText(fileUrl, ext);
-    const description = bodyText
-      ? bodyText
-      : `업로드 파일 (${ext.toUpperCase() || '?'}) — 본문 추출 불가, 파일명만 기반 분류`;
-    cls = await classify(fileUrl, { title: base, description });
-  }
-
   // format은 확장자로 강제 보정 (AI가 파일명·본문 보고 잘못 추정하는 케이스 방지)
   // 이미지(png/jpg 등)는 AI가 보고 판단한 format(템플릿/가이드 등) 그대로 신뢰
   const fmtByExt: Record<string, string> = {
@@ -285,6 +273,35 @@ export async function analyzeFile(fileUrl: string, fileName: string): Promise<An
     xlsx: '템플릿', xls: '템플릿',
     hwp: '기획서', hwpx: '기획서',
   };
+
+  let cls;
+  if (inline) {
+    // 시각 분석 — Gemini가 파일을 직접 본다
+    cls = await classify(fileUrl, { title: base, description: '' }, inline);
+  } else {
+    // 폴백: 본문 텍스트 추출 (PDF가 18MB 초과거나 DOCX/TXT 등)
+    const bodyText = await extractFileText(fileUrl, ext);
+    // 내용을 전혀 못 읽는 파일(zip·구 바이너리 등) — 파일명만으로 요약·분류를 지어내면
+    // 잘못된 값이 미리 채워져 오히려 헷갈린다. 비워두고 직접 입력하도록 유도.
+    if (!bodyText) {
+      return {
+        ok: true,
+        title: base,
+        summary: '',
+        mainCategory: '',
+        subCategory: '',
+        tags: [],
+        format: fmtByExt[ext] ?? '',
+        isFile: true,
+        publishedAt: null,
+        aiUsed: false,
+        lowConfidence: true,
+        duplicate,
+      };
+    }
+    cls = await classify(fileUrl, { title: base, description: bodyText });
+  }
+
   const format = fmtByExt[ext] ?? cls.format;
 
   return {

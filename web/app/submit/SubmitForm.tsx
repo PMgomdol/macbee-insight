@@ -119,9 +119,11 @@ export function SubmitForm({ categories }: Props) {
     setAnalyzed(true);
     setAnalyzeMsg({
       kind: 'ok',
-      text: r.aiUsed
-        ? 'AI가 자동으로 채워뒀어요. 내용을 확인하고 등록해주세요.'
-        : '메타 정보로 채워뒀어요. 내용을 확인하고 등록해주세요.',
+      text: r.lowConfidence
+        ? '이 파일은 내용을 자동으로 읽지 못했어요. 제목·설명·분류를 직접 입력해주세요.'
+        : r.aiUsed
+          ? 'AI가 자동으로 채워뒀어요. 내용을 확인하고 등록해주세요.'
+          : '메타 정보로 채워뒀어요. 내용을 확인하고 등록해주세요.',
     });
     track('submit_analyzed', { mode, ai_used: !!r.aiUsed });
   }
