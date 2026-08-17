@@ -15,7 +15,7 @@ export default async function Admin1229Page() {
   const { user, role, displayName, isReviewer } = await getAuthState();
 
   if (user) {
-    if (isReviewer) redirect('/admin');
+    if (isReviewer) redirect('/admin-mb26/panel');
     return <Logged user={user} displayName={displayName} role={role} />;
   }
   return <Guest />;
@@ -71,7 +71,7 @@ function Logged({ user, displayName, role }: { user: { email?: string }; display
             기존 운영진이 신청을 확인하면 자료 검토 페이지로 들어갈 수 있어요.
             승인되면 새로고침했을 때 검토 페이지로 바로 이동해요.
           </p>
-          <Link href="/admin1229" className="self-start text-xs text-[var(--accent)] hover:underline mt-1">새로고침</Link>
+          <Link href="/admin-mb26" className="self-start text-xs text-[var(--accent)] hover:underline mt-1">새로고침</Link>
         </div>
       ) : (
         <ApplyReviewerForm defaultName={fallbackName} />

@@ -15,7 +15,7 @@ export default async function AdminDashboardPage() {
       <div className="flex flex-col gap-3 max-w-md py-8 mx-auto">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">지표 대시보드</h1>
         <p className="text-sm text-[var(--muted)]">운영진만 볼 수 있어요.</p>
-        <UILinkButton href="/admin1229" className="w-fit">
+        <UILinkButton href="/admin-mb26" className="w-fit">
           로그인
         </UILinkButton>
       </div>
@@ -29,7 +29,7 @@ export default async function AdminDashboardPage() {
         <p className="text-sm text-[var(--muted)]">
           {user.email} 계정은 아직 운영진이 아니에요.
         </p>
-        <Link href="/admin1229" className="text-sm text-[var(--accent)] hover:underline">
+        <Link href="/admin-mb26" className="text-sm text-[var(--accent)] hover:underline">
           → 운영진 신청하러 가기
         </Link>
       </div>

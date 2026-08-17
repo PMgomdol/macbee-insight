@@ -5,7 +5,7 @@ import { Mail, Copy, Check } from 'lucide-react';
 import { UIButton } from '@/components/ui/Button';
 import Textfield from '@atlaskit/textfield';
 
-const PATH = '/admin1229';
+const PATH = '/admin-mb26';
 
 export function InvitePanel() {
   const [email, setEmail] = useState('');

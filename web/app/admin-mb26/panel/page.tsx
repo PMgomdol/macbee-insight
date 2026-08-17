@@ -20,7 +20,7 @@ export default async function AdminHome() {
       <div className="flex flex-col gap-3 max-w-md py-8">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">운영/관리</h1>
         <p className="text-sm text-[var(--muted)]">운영진으로 로그인해주세요.</p>
-        <UILinkButton href="/admin1229" className="w-fit">진입점으로 가기</UILinkButton>
+        <UILinkButton href="/admin-mb26" className="w-fit">진입점으로 가기</UILinkButton>
       </div>
     );
   }
@@ -29,7 +29,7 @@ export default async function AdminHome() {
       <div className="flex flex-col gap-3 max-w-md py-8">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">운영/관리</h1>
         <p className="text-sm text-[var(--muted)]">{user.email} 계정은 아직 운영진이 아니에요.</p>
-        <Link href="/admin1229" className="text-sm text-[var(--accent)] hover:underline">→ 운영진 신청하러 가기</Link>
+        <Link href="/admin-mb26" className="text-sm text-[var(--accent)] hover:underline">→ 운영진 신청하러 가기</Link>
       </div>
     );
   }
@@ -46,10 +46,10 @@ export default async function AdminHome() {
   const reviewerCount = revs.count ?? 0;
 
   const rows = [
-    { href: '/admin/requests', icon: Inbox, label: '자료 등록요청', count: req.count ?? 0, hint: '멤버가 제안한 자료 검토·승인' },
-    { href: '/admin/feedback', icon: MessageSquare, label: '미처리 VOC', count: voc.count ?? 0, hint: '사용자 의견 처리·답변' },
-    { href: '/admin/backlog', icon: KanbanSquare, label: '진행 중 백로그', count: back.count ?? 0, hint: '운영진 공용 작업 보드' },
-    { href: '/admin/invite', icon: UserPlus, label: '운영진 신청', count: apps.count ?? 0, hint: '새 운영진 승인·초대' },
+    { href: '/admin-mb26/panel/requests', icon: Inbox, label: '자료 등록요청', count: req.count ?? 0, hint: '멤버가 제안한 자료 검토·승인' },
+    { href: '/admin-mb26/panel/feedback', icon: MessageSquare, label: '미처리 VOC', count: voc.count ?? 0, hint: '사용자 의견 처리·답변' },
+    { href: '/admin-mb26/panel/backlog', icon: KanbanSquare, label: '진행 중 백로그', count: back.count ?? 0, hint: '운영진 공용 작업 보드' },
+    { href: '/admin-mb26/panel/invite', icon: UserPlus, label: '운영진 신청', count: apps.count ?? 0, hint: '새 운영진 승인·초대' },
   ];
 
   return (
@@ -65,7 +65,7 @@ export default async function AdminHome() {
       {reviewerCount < 2 && isAdmin && (
         <p className="text-xs text-[var(--warning)] rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--card)] p-2.5">
           지금 운영진이 {reviewerCount}명이에요. 자료 승인엔 2명이 필요한데, 관리자는 사유를 적고 단독 승인할 수 있어요.
-          <Link href="/admin/invite" className="text-[var(--accent)] hover:underline ml-1">운영진 초대 →</Link>
+          <Link href="/admin-mb26/panel/invite" className="text-[var(--accent)] hover:underline ml-1">운영진 초대 →</Link>
         </p>
       )}
 

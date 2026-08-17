@@ -10,7 +10,7 @@ export function LoginButton() {
     const sb = createClient();
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=/admin1229` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=/admin-mb26` },
     });
     if (error) {
       alert('로그인하지 못했어요 — ' + error.message);

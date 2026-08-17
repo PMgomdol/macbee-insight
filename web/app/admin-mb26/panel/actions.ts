@@ -82,7 +82,7 @@ export async function approveProposal(id: string) {
       after(() => notifyProposalResult({ to: row.proposer_email, title: row.title, approved: true }));
     }
   }
-  revalidatePath('/admin');
+  revalidatePath('/admin-mb26/panel');
 }
 
 /**
@@ -115,7 +115,7 @@ export async function forceApproveProposal(id: string, reason: string) {
   if (row.proposer_email) {
     after(() => notifyProposalResult({ to: row.proposer_email, title: row.title, approved: true }));
   }
-  revalidatePath('/admin');
+  revalidatePath('/admin-mb26/panel');
 }
 
 export async function rejectProposal(id: string, note: string) {
@@ -134,5 +134,5 @@ export async function rejectProposal(id: string, note: string) {
   if (row?.proposer_email) {
     after(() => notifyProposalResult({ to: row.proposer_email, title: row.title, approved: false, note: note || null }));
   }
-  revalidatePath('/admin');
+  revalidatePath('/admin-mb26/panel');
 }

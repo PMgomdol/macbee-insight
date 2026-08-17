@@ -30,7 +30,7 @@ export default async function RequestsPage() {
       <div className="flex flex-col gap-3 max-w-md py-8">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">자료등록요청</h1>
         <p className="text-sm text-[var(--muted)]">운영진만 볼 수 있어요.</p>
-        <UILinkButton href="/admin1229" className="w-fit">로그인</UILinkButton>
+        <UILinkButton href="/admin-mb26" className="w-fit">로그인</UILinkButton>
       </div>
     );
   }
@@ -70,7 +70,7 @@ export default async function RequestsPage() {
         {reviewerCount < 2 && isAdmin && (
           <p className="text-xs text-[var(--warning)] mt-1">
             운영진이 {reviewerCount}명이라 2인 승인이 어려워요. 관리자는 사유를 적고 <strong>단독 승인</strong>할 수 있어요.
-            <Link href="/admin/invite" className="text-[var(--accent)] hover:underline ml-1">운영진 초대 →</Link>
+            <Link href="/admin-mb26/panel/invite" className="text-[var(--accent)] hover:underline ml-1">운영진 초대 →</Link>
           </p>
         )}
       </section>

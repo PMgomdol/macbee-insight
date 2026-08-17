@@ -10,7 +10,7 @@ type State =
  * 로그인 영역 노출 정책:
  * - 일반 사용자(비로그인) 에게는 로그인 버튼 일체 노출 안 함
  * - 로그인된 사용자만 헤더 우상단에 이름·로그아웃 표시 (모든 페이지)
- * - 운영진 진입점은 비공개 URL `/admin1229` — 외부 NAV에 없음
+ * - 운영진 진입점은 비공개 URL `/admin-mb26` — 외부 NAV에 없음
  */
 export function AuthStatusClient({ state }: { state: State }) {
   const pathname = usePathname();

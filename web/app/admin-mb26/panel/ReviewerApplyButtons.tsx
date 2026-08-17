@@ -2,7 +2,7 @@
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { UIButton } from '@/components/ui/Button';
-import { approveReviewer, rejectReviewer } from '../admin1229/actions';
+import { approveReviewer, rejectReviewer } from '../actions';
 
 export function ReviewerApplyButtons({ profileId, isSelf = false }: { profileId: string; isSelf?: boolean }) {
   const [pending, startTransition] = useTransition();

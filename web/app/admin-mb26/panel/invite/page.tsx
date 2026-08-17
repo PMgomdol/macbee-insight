@@ -17,7 +17,7 @@ export default async function InvitePage() {
       <div className="flex flex-col gap-3 max-w-md py-8">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">운영진 초대</h1>
         <p className="text-sm text-[var(--muted)]">운영진만 볼 수 있어요.</p>
-        <UILinkButton href="/admin1229" className="w-fit">로그인</UILinkButton>
+        <UILinkButton href="/admin-mb26" className="w-fit">로그인</UILinkButton>
       </div>
     );
   }

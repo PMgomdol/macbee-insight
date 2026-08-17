@@ -18,7 +18,7 @@ export default async function FeedbackPage() {
       <div className="flex flex-col gap-3 max-w-md py-8 mx-auto">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">의견 관리</h1>
         <p className="text-sm text-[var(--muted)]">운영진만 볼 수 있어요.</p>
-        <UILinkButton href="/admin1229" className="w-fit">로그인</UILinkButton>
+        <UILinkButton href="/admin-mb26" className="w-fit">로그인</UILinkButton>
       </div>
     );
   }

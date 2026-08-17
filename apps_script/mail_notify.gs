@@ -101,7 +101,7 @@ function sendProposalSubmitted_(d) {
   if (who) lines.push('제안자: ' + who);
   lines.push('');
   // 딥링크 — 해당 제안 카드로 바로 이동 (admin 페이지가 #p-<id> 앵커 지원)
-  var reviewUrl = MAIL_NOTIFY.SITE_URL + '/admin' + (d.id ? '#p-' + d.id : '');
+  var reviewUrl = MAIL_NOTIFY.SITE_URL + '/admin-mb26/panel' + (d.id ? '#p-' + d.id : '');
   lines.push('바로 검토하기: ' + reviewUrl);
   lines.push('');
   lines.push('— 맥비기획 자료실 자동 알림');

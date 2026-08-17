@@ -54,8 +54,8 @@ export async function applyReviewer(
   if (r.error) return { ok: false, error: r.error.message };
 
   updateTag('profile');
-  revalidatePath('/admin1229');
-  revalidatePath('/admin');
+  revalidatePath('/admin-mb26');
+  revalidatePath('/admin-mb26/panel');
   return { ok: true };
 }
 
@@ -77,8 +77,8 @@ export async function approveReviewer(profileId: string): Promise<{ ok: boolean;
   if (error) return { ok: false, error: error.message };
 
   updateTag('profile');
-  revalidatePath('/admin');
-  revalidatePath('/admin1229');
+  revalidatePath('/admin-mb26/panel');
+  revalidatePath('/admin-mb26');
   return { ok: true };
 }
 
@@ -108,7 +108,7 @@ export async function rejectReviewer(profileId: string, reason: string): Promise
   if (r.error) return { ok: false, error: r.error.message };
 
   updateTag('profile');
-  revalidatePath('/admin');
-  revalidatePath('/admin1229');
+  revalidatePath('/admin-mb26/panel');
+  revalidatePath('/admin-mb26');
   return { ok: true };
 }
