@@ -187,35 +187,49 @@ export function SubmitForm({ categories }: Props) {
 
     track('submit_start', { mode: 'file' });
     startUpload(async () => {
-      // 1) 서버에서 업로드 허가증만 발급 (응답 수 바이트 — Vercel 4.5MB 캡 무관)
-      const ticket = await createUploadTicket(f.name, f.size);
-      if (!ticket.ok) {
-        setAnalyzeMsg({ kind: 'error', text: `파일을 못 올렸어요 — ${ticket.error}` });
-        return;
-      }
-      // 2) 파일 바이트는 브라우저 → Supabase로 직접 업로드
-      const sb = createBrowserSupabase();
-      const { error } = await sb.storage
-        .from(UPLOAD_BUCKET)
-        .uploadToSignedUrl(ticket.path, ticket.token, f, {
-          contentType: f.type || undefined,
+      try {
+        // 1) 서버에서 업로드 허가증만 발급 (응답 수 바이트 — Vercel 4.5MB 캡 무관)
+        const ticket = await createUploadTicket(f.name, f.size);
+        if (!ticket.ok) {
+          setAnalyzeMsg({ kind: 'error', text: `파일을 못 올렸어요 — ${ticket.error}` });
+          return;
+        }
+        // 2) 파일 바이트는 브라우저 → Supabase로 직접 업로드
+        const sb = createBrowserSupabase();
+        const { error } = await sb.storage
+          .from(UPLOAD_BUCKET)
+          .uploadToSignedUrl(ticket.path, ticket.token, f, {
+            contentType: f.type || undefined,
+          });
+        if (error) {
+          setAnalyzeMsg({
+            kind: 'error',
+            text: `파일을 못 올렸어요 — ${error.message}. 크기(10MB 이하)와 인터넷 연결을 확인하고 다시 시도해주세요.`,
+          });
+          return;
+        }
+        const uploadedUrl = ticket.publicUrl;
+        setFileUrl(uploadedUrl);
+        setAnalyzeMsg({ kind: 'ok', text: `파일을 올렸어요 (${fmtMB(f.size)}) · 분석 중...` });
+
+        // 파일 자동 분석 — 파일명 기반 classify로 제목·요약·카테고리·태그 자동 채움.
+        // 분석이 실패해도 파일은 이미 올라갔으니 페이지를 죽이지 말고 직접 입력으로 이어가게 한다.
+        startAnalyze(async () => {
+          try {
+            const ar = await analyzeFile(uploadedUrl, f.name);
+            applyAnalysis(ar);
+          } catch (e) {
+            setTitle(f.name.replace(/\.[^.]+$/, ''));
+            setAnalyzed(true);
+            setAnalyzeMsg({ kind: 'ok', text: '파일은 올라갔어요. 자동 분석은 실패해서 제목·설명을 직접 확인·입력해주세요.' });
+          }
         });
-      if (error) {
+      } catch (e) {
         setAnalyzeMsg({
           kind: 'error',
-          text: `파일을 못 올렸어요 — ${error.message}. 크기(10MB 이하)와 인터넷 연결을 확인하고 다시 시도해주세요.`,
+          text: '파일을 올리는 중에 문제가 생겼어요. 잠시 후 다시 시도하거나 URL로 등록해주세요.',
         });
-        return;
       }
-      const uploadedUrl = ticket.publicUrl;
-      setFileUrl(uploadedUrl);
-      setAnalyzeMsg({ kind: 'ok', text: `파일을 올렸어요 (${fmtMB(f.size)}) · 분석 중...` });
-
-      // 파일 자동 분석 — 파일명 기반 classify로 제목·요약·카테고리·태그 자동 채움
-      startAnalyze(async () => {
-        const ar = await analyzeFile(uploadedUrl, f.name);
-        applyAnalysis(ar);
-      });
     });
   }
 
