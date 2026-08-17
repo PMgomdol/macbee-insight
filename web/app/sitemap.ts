@@ -1,8 +1,9 @@
 import type { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/site';
 
 // 자료는 외부 링크라 개별 페이지가 없음 — 주요 라우트만
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = 'https://macbee-insight.vercel.app';
+  const base = SITE_URL;
   return ['', '/files', '/insights', '/faq', '/search', '/submit'].map((p) => ({
     url: `${base}${p}`,
     changeFrequency: 'daily',
