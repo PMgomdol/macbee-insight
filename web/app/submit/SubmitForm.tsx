@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import {
   Sparkles, Upload, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle,
 } from 'lucide-react';
@@ -46,6 +46,19 @@ export function SubmitForm({ categories }: Props) {
   const [submitDone, setSubmitDone] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  // 업로드·분석 진행률 — 서버액션이 실제 %를 안 주므로 경과시간 기반으로 90%까지
+  // 차오르게 하고(뒤로 갈수록 느리게) 완료 시 사라짐. 30초 정도 걸리는 대기를 시각화.
+  const busy = uploading || analyzing;
+  useEffect(() => {
+    if (!busy) { setProgress(0); return; }
+    setProgress(8);
+    const id = setInterval(() => {
+      setProgress((p) => (p >= 90 ? p : Math.min(90, p + (p < 50 ? 6 : p < 75 ? 3 : 1))));
+    }, 400);
+    return () => clearInterval(id);
+  }, [busy]);
 
   // 점진적 노출 — URL 분석 성공·파일 업로드 완료·직접 입력 선택 시점부터 상세 필드 노출.
   // 분석이 실패해도 (브런치·페이월·JS 렌더 사이트) 직접 입력으로 등록할 수 있어야 함
@@ -210,7 +223,7 @@ export function SubmitForm({ categories }: Props) {
         }
         const uploadedUrl = ticket.publicUrl;
         setFileUrl(uploadedUrl);
-        setAnalyzeMsg({ kind: 'ok', text: `파일을 올렸어요 (${fmtMB(f.size)}) · 분석 중...` });
+        setAnalyzeMsg({ kind: 'ok', text: `파일을 올렸어요 (${fmtMB(f.size)})` });
 
         // 파일 자동 분석 — 파일명 기반 classify로 제목·요약·카테고리·태그 자동 채움.
         // 분석이 실패해도 파일은 이미 올라갔으니 페이지를 죽이지 말고 직접 입력으로 이어가게 한다.
@@ -355,6 +368,23 @@ export function SubmitForm({ categories }: Props) {
               <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">{fileUrl}</a>
             </div>
           )}
+        </div>
+      )}
+
+      {busy && (
+        <div className="flex flex-col gap-1.5" role="status" aria-live="polite">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-[var(--muted)]">
+              {uploading ? '파일을 올리고 있어요' : '내용을 분석하고 있어요'} · 최대 30초 정도 걸릴 수 있어요
+            </span>
+            <span className="tabular-nums font-medium text-[var(--fg)]">{progress}%</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-[var(--border)] overflow-hidden">
+            <div
+              className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       )}
 
