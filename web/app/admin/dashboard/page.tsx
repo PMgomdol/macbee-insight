@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { UILinkButton } from '@/components/ui/Button';
 import { getAuthState } from '@/lib/auth';
-import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { DashboardTabs } from './DashboardTabs';
 
 export const metadata = {
@@ -40,29 +39,15 @@ export default async function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-4">
       <section className="flex flex-col gap-1">
-        <Link
-          href="/admin"
-          className="inline-flex items-center gap-1 text-xs text-[var(--muted)] hover:text-[var(--fg)] w-fit"
-        >
-          <ArrowLeft size={12} aria-hidden /> 운영진 영역으로
-        </Link>
-        <div className="flex items-baseline justify-between gap-3 flex-wrap mt-1">
+        <div className="flex items-baseline justify-between gap-3 flex-wrap">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">지표 대시보드</h1>
           <span className="text-xs text-[var(--muted-2)]">
             {displayName ?? user.email} · {role === 'admin' ? '관리자' : '운영진'}
           </span>
         </div>
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-sm text-[var(--muted)]">
-            PostHog 실시간 지표. 트래픽·콘텐츠·전환 세 관점으로 정리했어요.
-          </p>
-          <Link
-            href="/admin/feedback"
-            className="inline-flex items-center gap-1.5 text-sm text-[var(--accent)] hover:underline"
-          >
-            <MessageSquare size={14} aria-hidden /> 의견 관리 (VOC)
-          </Link>
-        </div>
+        <p className="text-sm text-[var(--muted)]">
+          PostHog 실시간 지표. 트래픽·콘텐츠·전환 세 관점으로 정리했어요.
+        </p>
       </section>
 
       <DashboardTabs />

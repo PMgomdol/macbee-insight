@@ -6,7 +6,7 @@ export async function FooterAdminLink() {
   if (!isReviewer) return null;
   return (
     <Link href="/admin" className="hover:text-white transition-colors">
-      운영진
+      운영/관리
     </Link>
   );
 }

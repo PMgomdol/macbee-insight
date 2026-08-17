@@ -1,5 +1,3 @@
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { UILinkButton } from '@/components/ui/Button';
 import { getAuthState } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/server';
@@ -40,10 +38,7 @@ export default async function FeedbackPage() {
 
   const header = (
     <section className="flex flex-col gap-1">
-      <Link href="/admin/dashboard" className="inline-flex items-center gap-1 text-xs text-[var(--muted)] hover:text-[var(--fg)] w-fit">
-        <ArrowLeft size={12} aria-hidden /> 대시보드로
-      </Link>
-      <div className="flex items-baseline justify-between gap-3 flex-wrap mt-1">
+      <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">의견 관리 (VOC)</h1>
         <span className="text-xs text-[var(--muted-2)]">{displayName ?? user.email} · {role === 'admin' ? '관리자' : '운영진'}</span>
       </div>
