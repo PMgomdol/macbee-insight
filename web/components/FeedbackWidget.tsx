@@ -90,12 +90,12 @@ export function FeedbackWidget() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="feedback-title"
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4 bg-black/40"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
           onClick={close}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-[var(--bg)] border border-[var(--border)] rounded-t-[var(--r-lg)] sm:rounded-[var(--r-md)] shadow-[var(--shadow-16)] w-full sm:max-w-md max-h-[90vh] overflow-y-auto flex flex-col"
+            className="bg-[var(--bg)] border border-[var(--border)] rounded-[var(--r-md)] shadow-[var(--shadow-3)] max-w-md w-full max-h-[90vh] overflow-y-auto flex flex-col"
           >
             <div className="flex items-start justify-between gap-3 p-4 border-b border-[var(--border)]">
               <div className="flex flex-col">
@@ -127,28 +127,27 @@ export function FeedbackWidget() {
               </div>
             ) : (
             <form onSubmit={onSubmit} className="p-4 flex flex-col gap-3">
-              {/* 종류 세그먼트 */}
-              <div>
-                <label className="text-xs font-medium text-[var(--muted)] block mb-1.5">종류</label>
-                <div role="radiogroup" className="grid grid-cols-4 gap-1 p-0.5 rounded-[var(--r-sm)] bg-[var(--card)] border border-[var(--border)]">
-                  {KINDS.map(({ v, label }) => {
-                    const active = kind === v;
-                    return (
-                      <button
-                        key={v}
-                        type="button"
-                        role="radio"
-                        aria-checked={active}
-                        onClick={() => setKind(v)}
-                        className={`px-2 py-1.5 rounded-[var(--r-sm)] text-xs font-medium transition ${
-                          active ? 'bg-[var(--bg)] shadow-[var(--shadow-2)] text-[var(--fg)]' : 'text-[var(--muted)] hover:text-[var(--fg)]'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
+              {/* 종류 — 밑줄 탭 (UI 규칙: 전환은 탭답게, 등록폼과 동일 패턴) */}
+              <div role="radiogroup" aria-label="종류" className="flex gap-1 border-b border-[var(--border)]">
+                {KINDS.map(({ v, label }) => {
+                  const active = kind === v;
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => setKind(v)}
+                      className={`px-3 py-2.5 text-sm -mb-px border-b-2 transition ${
+                        active
+                          ? 'border-[var(--accent)] text-[var(--accent)] font-semibold'
+                          : 'border-transparent text-[var(--muted)] hover:text-[var(--fg)]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
 
               <div>

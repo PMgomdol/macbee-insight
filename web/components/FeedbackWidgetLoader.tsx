@@ -23,24 +23,25 @@ export function FeedbackWidgetLoader() {
     };
   }, []);
 
-  if (!ready) {
-    // 초기 스켈레톤 FAB (실 위젯과 동일 위치·크기, 아이콘만)
-    return (
-      <button
-        type="button"
-        aria-label="의견 보내기"
-        onClick={() => setReady(true)}
-        style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
-        className="fixed z-40 right-5 sm:bottom-6 sm:right-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[var(--accent)] text-white font-semibold text-sm shadow-[var(--shadow-8)] hover:bg-[var(--accent-hover)] transition"
-      >
-        <MessageCircle size={16} aria-hidden />
-        의견 보내기
-      </button>
-    );
-  }
+  // 스켈레톤 FAB — 실 위젯 FAB와 동일 위치·크기·스타일. ready 전과 청크 로딩 중(Suspense
+  // fallback) 둘 다에 써서, 실 위젯으로 교체될 때 사라지는 틈(깜빡임)이 없게 한다.
+  const fab = (
+    <button
+      type="button"
+      aria-label="의견 보내기"
+      onClick={() => setReady(true)}
+      style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
+      className="fixed z-40 right-5 sm:bottom-6 sm:right-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[var(--accent)] text-white font-semibold text-sm shadow-[var(--shadow-8)] hover:bg-[var(--accent-hover)] transition"
+    >
+      <MessageCircle size={16} aria-hidden />
+      의견 보내기
+    </button>
+  );
+
+  if (!ready) return fab;
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={fab}>
       <FeedbackWidgetLazy />
     </Suspense>
   );
