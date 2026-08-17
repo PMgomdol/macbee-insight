@@ -500,7 +500,8 @@ const MIME_FALLBACK: Record<string, string> = {
   txt: 'text/plain',
 };
 
-export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB — 버킷 file_size_limit과 일치
+// 'use server' 파일은 async 함수만 export 가능 (Next 16) — 내부 상수는 export 금지
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB — 버킷 file_size_limit과 일치
 
 /**
  * 업로드 허가증(signed upload URL) 발급.
