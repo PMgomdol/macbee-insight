@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>맥비 자료실 운영 가이드</title>
+<meta name="description" content="맥비 자료실 운영진을 위한 관리자 화면 사용 안내 — 로그인부터 자료 승인·의견 관리·백로그까지.">
+<style>
+  :root {
+    --bg: #F6F7F9;
+    --surface: #FFFFFF;
+    --surface-2: #FBFBFC;
+    --ink: #1A1C21;
+    --muted: #5A616E;
+    --muted-2: #8B92A0;
+    --border: #E6E8EC;
+    --border-strong: #D3D7DE;
+    --accent: #1868DB;
+    --accent-ink: #FFFFFF;
+    --accent-bg: #E9F0FD;
+    --accent-border: #BBD2F6;
+    --success: #1F8A5B;
+    --warning: #C56A12;
+    --warning-bg: #FBEEDD;
+    --danger: #D23F34;
+    --r-sm: 4px;
+    --r-md: 8px;
+    --r-lg: 14px;
+    --shadow: 0 1px 2px rgba(20,25,35,.06), 0 6px 20px rgba(20,25,35,.05);
+    --shadow-sm: 0 1px 2px rgba(20,25,35,.08);
+    --maxw: 1120px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+
+  header.top { background: linear-gradient(180deg, var(--surface), var(--surface-2)); border-bottom: 1px solid var(--border); }
+  .top-inner { max-width: var(--maxw); margin: 0 auto; padding: 44px 28px 40px; }
+  .brand { display: inline-flex; align-items: center; gap: 9px; font-size: 12.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); background: var(--accent-bg); border: 1px solid var(--accent-border); padding: 5px 11px; border-radius: 999px; }
+  .brand .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  header.top h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.12; letter-spacing: -.02em; font-weight: 800; margin: 18px 0 10px; text-wrap: balance; }
+  header.top .lede { font-size: 17px; color: var(--muted); max-width: 60ch; margin: 0; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 24px; font-size: 13.5px; color: var(--muted); }
+  .meta-row b { color: var(--ink); font-weight: 600; }
+
+  .layout { max-width: var(--maxw); margin: 0 auto; padding: 40px 28px 96px; display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 48px; align-items: start; }
+  nav.toc { position: sticky; top: 24px; font-size: 13.5px; display: flex; flex-direction: column; gap: 2px; }
+  nav.toc .toc-label { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-2); margin: 0 0 10px 10px; }
+  nav.toc a { display: flex; gap: 10px; align-items: baseline; color: var(--muted); text-decoration: none; padding: 7px 10px; border-radius: var(--r-sm); border-left: 2px solid transparent; transition: background .12s, color .12s; }
+  nav.toc a:hover { background: var(--surface); color: var(--ink); }
+  nav.toc a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  nav.toc a .n { color: var(--muted-2); font-variant-numeric: tabular-nums; font-size: 12px; min-width: 14px; }
+
+  main { min-width: 0; }
+  section { scroll-margin-top: 24px; margin-bottom: 56px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .eyebrow .idx { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: var(--r-sm); background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); font-size: 12px; font-weight: 700; }
+  h2 { font-size: 25px; font-weight: 750; letter-spacing: -.015em; margin: 12px 0 8px; line-height: 1.25; text-wrap: balance; }
+  section > p { color: var(--muted); margin: 0 0 18px; max-width: 68ch; }
+  h3 { font-size: 16px; font-weight: 700; margin: 26px 0 10px; letter-spacing: -.01em; }
+  strong { font-weight: 700; color: var(--ink); }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .86em; background: var(--surface); border: 1px solid var(--border); padding: 1px 6px; border-radius: var(--r-sm); color: var(--accent); word-break: break-all; }
+
+  ol.steps { list-style: none; counter-reset: s; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+  ol.steps > li { position: relative; counter-increment: s; padding-left: 42px; min-height: 28px; color: var(--ink); }
+  ol.steps > li::before { content: counter(s); position: absolute; left: 0; top: -1px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  ol.steps > li .sub { color: var(--muted); font-size: 14.5px; }
+
+  ul.plain { margin: 4px 0 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  ul.plain > li { position: relative; padding-left: 20px; color: var(--muted); }
+  ul.plain > li::before { content: ""; position: absolute; left: 4px; top: 11px; width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong); }
+  ul.plain > li b { color: var(--ink); }
+
+  .note { border: 1px solid var(--border); border-left: 3px solid var(--accent); background: var(--surface); border-radius: var(--r-md); padding: 14px 16px; margin: 18px 0; font-size: 14.5px; color: var(--muted); }
+  .note.warn { border-left-color: var(--warning); }
+  .note b, .note strong { color: var(--ink); }
+  .note .tag { font-weight: 700; color: var(--accent); margin-right: 6px; }
+  .note.warn .tag { color: var(--warning); }
+
+  figure.shot { margin: 22px 0 6px; }
+  .frame { border: 1px solid var(--border-strong); border-radius: var(--r-lg); background: var(--surface); overflow: hidden; box-shadow: var(--shadow); }
+  .frame .bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  .frame .lights { display: flex; gap: 6px; }
+  .frame .lights i { width: 11px; height: 11px; border-radius: 50%; background: var(--border-strong); }
+  .frame .url { flex: 1; font-size: 12.5px; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; font-family: ui-monospace, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  figcaption { font-size: 13px; color: var(--muted-2); margin-top: 10px; text-align: center; }
+
+  .app { display: grid; grid-template-columns: 176px minmax(0,1fr); min-height: 240px; }
+  .lnb { border-right: 1px solid var(--border); padding: 14px 10px; background: var(--surface-2); display: flex; flex-direction: column; gap: 3px; }
+  .lnb .it { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: var(--r-sm); font-size: 13.5px; color: var(--muted); font-weight: 500; }
+  .lnb .it svg { width: 15px; height: 15px; flex: none; }
+  .lnb .it.active { background: var(--accent-bg); color: var(--accent); font-weight: 650; }
+  .lnb .it .badge { margin-left: auto; background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; min-width: 17px; height: 17px; border-radius: 999px; display: grid; place-items: center; padding: 0 4px; }
+  .canvas { padding: 18px 20px; min-width: 0; }
+  .canvas .h { font-size: 16px; font-weight: 750; margin: 0 0 3px; }
+  .canvas .sub { font-size: 12.5px; color: var(--muted); margin: 0 0 14px; }
+
+  .mcard { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); padding: 12px 14px; box-shadow: var(--shadow-sm); }
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 2px 7px; }
+  .badge.blue { color: var(--accent); background: var(--accent-bg); border-color: var(--accent-border); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 650; padding: 6px 13px; border-radius: var(--r-sm); border: 1px solid transparent; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.ghost { background: var(--surface); color: var(--muted); border-color: var(--border-strong); }
+  .btn.danger { background: var(--surface); color: var(--danger); border-color: var(--border-strong); }
+
+  .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+  .col { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: 9px; display: flex; flex-direction: column; gap: 8px; }
+  .col .ch { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; }
+  .col .ch .cn { color: var(--muted-2); font-weight: 600; }
+  .kcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 9px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 6px; }
+  .kcard .t { font-size: 12.5px; font-weight: 600; line-height: 1.35; }
+  .kcard .m { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--muted-2); flex-wrap: wrap; }
+  .who { display: inline-flex; align-items: center; gap: 4px; }
+  .who .av { width: 14px; height: 14px; border-radius: 50%; background: var(--accent-bg); color: var(--accent); font-size: 8px; font-weight: 700; display: grid; place-items: center; border: 1px solid var(--accent-border); }
+  .flag { color: var(--danger); font-weight: 700; }
+
+  .annot { display: grid; grid-template-columns: 26px 1fr; gap: 10px 12px; margin-top: 16px; font-size: 14px; }
+  .annot .an { width: 24px; height: 24px; border-radius: 50%; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .annot .ax { color: var(--muted); align-self: center; }
+  .annot .ax b { color: var(--ink); }
+
+  hr.div { border: none; border-top: 1px solid var(--border); margin: 0 0 40px; }
+  footer { border-top: 1px solid var(--border); background: var(--surface-2); }
+  .foot-inner { max-width: var(--maxw); margin: 0 auto; padding: 26px 28px 40px; font-size: 13px; color: var(--muted-2); display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; }
+  a.jump { color: var(--accent); text-decoration: none; font-weight: 600; }
+  a.jump:hover { text-decoration: underline; }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; gap: 22px; padding: 26px 18px 72px; }
+    nav.toc { position: static; flex-flow: row wrap; gap: 6px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    nav.toc .toc-label { width: 100%; margin-left: 2px; }
+    nav.toc a { border-left: none; background: var(--surface); border: 1px solid var(--border); }
+    .top-inner { padding: 32px 18px 30px; }
+    .app { grid-template-columns: 1fr; }
+    .lnb { flex-flow: row wrap; border-right: none; border-bottom: 1px solid var(--border); }
+    .lnb .it { flex: none; }
+    .lnb .it .badge { margin-left: 4px; }
+    .kanban { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <span class="brand"><span class="dot"></span>맥비기획 자료실 · 운영/관리</span>
+    <h1>운영진 관리자 가이드</h1>
+    <p class="lede">자료 승인부터 사용자 의견 처리, 운영진끼리 나누는 작업 보드까지 — 관리자 화면을 처음 열어도 막힘없이 쓸 수 있도록 정리했어요.</p>
+    <div class="meta-row">
+      <span>관리자 주소 &nbsp;<b>macbe-archive.com/admin-mb26</b></span>
+      <span>대상 &nbsp;<b>승인된 운영진</b></span>
+      <span>최종 업데이트 &nbsp;<b class="num">2026. 8. 18</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="목차">
+    <p class="toc-label">목차</p>
+    <a href="#login"><span class="n num">1</span>접속과 로그인</a>
+    <a href="#home"><span class="n num">2</span>화면 한눈에</a>
+    <a href="#requests"><span class="n num">3</span>자료 등록요청</a>
+    <a href="#voc"><span class="n num">4</span>의견(VOC) 관리</a>
+    <a href="#backlog"><span class="n num">5</span>백로그 보드</a>
+    <a href="#invite"><span class="n num">6</span>운영진 초대</a>
+    <a href="#alerts"><span class="n num">7</span>알림 메일·팁</a>
+  </nav>
+
+  <main>
+    <section id="login">
+      <span class="eyebrow"><span class="idx num">1</span>시작하기</span>
+      <h2>접속과 로그인</h2>
+      <p>관리자 화면은 운영진만 볼 수 있어요. 구글 계정으로 로그인하고, 그 계정이 운영진으로 승인돼 있어야 들어갈 수 있어요.</p>
+      <ol class="steps">
+        <li>주소창에 <code>macbe-archive.com/admin-mb26</code> 입력 <span class="sub">— 사이트 하단 <b>"운영/관리"</b> 링크로도 들어올 수 있어요(운영진에게만 보여요).</span></li>
+        <li><strong>Google로 계속하기</strong>를 눌러 로그인</li>
+        <li>운영진으로 승인된 계정이면 <strong>관리 홈</strong>으로 바로 이동해요.</li>
+      </ol>
+      <figure class="shot">
+        <div class="frame">
+          <div class="bar"><span class="lights"><i></i><i></i><i></i></span><span class="url">macbe-archive.com/admin-mb26</span></div>
+          <div style="padding:34px 24px; display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center;">
+            <div style="font-size:17px; font-weight:750;">운영/관리</div>
+            <div style="font-size:13.5px; color:var(--muted); max-width:34ch;">맥비 자료실 운영진 전용 공간이에요. 로그인해 주세요.</div>
+            <span class="btn ghost" style="padding:9px 16px; gap:9px; font-size:13.5px; box-shadow:var(--shadow-sm);">
+              <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09A6.6 6.6 0 0 1 5.49 12c0-.73.13-1.43.35-2.09V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+              Google로 계속하기
+            </span>
+          </div>
+        </div>
+        <figcaption>로그인 화면 — 구글 계정 하나면 끝나요.</figcaption>
+      </figure>
+      <div class="note warn"><span class="tag">안 열려요?</span> 로그인은 됐는데 <b>"아직 운영진이 아니에요"</b>가 뜨면, 다른 운영진(관리자)이 승인해 줘야 해요. <a class="jump" href="#invite">→ 운영진 초대·승인</a> 참고.</div>
+    </section>
+
+    <hr class="div">
+
+    <section id="home">
+      <span class="eyebrow"><span class="idx num">2</span>둘러보기</span>
+      <h2>화면 한눈에</h2>
+      <p>왼쪽 메뉴(LNB)로 모든 기능을 오가요. 로그인하면 처음 보이는 <strong>홈</strong>에는 지금 처리해야 할 일이 건수로 모여 있어요 — 빨간 숫자를 눌러 바로 이동하면 돼요.</p>
+      <figure class="shot">
+        <div class="frame">
+          <div class="bar"><span class="lights"><i></i><i></i><i></i></span><span class="url">macbe-archive.com/admin-mb26/panel</span></div>
+          <div class="app">
+            <aside class="lnb">
+              <span class="it active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>홈</span>
+              <span class="it"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="7"/><rect x="12" y="6" width="3" height="11"/><rect x="17" y="13" width="3" height="4"/></svg>대시보드</span>
+              <span class="it"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>자료등록요청<span class="badge num">1</span></span>
+              <span class="it"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>VOC<span class="badge num">3</span></span>
+              <span class="it"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7v7M12 7v10M16 7v4"/></svg>백로그</span>
+              <span class="it"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>운영진 초대</span>
+            </aside>
+            <div class="canvas">
+              <p class="h">운영/관리</p>
+              <p class="sub">처리할 일을 한눈에 보고 바로 이동해요.</p>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <div class="mcard" style="display:flex; align-items:center; gap:11px;">
+                  <span style="color:var(--muted);">▣</span>
+                  <div style="flex:1;"><div style="font-size:13px; font-weight:650;">자료 등록요청 <span class="badge blue num" style="margin-left:4px;">1</span></div><div style="font-size:11.5px; color:var(--muted-2);">멤버가 제안한 자료 검토·승인</div></div>
+                  <span style="color:var(--muted-2);">›</span>
+                </div>
+                <div class="mcard" style="display:flex; align-items:center; gap:11px;">
+                  <span style="color:var(--muted);">▤</span>
+                  <div style="flex:1;"><div style="font-size:13px; font-weight:650;">미처리 VOC <span class="badge blue num" style="margin-left:4px;">3</span></div><div style="font-size:11.5px; color:var(--muted-2);">사용자 의견 처리·답변</div></div>
+                  <span style="color:var(--muted-2);">›</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption>관리 홈 — 왼쪽이 메뉴, 가운데가 "처리 대기" 목록.</figcaption>
+      </figure>
+      <h3>메뉴 6가지</h3>
+      <ul class="plain">
+        <li><b>홈</b> — 지금 처리할 일(자료요청·미처리 의견·운영진 신청) 건수와 바로가기</li>
+        <li><b>대시보드</b> — 방문·조회 등 사이트 지표(PostHog)</li>
+        <li><b>자료등록요청</b> — 멤버가 제안한 자료를 승인/거절</li>
+        <li><b>VOC</b> — 사용자가 [의견 보내기]로 남긴 의견 관리·답변</li>
+        <li><b>백로그</b> — 운영진끼리 함께 관리하는 작업 보드</li>
+        <li><b>운영진 초대</b> — 새 운영진 초대·신청 승인</li>
+      </ul>
+    </section>
+
+    <hr class="div">
+
+    <section id="requests">
+      <span class="eyebrow"><span class="idx num">3</span>가장 자주 하는 일</span>
+      <h2>자료 등록요청 처리</h2>
+      <p>멤버가 사이트에서 제안한 자료가 여기 모여요. <strong>운영진 2명이 승인</strong>하면 자동으로 자료실에 올라가고, 부적절하면 거절해요.</p>
+      <figure class="shot">
+        <div class="frame">
+          <div class="bar"><span class="lights"><i></i><i></i><i></i></span><span class="url">macbe-archive.com/admin-mb26/panel/requests</span></div>
+          <div style="padding:18px 20px;">
+            <p class="h" style="margin:0 0 3px;">자료등록요청 <span style="color:var(--muted-2); font-weight:600;">(1)</span></p>
+            <p class="sub" style="margin:0 0 14px;">멤버가 제안한 자료예요. 운영진 2명이 승인하면 자료실로 옮겨가요.</p>
+            <div class="mcard">
+              <div style="display:flex; gap:6px; margin-bottom:7px;"><span class="badge">기획/PM · 프로세스</span><span class="badge">영상</span></div>
+              <div style="font-size:14px; font-weight:700; margin-bottom:3px;">공들여 쓴 프롬프트를 당장 지워야 하는 이유</div>
+              <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">Recent AI 채널의 영상 · <span style="color:var(--accent);">youtube.com/watch?v=…</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--border); padding-top:9px; gap:8px; flex-wrap:wrap;">
+                <div style="font-size:11px; color:var(--muted-2); display:flex; flex-direction:column; gap:1px;">
+                  <span>제안 <b style="color:var(--muted);">맥비</b> · 2026. 8. 12</span>
+                  <span>승인 1/2 · <span style="color:var(--accent);">안재찬</span></span>
+                </div>
+                <div style="display:flex; gap:6px;"><span class="btn primary">승인</span><span class="btn danger">거절</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption>제안 카드 — 아래에 <b>누가 제안했고 누가 승인했는지</b>가 보여요.</figcaption>
+      </figure>
+      <div class="annot">
+        <span class="an num">1</span><span class="ax"><b>내용 확인</b> — 제목·분류·링크를 열어보고 자료실에 맞는지 판단해요.</span>
+        <span class="an num">2</span><span class="ax"><b>승인</b> — 맞으면 [승인]. <b>서로 다른 운영진 2명</b>이 승인하면 자동으로 자료실에 게시돼요.</span>
+        <span class="an num">3</span><span class="ax"><b>거절</b> — 부적절하면 [거절], 사유를 적으면 제안자에게 메일로 전달돼요.</span>
+      </div>
+      <div class="note"><span class="tag">단독 승인</span> 운영진이 2명 미만이라 2인 승인이 어려울 땐, <b>관리자</b>가 사유를 적고 <b>단독 승인</b>할 수 있어요(기록에 남아요). 평소엔 2인 승인이 원칙이에요.</div>
+    </section>
+
+    <hr class="div">
+
+    <section id="voc">
+      <span class="eyebrow"><span class="idx num">4</span>사용자 목소리</span>
+      <h2>의견(VOC) 관리</h2>
+      <p>사용자가 <strong>[의견 보내기]</strong>로 남긴 제안·오류·문의·칭찬이 여기 모여요. 칸반 보드에서 <strong>상태를 옮기고</strong>, 담당자를 정하고, 이메일을 남긴 사람에겐 답장할 수 있어요.</p>
+      <figure class="shot">
+        <div class="frame">
+          <div class="bar"><span class="lights"><i></i><i></i><i></i></span><span class="url">macbe-archive.com/admin-mb26/panel/feedback</span></div>
+          <div style="padding:16px 18px;">
+            <p class="h" style="margin:0 0 12px;">의견 관리 (VOC)</p>
+            <div class="kanban" style="grid-template-columns:repeat(5,1fr);">
+              <div class="col"><div class="ch">신규<span class="cn num">2</span></div>
+                <div class="kcard"><div style="display:flex; gap:5px;"><span class="badge">제안</span></div><div class="t">목록형 보기도 있으면 좋겠어요</div><div class="m"><span class="who"><span class="av">익</span>미지정</span></div></div>
+                <div class="kcard"><div style="display:flex; gap:5px;"><span class="badge">오류</span><span class="flag">▲ 높음</span></div><div class="t">모바일에서 버튼이…</div><div class="m"><span class="who"><span class="av">익</span>미지정</span></div></div>
+              </div>
+              <div class="col"><div class="ch">처리중<span class="cn num">1</span></div>
+                <div class="kcard"><div style="display:flex; gap:5px;"><span class="badge">문의</span></div><div class="t">자료는 어디에 저장되나요?</div><div class="m"><span class="who"><span class="av">안</span>안재찬</span></div></div>
+              </div>
+              <div class="col"><div class="ch">보류<span class="cn num">0</span></div><div style="font-size:11px; color:var(--muted-2); padding:4px;">비어 있음</div></div>
+              <div class="col"><div class="ch">답변완료<span class="cn num">1</span></div>
+                <div class="kcard"><div style="display:flex; gap:5px;"><span class="badge">칭찬</span></div><div class="t">자료실 정말 잘 쓰고 있어요!</div><div class="m"><span class="who"><span class="av">지</span>지연</span></div></div>
+              </div>
+              <div class="col"><div class="ch">종료<span class="cn num">7</span></div><div style="font-size:11px; color:var(--accent); padding:4px;">지난 종료 7건 더 보기</div></div>
+            </div>
+          </div>
+        </div>
+        <figcaption>VOC 칸반 — 신규 → 처리중 → 답변완료 → 종료 순으로 흘러가요.</figcaption>
+      </figure>
+      <div class="annot">
+        <span class="an num">1</span><span class="ax"><b>카드를 옮겨 상태 변경</b> — PC에선 카드를 다른 칸으로 <b>끌어다 놓고</b>, 휴대폰에선 카드를 <b>눌러</b> 뜨는 창에서 상태를 바꿔요.</span>
+        <span class="an num">2</span><span class="ax"><b>담당자·우선순위 지정</b> — 카드를 열어 담당자를 정하면, 누가 맡았는지 서로 알 수 있어요.</span>
+        <span class="an num">3</span><span class="ax"><b>답장</b> — 이메일을 남긴 사람이면 <b>[메일로 답장 보내기]</b>로 내 메일앱이 열려요(실제 발송은 개인 메일에서). 이메일이 없으면 <b>처리 메모</b>에 기록만 남겨요.</span>
+      </div>
+      <h3>상태의 뜻</h3>
+      <ul class="plain">
+        <li><b>신규</b> — 방금 들어와 아직 아무도 안 본 의견</li>
+        <li><b>처리중</b> — 담당자가 보고 있는 중</li>
+        <li><b>보류</b> — 지금은 미루는 것</li>
+        <li><b>답변완료</b> — 답장은 보냈고, 상대 반응을 지켜보는 단계(아직 열려 있음)</li>
+        <li><b>종료</b> — 완전히 끝난 것. 최근 2주만 보이고 지난 건 <b>[더 보기]</b>로 접혀요.</li>
+      </ul>
+    </section>
+
+    <hr class="div">
+
+    <section id="backlog">
+      <span class="eyebrow"><span class="idx num">5</span>함께 일하기</span>
+      <h2>백로그 보드</h2>
+      <p>운영진끼리 <strong>함께 관리하는 작업 보드</strong>예요. "이 자료 다시 분류하자", "이 기능 개선하자" 같은 할 일을 적어두고, 나눠 맡고, 끝내가요. 혼자 머릿속에 담아두는 대신 같이 기록해요.</p>
+      <figure class="shot">
+        <div class="frame">
+          <div class="bar"><span class="lights"><i></i><i></i><i></i></span><span class="url">macbe-archive.com/admin-mb26/panel/backlog</span></div>
+          <div style="padding:16px 18px;">
+            <div class="mcard" style="display:flex; gap:7px; align-items:center; margin-bottom:12px; flex-wrap:wrap; padding:9px 10px;">
+              <span style="flex:1; min-width:150px; font-size:12.5px; color:var(--muted-2); border:1px solid var(--border); border-radius:var(--r-sm); padding:6px 9px;">할 일 추가 (예: 면접 자료 재분류)</span>
+              <span class="badge">분류 ▾</span><span class="badge">담당자 ▾</span><span class="badge">우선순위 ▾</span>
+              <span class="btn primary">＋ 추가</span>
+            </div>
+            <div class="kanban">
+              <div class="col"><div class="ch">할 일<span class="cn num">2</span></div>
+                <div class="kcard"><div class="t">게임기획 면접자료 카테고리 재분류</div><div class="m"><span class="badge">자료 정리/분류</span><span class="who"><span class="av">안</span>안재찬</span></div></div>
+                <div class="kcard"><div class="t">저작권 안내 문구 등록</div><div class="m"><span class="flag">▲ 높음</span><span class="who"><span class="av">지</span>지연</span></div></div>
+              </div>
+              <div class="col"><div class="ch">진행중<span class="cn num">1</span></div>
+                <div class="kcard"><div class="t">목록형 보기 개선</div><div class="m"><span class="badge">기능 개선</span><span class="who"><span class="av">안</span>안재찬</span></div></div>
+              </div>
+              <div class="col"><div class="ch">완료<span class="cn num">5</span></div>
+                <div class="kcard" style="opacity:.7;"><div class="t" style="text-decoration:line-through; color:var(--muted);">드라이브 파일형식 정리</div></div>
+                <div style="font-size:11px; color:var(--accent); padding:2px;">지난 완료 4건 더 보기</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <figcaption>백로그 — 위에서 할 일을 추가하고, 카드를 옮겨 진행 상태를 바꿔요.</figcaption>
+      </figure>
+      <div class="annot">
+        <span class="an num">1</span><span class="ax"><b>추가</b> — 맨 위 칸에 할 일을 적고 분류·담당자·우선순위를 골라 <b>[추가]</b>. 엔터로도 돼요.</span>
+        <span class="an num">2</span><span class="ax"><b>진행</b> — 할 일 → 진행중 → 완료로 카드를 옮겨요(VOC와 같은 방식).</span>
+        <span class="an num">3</span><span class="ax"><b>완료 정리</b> — 완료 칸은 최근 2주만 보이고, 지난 건 <b>[더 보기]</b>로 접혀 화면이 깔끔해요.</span>
+      </div>
+      <div class="note"><span class="tag">VOC와 뭐가 달라요?</span> <b>VOC</b>는 <b>사용자</b>가 보낸 의견, <b>백로그</b>는 <b>운영진</b>이 스스로 정하는 할 일이에요. 서로 다른 보드예요.</div>
+    </section>
+
+    <hr class="div">
+
+    <section id="invite">
+      <span class="eyebrow"><span class="idx num">6</span>팀 늘리기</span>
+      <h2>운영진 초대</h2>
+      <p>새 운영진을 들이는 방법과, 신청한 사람을 승인하는 방법이 한 곳에 있어요.</p>
+      <h3>초대하기</h3>
+      <ol class="steps">
+        <li><strong>운영진 초대</strong> 메뉴에서 초대할 사람의 이메일을 입력해요.</li>
+        <li><strong>[초대 메일 보내기]</strong>를 누르면 초대 링크가 담긴 메일이 <span class="sub">내 메일앱에 열려요</span> — 확인하고 보내면 돼요.</li>
+        <li>상대가 링크로 들어와 <strong>구글 로그인 + 운영진 신청</strong>을 해요.</li>
+        <li>신청이 들어오면 이 화면 아래 <strong>신청 목록</strong>에 떠요 — <strong>[승인]</strong>하면 그때부터 운영진이에요.</li>
+      </ol>
+      <div class="note warn"><span class="tag">본인 신청은 본인이 승인 못 해요</span> 안전을 위해, 신청한 사람과 <b>다른 운영진</b>이 승인해야 해요. 그래서 초기엔 최소 2명이 필요해요.</div>
+    </section>
+
+    <hr class="div">
+
+    <section id="alerts">
+      <span class="eyebrow"><span class="idx num">7</span>알아두면 편해요</span>
+      <h2>알림 메일 · 자주 묻는 것</h2>
+      <h3>이런 일이 생기면 메일이 와요</h3>
+      <ul class="plain">
+        <li><b>새 자료 제안</b>이 들어오면 → 운영진 전원에게 (바로 검토 링크 포함)</li>
+        <li><b>새 의견</b>이 들어오면 → 운영진 전원에게 (종류·내용·처리 링크 포함)</li>
+        <li>제안을 <b>승인/거절</b>하면 → 제안한 사람에게 결과 안내</li>
+      </ul>
+      <div class="note"><span class="tag">메일은 알림용</span> 메일이 오면 관리자 화면에서 처리하면 돼요. 개인 계정(openpath@duotone.io)은 알림에서 제외돼 있어요.</div>
+      <h3>자주 묻는 것</h3>
+      <ul class="plain">
+        <li><b>휴대폰에서도 되나요?</b> — 네. 카드를 <b>끌어놓는 대신 눌러서</b> 상태를 바꾸면 돼요. 메뉴는 위쪽에 접혀 나와요.</li>
+        <li><b>실수로 카드를 잘못 옮겼어요.</b> — 다시 원래 칸으로 옮기면 돼요. 삭제가 아니라 상태만 바뀌는 거예요.</li>
+        <li><b>종료·완료한 게 안 보여요.</b> — 최근 2주만 펼쳐 보여요. 칸 아래 <b>[지난 N건 더 보기]</b>를 누르면 전부 나와요.</li>
+        <li><b>로그아웃은 어디서?</b> — PC는 우측 상단, 휴대폰은 메뉴 하단에 있어요.</li>
+      </ul>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <span>맥비기획 자료실 · 운영진 관리자 가이드</span>
+    <span>궁금한 건 운영진 채널에 물어봐 주세요.</span>
+  </div>
+</footer>
+
+</body>
+</html>
