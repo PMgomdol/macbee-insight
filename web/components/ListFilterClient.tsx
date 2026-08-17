@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Search, X } from 'lucide-react';
-import { ItemCard } from './ItemCard';
+import { useEffect, useMemo, useState } from 'react';
+import { Search, X, LayoutGrid, LayoutList } from 'lucide-react';
+import { ItemCard, ItemRow } from './ItemCard';
 import type { ArchiveItem } from '@/types/db';
 import { track } from '@/lib/track';
 
@@ -22,6 +22,19 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
   const [sort, setSort] = useState<'default' | 'popular'>('default');
   const [q, setQ] = useState('');
   const [showCount, setShowCount] = useState(STEP);
+  const [view, setView] = useState<'card' | 'list'>('card');
+
+  // 뷰 선호 기억 (localStorage) — 렌더 후 로드해 하이드레이션 불일치 방지
+  useEffect(() => {
+    const saved = localStorage.getItem('archive_view');
+    if (saved === 'list' || saved === 'card') setView(saved);
+  }, []);
+
+  function changeView(next: 'card' | 'list') {
+    setView(next);
+    localStorage.setItem('archive_view', next);
+    track('filter_change', { type: 'view', value: next, page: kind });
+  }
 
   // 대분류 카운트 — 전체 데이터 기준
   const mainCounts = useMemo(() => {
@@ -172,8 +185,24 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
         </div>
       )}
 
-      {/* 정렬 — 인기순 토글 (기본=등록 순서). 등록일이 전건 동일해 최신순은 제거. */}
-      <div className="flex items-center justify-end gap-1 text-xs">
+      {/* 뷰 전환(세그먼트) + 정렬(인기순 토글). 뷰 토글은 필터 칩과 구분되게 세그먼트형. */}
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <div className="inline-flex items-center rounded-full border border-[var(--border)] p-0.5">
+          <button
+            onClick={() => changeView('card')}
+            aria-pressed={view === 'card'}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-medium transition ${view === 'card' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
+          >
+            <LayoutGrid size={13} aria-hidden /> 카드
+          </button>
+          <button
+            onClick={() => changeView('list')}
+            aria-pressed={view === 'list'}
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-medium transition ${view === 'list' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
+          >
+            <LayoutList size={13} aria-hidden /> 목록
+          </button>
+        </div>
         <button
           onClick={() => changeSort(sort === 'popular' ? 'default' : 'popular')}
           className={`px-2.5 py-1 rounded-full font-medium transition ${sort === 'popular' ? 'bg-[var(--card)] text-[var(--fg)]' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
@@ -184,6 +213,10 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
 
       {filtered.length === 0 ? (
         <div className="py-16 text-center text-sm text-[var(--muted)]">조건에 맞는 자료를 못 찾았어요</div>
+      ) : view === 'list' ? (
+        <div className="flex flex-col divide-y divide-[var(--border)] border-y border-[var(--border)]">
+          {visible.map((it) => <ItemRow key={it.id} item={it} />)}
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {visible.map((it) => <ItemCard key={it.id} item={it} />)}

@@ -22,6 +22,22 @@ function isVideo(item: ArchiveItem): boolean {
   return /youtube\.com|youtu\.be|vimeo\.com|tv\.naver\.com/.test(url);
 }
 
+/** 클릭 시 실제로 파일이 내려받아지는가. 구글 문서·드라이브는 뷰어로 열리므로 '바로가기'로 취급. */
+function isDownload(item: ArchiveItem): boolean {
+  if (isVideo(item)) return false;
+  if (item.file_url) return true; // 호스팅된 파일 = 다운로드
+  const u = unwrapRedirect(item.external_url || '').toLowerCase();
+  if (/docs\.google\.com|drive\.google\.com/.test(u)) return false;
+  return /\.(pdf|zip|docx?|pptx?|xlsx?|hwpx?|csv|key|odt|ods|odp)($|[?#])/.test(u);
+}
+
+/** 오른쪽 아래 액션 표시 — 무엇을 클릭하는지 명확히. */
+function cardAction(item: ArchiveItem) {
+  if (isVideo(item)) return { Icon: PlayCircle, label: '재생' };
+  if (isDownload(item)) return { Icon: Download, label: '다운로드' };
+  return { Icon: ExternalLink, label: '바로가기' };
+}
+
 // 구글 리다이렉트 URL(www.google.com/url?q=...) → 실제 URL로 풀기.
 // 카톡 공유 시 자주 감싸져 오는 형태라 URL 그대로면 substring 검사가 오탐남.
 function unwrapRedirect(u: string): string {
@@ -70,6 +86,8 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
   const isFile = media === '파일';
   const video = isVideo(item);
   const fileExt = fileExtBadge(item);
+  const topBadge = fileExt ?? (video ? '영상' : '아티클');
+  const { Icon: ActionIcon, label: actionLabel } = cardAction(item);
   const tags = (item.tags ?? []).slice(0, 2);
 
   return (
@@ -83,23 +101,15 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       className="app-card group flex flex-col gap-2.5 p-4 min-h-[180px] h-full overflow-hidden"
       aria-label={`${media}: ${item.title} (새 탭에서 열어요)`}
     >
-      {/* ① 자료 종류 (Lozenge) — 메타 배지 */}
+      {/* ① 형식 배지 — '무엇'인지만 (행동은 오른쪽 아래) */}
       <div className="flex items-center gap-1.5 flex-wrap min-h-[20px]">
         <span
           className={`slds-badge ${
             video ? 'app-badge-video' : isFile ? 'app-badge-file' : 'app-badge-insight'
           }`}
         >
-          {video ? (
-            <PlayCircle size={11} aria-hidden />
-          ) : isFile ? (
-            <Download size={11} aria-hidden />
-          ) : (
-            <ExternalLink size={11} aria-hidden />
-          )}
-          {media}
+          {topBadge}
         </span>
-        {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
       </div>
 
       {/* ② 타이틀 — 가장 강조 */}
@@ -123,12 +133,16 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
         </div>
       )}
 
-      {/* ⑤ 푸터 메타 */}
+      {/* ⑤ 푸터 메타 — 왼쪽 날짜·조회, 오른쪽 액션 */}
       <div className="flex items-center justify-between gap-3 text-[11px] text-[var(--muted-2)] mt-auto pt-1">
         <div className="flex items-center gap-3">
           {formatDate(item.published_at) && <span>{formatDate(item.published_at)}</span>}
           {item.views > 0 && <span>조회 {item.views.toLocaleString()}</span>}
         </div>
+        <span className="inline-flex items-center gap-1 text-[var(--muted)] group-hover:text-[var(--accent)] transition shrink-0">
+          <ActionIcon size={14} aria-hidden />
+          {actionLabel}
+        </span>
       </div>
     </a>
   );
@@ -140,6 +154,8 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
   const isFile = media === '파일';
   const video = isVideo(item);
   const fileExt = fileExtBadge(item);
+  const topBadge = fileExt ?? (video ? '영상' : '아티클');
+  const { Icon: ActionIcon, label: actionLabel } = cardAction(item);
   return (
     <a
       href={url}
@@ -163,11 +179,14 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
               video ? 'app-badge-video' : isFile ? 'app-badge-file' : 'app-badge-insight'
             }`}
           >
-            {media}
+            {topBadge}
           </span>
-          {fileExt && !video && <span className="slds-badge">{fileExt}</span>}
         </div>
       </div>
+      <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted-2)] group-hover:text-[var(--accent)] transition shrink-0">
+        <ActionIcon size={14} aria-hidden />
+        {actionLabel}
+      </span>
     </a>
   );
 }
