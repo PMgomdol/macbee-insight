@@ -134,10 +134,10 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       )}
 
       {/* ⑤ 푸터 메타 — 왼쪽 날짜·조회, 오른쪽 액션 */}
-      <div className="flex items-center justify-between gap-3 text-[11px] text-[var(--muted-2)] mt-auto pt-1">
-        <div className="flex items-center gap-3">
-          {formatDate(item.published_at) && <span>{formatDate(item.published_at)}</span>}
-          {item.views > 0 && <span>조회 {item.views.toLocaleString()}</span>}
+      <div className="flex items-center justify-between gap-x-3 gap-y-1 flex-wrap text-[11px] text-[var(--muted-2)] mt-auto pt-1">
+        <div className="flex items-center gap-3 min-w-0">
+          {formatDate(item.published_at) && <span className="truncate">{formatDate(item.published_at)}</span>}
+          {item.views > 0 && <span className="truncate">조회 {item.views.toLocaleString()}</span>}
         </div>
         <span className="inline-flex items-center gap-1 text-[var(--muted)] group-hover:text-[var(--accent)] transition shrink-0">
           <ActionIcon size={14} aria-hidden />

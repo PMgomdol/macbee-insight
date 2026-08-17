@@ -108,7 +108,7 @@ export function CSBoard({ tickets: initial, assignees }: { tickets: FeedbackTick
       </div>
 
       {/* 칸반 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-2">
         {COLUMNS.map((col) => {
           const all = filtered
             .filter((t) => t.status === col.key)
@@ -260,7 +260,7 @@ function Drawer({
             <span>#{ticket.id}</span>
             <span>{fmt(ticket.submitted_at)}</span>
           </div>
-          <button type="button" onClick={onClose} className="text-[var(--muted)] hover:text-[var(--fg)]" aria-label="닫기">
+          <button type="button" onClick={onClose} className="text-[var(--muted)] hover:text-[var(--fg)] p-1.5 -m-1.5" aria-label="닫기">
             <X size={18} />
           </button>
         </div>

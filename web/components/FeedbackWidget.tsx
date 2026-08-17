@@ -128,7 +128,7 @@ export function FeedbackWidget() {
             ) : (
             <form onSubmit={onSubmit} className="p-4 flex flex-col gap-3">
               {/* 종류 — 밑줄 탭 (UI 규칙: 전환은 탭답게, 등록폼과 동일 패턴) */}
-              <div role="radiogroup" aria-label="종류" className="flex gap-1 border-b border-[var(--border)]">
+              <div role="radiogroup" aria-label="종류" className="flex gap-1 border-b border-[var(--border)] overflow-x-auto no-scrollbar">
                 {KINDS.map(({ v, label }) => {
                   const active = kind === v;
                   return (
@@ -138,7 +138,7 @@ export function FeedbackWidget() {
                       role="radio"
                       aria-checked={active}
                       onClick={() => setKind(v)}
-                      className={`px-3 py-2.5 text-sm -mb-px border-b-2 transition ${
+                      className={`px-3 py-2.5 text-sm -mb-px border-b-2 transition shrink-0 whitespace-nowrap ${
                         active
                           ? 'border-[var(--accent)] text-[var(--accent)] font-semibold'
                           : 'border-transparent text-[var(--muted)] hover:text-[var(--fg)]'

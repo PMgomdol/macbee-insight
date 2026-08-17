@@ -20,7 +20,7 @@ export function AdminNav({ badges = {} }: { badges?: Record<string, number> }) {
   return (
     <nav
       aria-label="운영/관리"
-      className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible md:w-44 md:shrink-0 border-b md:border-b-0 md:border-r border-[var(--border)] pb-2 md:pb-0 md:pr-3"
+      className="flex flex-wrap md:flex-col md:flex-nowrap gap-1 md:w-44 md:shrink-0 border-b md:border-b-0 md:border-r border-[var(--border)] pb-2 md:pb-0 md:pr-3"
     >
       {ITEMS.map((it) => {
         const active = it.exact ? path === it.href : path === it.href || path.startsWith(it.href + '/');
@@ -31,7 +31,7 @@ export function AdminNav({ badges = {} }: { badges?: Record<string, number> }) {
             key={it.href}
             href={it.href}
             aria-current={active ? 'page' : undefined}
-            className={`inline-flex items-center gap-2 px-3 py-2 rounded-[var(--r-sm)] text-sm whitespace-nowrap transition ${
+            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-[var(--r-sm)] text-sm whitespace-nowrap transition ${
               active
                 ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium'
                 : 'text-[var(--muted)] hover:bg-[var(--card)] hover:text-[var(--fg)]'

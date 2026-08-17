@@ -5,7 +5,15 @@ import { Menu, X, Search } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { visibleNav } from '@/lib/nav';
 
-export function MobileNavClient({ isReviewer = false }: { isReviewer?: boolean }) {
+export function MobileNavClient({
+  isReviewer = false,
+  loggedIn = false,
+  accountLabel = null,
+}: {
+  isReviewer?: boolean;
+  loggedIn?: boolean;
+  accountLabel?: string | null;
+}) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const pathname = usePathname();
@@ -106,6 +114,16 @@ export function MobileNavClient({ isReviewer = false }: { isReviewer?: boolean }
             ))}
           </nav>
 
+          {loggedIn && (
+            <div className="mt-auto border-t border-[var(--border)] px-4 py-3 flex items-center justify-between gap-3">
+              {accountLabel && <span className="text-xs text-[var(--muted-2)] truncate">{accountLabel}</span>}
+              <form action="/auth/signout" method="post" className="shrink-0">
+                <button type="submit" className="px-3 py-2 rounded-[var(--r-sm)] border border-[var(--border-strong)] text-sm hover:bg-[var(--card)]">
+                  로그아웃
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       )}
     </>

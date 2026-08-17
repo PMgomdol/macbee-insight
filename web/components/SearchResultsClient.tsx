@@ -149,7 +149,7 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
               onClick={() => changeView('card')}
               aria-pressed={view === 'card'}
               aria-label="카드 보기"
-              className={`inline-flex items-center px-2 py-1 rounded-full transition ${view === 'card' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
+              className={`inline-flex items-center px-2.5 py-2 rounded-full transition ${view ==='card' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
             >
               <LayoutGrid size={13} aria-hidden />
             </button>
@@ -157,7 +157,7 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
               onClick={() => changeView('list')}
               aria-pressed={view === 'list'}
               aria-label="목록 보기"
-              className={`inline-flex items-center px-2 py-1 rounded-full transition ${view === 'list' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
+              className={`inline-flex items-center px-2.5 py-2 rounded-full transition ${view ==='list' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
             >
               <LayoutList size={13} aria-hidden />
             </button>

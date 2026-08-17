@@ -232,3 +232,15 @@ input[type="search"]::-webkit-search-results-decoration {
   from { width: 0; }
   to { width: 100%; }
 }
+
+/* 모바일 iOS Safari: 입력 포커스 시 자동 확대(zoom) 방지 — 폼 컨트롤 최소 16px.
+   .app-input(16px)이 Tailwind utilities 레이어의 text-xs에 밀리는 문제 + Atlaskit
+   Textfield/Select가 14px로 렌더되는 문제를 언레이어드 규칙으로 한 번에 잡는다. */
+@media (max-width: 640px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  textarea,
+  select,
+  [data-ds--text-field--input] {
+    font-size: 16px !important;
+  }
+}

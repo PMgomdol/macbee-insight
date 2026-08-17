@@ -294,7 +294,7 @@ function Drawer({
             <span>#{item.id}</span>
             <span>등록 {fmt(item.created_at)}{item.created_by ? ` · ${item.created_by}` : ''}</span>
           </div>
-          <button type="button" onClick={onClose} className="text-[var(--muted)] hover:text-[var(--fg)]" aria-label="닫기">
+          <button type="button" onClick={onClose} className="text-[var(--muted)] hover:text-[var(--fg)] p-1.5 -m-1.5" aria-label="닫기">
             <X size={18} />
           </button>
         </div>

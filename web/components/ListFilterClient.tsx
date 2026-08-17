@@ -120,7 +120,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
           aria-label={`${title} 내 검색`}
         />
         {q && (
-          <button onClick={() => changeQ('')} className="text-[var(--muted)] hover:text-[var(--fg)] shrink-0" aria-label="입력 지우기">
+          <button onClick={() => changeQ('')} className="text-[var(--muted)] hover:text-[var(--fg)] shrink-0 p-2 -m-2" aria-label="입력 지우기">
             <X size={14} />
           </button>
         )}

@@ -147,7 +147,7 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
         {q && (
           <button
             onClick={() => setQ('')}
-            className="text-[var(--muted)] hover:text-[var(--fg)] shrink-0"
+            className="text-[var(--muted)] hover:text-[var(--fg)] shrink-0 p-2 -m-2"
             aria-label="검색 지우기"
           >
             <X size={14} />
