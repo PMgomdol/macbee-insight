@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react';
 import {
-  Sparkles, Upload, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle,
+  Sparkles, Upload, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle, ExternalLink,
 } from 'lucide-react';
 import { UIButton, UILinkButton } from '@/components/ui/Button';
 import Textfield from '@atlaskit/textfield';
@@ -350,13 +350,17 @@ export function SubmitForm({ categories }: Props) {
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={onDrop}
-            className={`flex items-center justify-center gap-2 px-4 py-8 rounded-[var(--r-lg)] border-2 border-dashed bg-[var(--card)] cursor-pointer transition-colors ${
-              dragOver ? 'border-[var(--accent)] bg-[var(--accent-bg)]' : 'border-[var(--border-strong)] hover:border-[var(--accent)]'
+            className={`flex items-center justify-center gap-2 px-4 rounded-[var(--r-lg)] border-2 border-dashed cursor-pointer transition-colors ${
+              fileUrl && !uploading
+                ? 'py-4 border-[var(--success)]/50 bg-[var(--success)]/5'
+                : dragOver
+                  ? 'py-8 border-[var(--accent)] bg-[var(--accent-bg)]'
+                  : 'py-8 border-[var(--border-strong)] bg-[var(--card)] hover:border-[var(--accent)]'
             }`}
           >
             <input type="file" onChange={onFileChange} className="hidden" />
-            {uploading ? <Spinner size="small" /> : <Upload size={16} />}
-            <span className="text-sm">
+            {uploading ? <Spinner size="small" /> : fileUrl ? <FileCheck2 size={16} className="text-[var(--success)]" aria-hidden /> : <Upload size={16} />}
+            <span className="text-sm truncate">
               {uploading
                 ? '올리고 있어요...'
                 : dragOver
@@ -364,11 +368,15 @@ export function SubmitForm({ categories }: Props) {
                   : fileName ?? '파일을 끌어다 놓거나 눌러서 고르기 (10MB까지)'}
             </span>
           </label>
-          {fileUrl && (
-            <div className="text-xs text-[var(--muted)] break-all flex items-center gap-1.5">
-              <FileCheck2 size={12} className="text-[var(--success)] shrink-0" aria-hidden />
-              <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">{fileUrl}</a>
-            </div>
+          {fileUrl && !uploading && (
+            <a
+              href={fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="self-start text-xs text-[var(--accent)] hover:underline inline-flex items-center gap-1"
+            >
+              업로드된 파일 보기 <ExternalLink size={11} aria-hidden />
+            </a>
           )}
         </div>
       )}
