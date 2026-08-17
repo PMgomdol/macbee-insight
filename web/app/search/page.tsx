@@ -35,18 +35,13 @@ export default async function SearchPage({
       </section>
 
       {q && result.synonymCanonical && result.expanded.length > 1 && (
-        <div className="flex items-start gap-2 p-3 rounded-[var(--r-md)] bg-[var(--accent-bg)] text-xs">
-          <Sparkles size={14} className="text-[var(--accent)] shrink-0 mt-0.5" aria-hidden />
+        <p className="flex items-start gap-1.5 text-xs text-[var(--muted)] -mt-1.5">
+          <Sparkles size={13} className="text-[var(--muted-2)] shrink-0 mt-0.5" aria-hidden />
           {/* 정보성 표시만 — 링크로 만들면 원 질의를 잃고 결과가 오히려 줄어듦 (이미 함께 검색된 키워드) */}
           <span className="flex-1">
-            <strong className="text-[var(--fg)]">{result.synonymCanonical}</strong> 관련 키워드를 함께 검색했어요:&nbsp;
-            {result.expanded.slice(1).map((t, i) => (
-              <span key={t} className="text-[var(--fg)]">
-                {t}{i < result.expanded.length - 2 ? ', ' : ''}
-              </span>
-            ))}
+            <strong className="text-[var(--fg)] font-medium">{result.synonymCanonical}</strong> 유의어도 함께 검색했어요 · {result.expanded.slice(1).join(', ')}
           </span>
-        </div>
+        </p>
       )}
 
       {/* 오타/초성 폴백 안내 — 정확 매칭이 없어서 비슷한 자료를 보여줄 때 */}

@@ -40,6 +40,7 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
   const [sub, setSub] = useState<string | undefined>(initialSub);
   const [sort, setSort] = useState<Sort>(initialSort ?? 'relevance');
   const [view, setView] = useState<'card' | 'list'>('card');
+  const [showCats, setShowCats] = useState(!!initialMain); // 카테고리는 기본 접힘 — 공유 링크로 들어오면 펼침
 
   useEffect(() => {
     const saved = localStorage.getItem('archive_view');
@@ -124,27 +125,42 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-[var(--muted)]">
-        <strong className="text-[var(--fg)]">{q}</strong> 결과 — 자료 {sorted.length}
-        {sorted.length !== archives.length && (
-          <span className="text-[var(--muted-2)]"> (전체 {archives.length})</span>
-        )}
-        {' '}· 실무 Q&A {faqs.length}
-      </p>
-
-      {/* kind + 정렬 */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex gap-1 text-xs flex-wrap">
-          <FilterBtn onClick={() => pickKind(undefined)} active={!kind}>전체 ({archives.length})</FilterBtn>
-          <FilterBtn onClick={() => pickKind('files')} active={kind === 'files'}>양식·템플릿 ({kindCounts.files})</FilterBtn>
-          <FilterBtn onClick={() => pickKind('insights')} active={kind === 'insights'}>콘텐츠 ({kindCounts.insights})</FilterBtn>
+      {/* 필터·정렬 한 밴드 — 종류(세그먼트) / 정렬(드롭다운)·카테고리(토글)·뷰(아이콘) */}
+      <div className="flex flex-col gap-2">
+        {/* 종류 — 단일 선택이라 세그먼트 컨트롤 (뷰 전환류와 같은 시각 언어) */}
+        <div className="flex rounded-full border border-[var(--border)] p-0.5 text-xs">
+          <SegBtn active={!kind} onClick={() => pickKind(undefined)}>전체 {archives.length}</SegBtn>
+          <SegBtn active={kind === 'files'} onClick={() => pickKind('files')}>양식·템플릿 {kindCounts.files}</SegBtn>
+          <SegBtn active={kind === 'insights'} onClick={() => pickKind('insights')}>콘텐츠 {kindCounts.insights}</SegBtn>
         </div>
-        <div className="flex items-center gap-2 text-xs">
-          <div className="flex gap-1">
-            <FilterBtn onClick={() => pickSort('relevance')} active={sort === 'relevance'}>관련도</FilterBtn>
-            <FilterBtn onClick={() => pickSort('popular')} active={sort === 'popular'}>인기순</FilterBtn>
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-1.5">
+            {/* 정렬 — 필터 칩과 구분되게 네이티브 드롭다운 (모바일 네이티브 피커) */}
+            <select
+              value={sort}
+              onChange={(e) => pickSort(e.target.value as Sort)}
+              aria-label="정렬 기준"
+              className="rounded-full border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-[var(--muted)] cursor-pointer hover:text-[var(--fg)] transition-colors"
+            >
+              <option value="relevance">관련도순</option>
+              <option value="popular">인기순</option>
+            </select>
+            {/* 카테고리 — 보조 필터라 기본 접힘. 선택 중이면 라벨에 노출 */}
+            {sortedMains.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowCats((v) => !v)}
+                aria-expanded={showCats}
+                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 whitespace-nowrap transition ${
+                  main ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-[var(--border)] text-[var(--muted)] hover:text-[var(--fg)]'
+                }`}
+              >
+                {main ? `카테고리 · ${main}` : '카테고리'}
+                <ChevronDown size={13} className={`transition ${showCats ? 'rotate-180' : ''}`} aria-hidden />
+              </button>
+            )}
           </div>
-          <div className="inline-flex items-center rounded-full border border-[var(--border)] p-0.5">
+          <div className="inline-flex items-center rounded-full border border-[var(--border)] p-0.5 shrink-0">
             <button
               onClick={() => changeView('card')}
               aria-pressed={view === 'card'}
@@ -165,8 +181,8 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
         </div>
       </div>
 
-      {/* 대분류 chips */}
-      {sortedMains.length > 0 && (
+      {/* 대분류 chips — 카테고리 토글 시 노출 */}
+      {showCats && sortedMains.length > 0 && (
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap">
           <Chip active={!main} onClick={() => pickMain(undefined)}>전체 카테고리</Chip>
           {sortedMains.map(([cat, n]) => (
@@ -178,7 +194,7 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
       )}
 
       {/* 소분류 chips */}
-      {main && sortedSubs.length > 0 && (
+      {showCats && main && sortedSubs.length > 0 && (
         <div className="flex gap-1 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap items-center">
           <SubChip active={!sub} onClick={() => pickSub(undefined)}>전체</SubChip>
           {sortedSubs.map(([s, n]) => (
@@ -191,8 +207,7 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
 
       {/* 자료 그리드 */}
       {sorted.length > 0 && (
-        <section className="flex flex-col gap-2.5 mt-2">
-          <h2 className="text-sm font-semibold text-[var(--muted)] uppercase tracking-wide">자료</h2>
+        <section className="flex flex-col gap-2.5 mt-1">
           <div
             className={view === 'list' ? 'flex flex-col divide-y divide-[var(--border)] border-y border-[var(--border)]' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'}
             onClick={(e) => trackResultClick(e, '[data-card-id]', 'archive')}
@@ -235,12 +250,16 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
   );
 }
 
-function FilterBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+// 세그먼트 버튼 — 종류 필터(단일 선택). 뷰 토글과 같은 시각 언어로 "하나만 켜짐"을 표현.
+function SegBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`px-2.5 py-1.5 rounded-full font-medium transition ${active ? 'bg-[var(--card)] text-[var(--fg)]' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+      aria-pressed={active}
+      className={`flex-1 px-2 py-1.5 rounded-full font-medium whitespace-nowrap transition ${
+        active ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'
+      }`}
     >
       {children}
     </button>
