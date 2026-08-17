@@ -106,7 +106,7 @@ export async function classify(
     const format = (g && g !== '아티클') ? g : (hint && hint !== '아티클' ? hint : (g || '아티클'));
     return {
       title: String(out.title_ko || meta.title).slice(0, 200),
-      summary: String(out.summary_ko || meta.description).slice(0, 500),
+      summary: clampSummary(String(out.summary_ko || meta.description)),
       mainCategory: out.main_category || '미분류',
       subCategory: out.sub_category || '',
       tags: Array.isArray(out.tags) ? out.tags.slice(0, 6) : [],
@@ -221,6 +221,20 @@ const TAG_DICT: Array<{ pat: RegExp; tag: string }> = [
   { pat: /성장|성장 단계|growth/i, tag: '성장' },
 ];
 
+/**
+ * 한 줄 설명 클램프 — Gemini가 "1문장" 지시를 무시하고 긴 요약을 뱉거나,
+ * 파일 본문이 그대로 요약에 들어오는 경우 방지. 첫 문장 종결부호에서 자르고,
+ * 문장부호가 없으면(정상적인 명사구 요약) 길 때만 하드컷. 정상 요약은 그대로 통과.
+ */
+function clampSummary(s: string, max = 160): string {
+  s = (s || '').replace(/\s+/g, ' ').trim();
+  // 첫 문장 종결(마침표/물음표/느낌표 뒤 공백·끝)에서 자르기 — 따옴표 안 물음표는 제외
+  const end = s.search(/[.?!。](\s|$)/);
+  if (end >= 10 && end < max) return s.slice(0, end + 1).trim();
+  if (s.length <= max) return s;
+  return s.slice(0, max).trim() + '…';
+}
+
 function extractTags(blob: string, max = 6): string[] {
   const found: string[] = [];
   for (const { pat, tag } of TAG_DICT) {
@@ -262,7 +276,7 @@ function heuristic(url: string, meta: { title: string; description: string }): O
 
   return {
     title: meta.title,
-    summary: meta.description,
+    summary: clampSummary(meta.description),
     mainCategory: main,
     subCategory: sub,
     tags: extractTags(blob),
