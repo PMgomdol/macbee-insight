@@ -47,6 +47,21 @@ export default async function RequestsPage() {
   const reviewerCount = countRes.count ?? 0;
   const items = (pendingRes.data ?? []) as Proposal[];
 
+  // 승인자 email → 운영진 이름 매핑 (profile엔 email이 없어 auth에서 uid↔email을 가져와 join)
+  const emailToName = new Map<string, string>();
+  if (items.some((p) => p.approvers && p.approvers.length > 0)) {
+    const [{ data: usersRes }, { data: profs }] = await Promise.all([
+      sb.auth.admin.listUsers({ page: 1, perPage: 200 }),
+      sb.from('profile').select('id, display_name'),
+    ]);
+    const idToName = new Map((profs ?? []).map((p) => [p.id as string, p.display_name as string | null]));
+    for (const u of usersRes?.users ?? []) {
+      if (u.email) emailToName.set(u.email, idToName.get(u.id) || u.email.split('@')[0]);
+    }
+  }
+  const approverNames = (emails: string[] | null) =>
+    (emails ?? []).map((e) => emailToName.get(e) ?? e.split('@')[0]).join(', ');
+
   return (
     <div className="flex flex-col gap-4">
       <section className="flex flex-col gap-1">
@@ -96,9 +111,11 @@ export default async function RequestsPage() {
                 </div>
               )}
               <div className="flex items-center justify-between gap-2 mt-1 pt-2 border-t border-[var(--border)] flex-wrap">
-                <div className="text-[11px] text-[var(--muted-2)]">
-                  {p.proposer ?? '익명'} · {new Date(p.proposed_at).toLocaleDateString('ko-KR')}
-                  {p.approvers && p.approvers.length > 0 && <span> · 승인 {p.approvers.length}/2</span>}
+                <div className="text-[11px] text-[var(--muted-2)] flex flex-col gap-0.5">
+                  <span>제안 <strong className="font-medium text-[var(--muted)]">{p.proposer ?? '익명'}</strong> · {new Date(p.proposed_at).toLocaleDateString('ko-KR')}</span>
+                  {p.approvers && p.approvers.length > 0 && (
+                    <span>승인 {p.approvers.length}/2 · <span className="text-[var(--accent)]">{approverNames(p.approvers)}</span></span>
+                  )}
                 </div>
                 <div className="flex gap-1.5 flex-wrap">
                   <ApproveButton id={p.id} disabled={p.approvers?.includes(user.email ?? '')} />
