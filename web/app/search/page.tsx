@@ -56,8 +56,8 @@ export default async function SearchPage({
           <span className="flex-1 text-[var(--muted)]">
             <strong className="text-[var(--fg)]">{q}</strong>
             {result.fallback === 'chosung'
-              ? ' 초성에 맞는 자료를 보여드려요.'
-              : '와 정확히 일치하는 자료가 없어 비슷한 자료를 보여드려요.'}
+              ? ' 초성에 맞는 자료를 보여줘요.'
+              : '와 정확히 일치하는 자료가 없어 비슷한 자료를 보여줘요.'}
           </span>
         </div>
       )}

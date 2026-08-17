@@ -9,7 +9,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       </svg>
       <h1 className="text-2xl font-bold tracking-tight">일시적인 문제가 생겼어요</h1>
       <p className="text-sm text-[var(--muted)] max-w-sm">
-        잠시 후 다시 시도해 주세요. 계속 반복되면 하단 의견 보내기로 알려주시면 빠르게 고칠게요.
+        잠시 후 다시 시도해주세요. 계속 반복되면 하단 의견 보내기로 알려주시면 빠르게 고칠게요.
       </p>
       <div className="flex gap-2 mt-2">
         <button
@@ -17,7 +17,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           onClick={reset}
           className="px-4 py-2 rounded-[var(--r-md)] bg-[var(--accent)] text-white hover:text-white text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
         >
-          다시 시도
+          다시 시도하기
         </button>
         <a
           href="/"

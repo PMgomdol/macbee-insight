@@ -22,7 +22,7 @@ export default function NotFound() {
           href="/search"
           className="px-4 py-2 rounded-[var(--r-md)] border border-[var(--border)] text-sm hover:bg-[var(--card)] transition-colors"
         >
-          자료 검색
+          자료 검색하기
         </Link>
       </div>
     </div>

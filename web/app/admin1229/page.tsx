@@ -45,7 +45,7 @@ function Logged({ user, displayName, role }: { user: { email?: string }; display
       <header className="flex flex-col gap-2 text-center">
         <h1 className="text-2xl font-bold tracking-tight">운영진 신청</h1>
         <p className="text-sm text-[var(--muted)]">
-          신청하면 기존 운영진이 확인해드려요.
+          신청하면 기존 운영진이 확인해요.
         </p>
       </header>
 

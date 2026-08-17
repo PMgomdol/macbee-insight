@@ -64,7 +64,7 @@ export async function approveReviewer(profileId: string): Promise<{ ok: boolean;
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return { ok: false, error: '로그인해주세요' };
-  if (user.id === profileId) return { ok: false, error: '본인 신청은 다른 운영진이 승인할 수 있어요' };
+  if (user.id === profileId) return { ok: false, error: '본인 신청은 다른 운영진이 승인해요' };
   const sba = createAdminClient();
   const { data: me } = await sba.from('profile').select('role').eq('id', user.id).maybeSingle();
   if (me?.role !== 'admin' && me?.role !== 'reviewer') return { ok: false, error: '운영진만 할 수 있어요' };
@@ -87,7 +87,7 @@ export async function rejectReviewer(profileId: string, reason: string): Promise
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return { ok: false, error: '로그인해주세요' };
-  if (user.id === profileId) return { ok: false, error: '본인 신청은 다른 운영진이 처리할 수 있어요' };
+  if (user.id === profileId) return { ok: false, error: '본인 신청은 다른 운영진이 처리해요' };
   const sba = createAdminClient();
   const { data: me } = await sba.from('profile').select('role').eq('id', user.id).maybeSingle();
   if (me?.role !== 'admin' && me?.role !== 'reviewer') return { ok: false, error: '운영진만 할 수 있어요' };
