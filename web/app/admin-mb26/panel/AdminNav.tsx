@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BarChart3, Inbox, MessageSquare, UserPlus, KanbanSquare, ScrollText } from 'lucide-react';
+import { Home, BarChart3, Inbox, MessageSquare, UserPlus, KanbanSquare, ScrollText, Library } from 'lucide-react';
 
 type NavItem = { href: string; label: string; icon: typeof Home; exact?: boolean };
 
@@ -10,6 +10,7 @@ const ITEMS: NavItem[] = [
   { href: '/admin-mb26/panel', label: '홈', icon: Home, exact: true },
   { href: '/admin-mb26/panel/dashboard', label: '대시보드', icon: BarChart3 },
   { href: '/admin-mb26/panel/requests', label: '자료등록요청', icon: Inbox },
+  { href: '/admin-mb26/panel/archive', label: '자료 관리', icon: Library },
   { href: '/admin-mb26/panel/feedback', label: 'VOC', icon: MessageSquare },
   { href: '/admin-mb26/panel/backlog', label: '백로그', icon: KanbanSquare },
   { href: '/admin-mb26/panel/invite', label: '운영진 초대', icon: UserPlus },

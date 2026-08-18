@@ -7,6 +7,51 @@ import { notifyProposalResult } from '@/lib/notify';
 
 const MIN_APPROVALS = 2;
 
+/** 게시된 자료 수정 — 운영진이 제목·요약·분류·태그·형식·메뉴위치를 직접 보정. */
+export async function updateArchiveItem(
+  id: number,
+  fields: { title: string; summary: string; main_category: string; sub_category: string; tags: string[]; format: string; kind: 'files' | 'insights' }
+) {
+  const me = await getCurrentUser();
+  if (!me) throw new Error('로그인해주세요');
+  const role = await getRole();
+  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
+  const title = fields.title.trim();
+  if (!title) throw new Error('제목은 비울 수 없어요');
+
+  const sb = createAdminClient();
+  const { error } = await sb
+    .from('archive_item')
+    .update({
+      title,
+      summary: fields.summary.trim() || null,
+      main_category: fields.main_category.trim() || '미분류',
+      sub_category: fields.sub_category.trim() || null,
+      tags: fields.tags.length ? fields.tags : [],
+      format: fields.format.trim() || null,
+      kind: fields.kind === 'files' ? 'files' : 'insights',
+    })
+    .eq('id', id);
+  if (error) throw new Error('수정에 실패했어요 — ' + error.message);
+  updateTag('archive');
+  revalidatePath('/admin-mb26/panel/archive');
+}
+
+/** 자료 공개 상태 변경 — public(공개) / hidden(숨김) / deleted(삭제, 되살릴 수 있음). */
+export async function setArchiveStatus(id: number, status: 'public' | 'hidden' | 'deleted') {
+  const me = await getCurrentUser();
+  if (!me) throw new Error('로그인해주세요');
+  const role = await getRole();
+  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
+  if (!['public', 'hidden', 'deleted'].includes(status)) throw new Error('알 수 없는 상태예요');
+
+  const sb = createAdminClient();
+  const { error } = await sb.from('archive_item').update({ status }).eq('id', id);
+  if (error) throw new Error('상태 변경에 실패했어요 — ' + error.message);
+  updateTag('archive');
+  revalidatePath('/admin-mb26/panel/archive');
+}
+
 /** 승인 전 제안 내용 보정 — 운영진이 제목·요약·분류·태그·형식을 다듬어 저장. */
 export async function updateProposal(
   id: string,
