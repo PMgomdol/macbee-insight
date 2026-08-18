@@ -124,14 +124,14 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
 
   return (
     <div className="flex flex-col gap-3">
-      {/* 종류 필터 — 다른 페이지 대분류와 동일한 accent 필터 칩 */}
-      <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap">
-        <Chip active={!kind} onClick={() => pickKind(undefined)}>전체 <span className="opacity-70">({archives.length})</span></Chip>
-        <Chip active={kind === 'files'} onClick={() => pickKind('files')}>양식·템플릿 <span className="opacity-70">({kindCounts.files})</span></Chip>
-        <Chip active={kind === 'insights'} onClick={() => pickKind('insights')}>콘텐츠 <span className="opacity-70">({kindCounts.insights})</span></Chip>
+      {/* 종류 = 최상위 스코프 전환 → 탭(섹션 전환류). 양식·템플릿/콘텐츠는 원래 별도 메뉴라 탭이 위계상 맞음. */}
+      <div role="tablist" aria-label="자료 종류" className="flex gap-1 border-b border-[var(--border)] overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0">
+        <KindTab active={!kind} onClick={() => pickKind(undefined)} label="전체" n={archives.length} />
+        <KindTab active={kind === 'files'} onClick={() => pickKind('files')} label="양식·템플릿" n={kindCounts.files} />
+        <KindTab active={kind === 'insights'} onClick={() => pickKind('insights')} label="콘텐츠" n={kindCounts.insights} />
       </div>
 
-      {/* 대분류 chips */}
+      {/* 대분류 chips — 콘텐츠/템플릿 페이지와 동일한 accent 필터 칩 */}
       {sortedMains.length > 0 && (
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap">
           <Chip active={!main} onClick={() => pickMain(undefined)}>전체 카테고리</Chip>
@@ -225,6 +225,23 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
         </section>
       )}
     </div>
+  );
+}
+
+// 종류 탭 — 제출 폼 탭과 동일한 언더라인 스타일. "섹션 전환"이라 필터 칩과 시각 언어를 구분.
+function KindTab({ active, onClick, label, n }: { active: boolean; onClick: () => void; label: string; n: number }) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={`shrink-0 px-3 sm:px-4 py-2.5 text-sm -mb-px border-b-2 whitespace-nowrap transition ${
+        active ? 'border-[var(--accent)] text-[var(--accent)] font-semibold' : 'border-transparent text-[var(--muted)] hover:text-[var(--fg)]'
+      }`}
+    >
+      {label} <span className="text-xs opacity-70">{n}</span>
+    </button>
   );
 }
 
