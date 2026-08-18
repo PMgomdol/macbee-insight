@@ -250,6 +250,38 @@ function dailySyncCron() {
   fullSyncToSupabase();
 }
 
+/**
+ * ★ SSOT 이관 1단계 — 시트→Supabase 자동 동기화 종료. 편집기에서 1회 실행.
+ *   1) 최종 풀싱크로 Supabase를 시트 최신 상태와 맞춘다(데이터 유실 방지).
+ *   2) 싱크가 성공했을 때만 onEditSyncToSupabase·dailySyncCron 트리거를 삭제.
+ * 이후로 시트는 Supabase를 덮어쓰지 못한다 → 원본은 Supabase(사이트) 하나.
+ * 되돌리려면 installTriggers()를 다시 실행하면 트리거가 재설치된다.
+ */
+function disableSheetToSupabaseSync() {
+  if (!supabaseConfigured_()) throw new Error('Supabase 설정 없음 — 중단');
+
+  var res = fullSyncToSupabase();
+  var archiveOk = res.archive ? res.archive.ok : true;
+  var faqOk = res.faq ? res.faq.ok : true;
+  if (!archiveOk || !faqOk) {
+    throw new Error('최종 싱크 실패 — 트리거 그대로 둠. 결과: ' + JSON.stringify(res));
+  }
+
+  var removed = [];
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    var fn = triggers[i].getHandlerFunction();
+    if (fn === 'onEditSyncToSupabase' || fn === 'dailySyncCron') {
+      ScriptApp.deleteTrigger(triggers[i]);
+      removed.push(fn);
+    }
+  }
+  Logger.log('최종 싱크 완료: ' + JSON.stringify(res));
+  Logger.log('삭제한 트리거: ' + (removed.length ? removed.join(', ') : '(없음 — 이미 해제됨)'));
+  Logger.log('이제 원본은 Supabase 하나. 시트는 덮어쓰기 중단됨.');
+  return { sync: res, removedTriggers: removed };
+}
+
 // ---------------- 외부 호출 (link check 등) ----------------
 
 /**
