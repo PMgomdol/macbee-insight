@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { updateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 
 /**
  * 자료 DB를 앱 밖(스크립트·SQL)에서 일괄 수정한 뒤 캐시를 즉시 무효화하는 관리용 엔드포인트.
@@ -13,6 +13,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
   }
   const tags = ['archive', 'popular', 'faq'];
-  for (const t of tags) updateTag(t);
+  for (const t of tags) revalidateTag(t);
   return NextResponse.json({ ok: true, revalidated: tags });
 }
