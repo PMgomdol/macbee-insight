@@ -72,6 +72,16 @@ function fileExtBadge(item: ArchiveItem): string | null {
   return null;
 }
 
+/** 상단 형식 배지 — 파일 확장자 > 영상 > 홈페이지(사이트) > 아티클.
+ *  홈페이지·툴·포털은 '읽는 글'이 아니라 '둘러보는 사이트'라 별도 라벨로 오해를 줄인다. */
+function topBadgeLabel(item: ArchiveItem): string {
+  const ext = fileExtBadge(item);
+  if (ext) return ext;
+  if (isVideo(item)) return '영상';
+  if (item.format === '홈페이지') return '사이트';
+  return '아티클';
+}
+
 /**
  * 카드 정보 위계 — Linear/Medium 카드 참고
  *  ① 태그 (종류·형식·실태그)  — 작게
@@ -85,8 +95,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
   const media = mediaLabel(item);
   const isFile = media === '파일';
   const video = isVideo(item);
-  const fileExt = fileExtBadge(item);
-  const topBadge = fileExt ?? (video ? '영상' : '아티클');
+  const topBadge = topBadgeLabel(item);
   const { Icon: ActionIcon, label: actionLabel } = cardAction(item);
   const tags = (item.tags ?? []).slice(0, 2);
 
@@ -153,8 +162,7 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
   const media = mediaLabel(item);
   const isFile = media === '파일';
   const video = isVideo(item);
-  const fileExt = fileExtBadge(item);
-  const topBadge = fileExt ?? (video ? '영상' : '아티클');
+  const topBadge = topBadgeLabel(item);
   const { Icon: ActionIcon, label: actionLabel } = cardAction(item);
   return (
     <a
