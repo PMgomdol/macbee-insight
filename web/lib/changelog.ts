@@ -17,7 +17,9 @@ export type Media =
 
 export type Release = {
   date: string; // ISO "2026-08-18"
-  title?: string; // 이 릴리즈를 한 줄로 요약 (선택)
+  // 제목 = 그 릴리즈의 대표 변경 2~3개를 ' · '로 나열 (문장 요약 X). 옆에 "N건"이 뜨니 나머지는 생략.
+  // 접힌 제목만 보고 "뭐가 있었나"가 바로 읽히는 게 목적. 오픈 같은 마일스톤은 사건명.
+  title?: string;
   changes: ChangeItem[];
   media?: Media[];
 };
@@ -36,7 +38,7 @@ export const TYPE_META: Record<ChangeType, { label: string; color: string }> = {
 export const CHANGELOG: Release[] = [
   {
     date: '2026-08-18',
-    title: '제안 검토·제출 흐름 다듬기',
+    title: '승인 전 제안 수정 · 업로드 진행률 · 메일 알림',
     changes: [
       { type: 'feature', text: '운영진이 멤버 제안 자료를 승인하기 전에 내용을 바로 수정할 수 있어요.' },
       { type: 'feature', text: '자료 등록 시 업로드·AI 분석 진행률을 진행 바로 보여드려요.' },
@@ -56,7 +58,7 @@ export const CHANGELOG: Release[] = [
   },
   {
     date: '2026-08-17',
-    title: '운영 도구 강화 · 새 도메인 이전',
+    title: '백로그 보드 · 의견 관리(VOC) · 카드 액션 · 도메인 이전',
     changes: [
       { type: 'feature', text: '운영진 공용 백로그 칸반 보드를 추가해 할 일을 함께 관리해요.' },
       { type: 'feature', text: '의견 관리(VOC) 전용 페이지와 대시보드 피드백 탭이 생겼어요.' },
@@ -74,7 +76,7 @@ export const CHANGELOG: Release[] = [
   },
   {
     date: '2026-08-13',
-    title: '업로드·태그 정리',
+    title: '직접 업로드(10MB) · 행동 기준 태그',
     changes: [
       { type: 'improve', text: '파일 업로드를 브라우저에서 바로 올리는 방식으로 바꾸고 한도를 10MB로 넓혔어요.' },
       { type: 'improve', text: '자료 태그를 행동 기준으로 정리했어요 — [다운로드], [바로 보기]. 파일 형식은 보조 정보로 내렸어요.' },
@@ -82,7 +84,7 @@ export const CHANGELOG: Release[] = [
   },
   {
     date: '2026-08-10',
-    title: '모바일 사용성 · 컴포넌트 정리',
+    title: '다크 푸터 · 모바일 사용성 · 버튼 통일',
     changes: [
       { type: 'feature', text: '다크 톤 푸터와 검색 결과에서 FAQ 펼쳐보기를 추가했어요.' },
       { type: 'improve', text: '모바일 사용성 검수 결과를 반영하고, 검색이 걸러야 할 불용어를 넓혔어요.' },
@@ -93,7 +95,7 @@ export const CHANGELOG: Release[] = [
   },
   {
     date: '2026-08-09',
-    title: '디자인 시스템 확정 · 라이트 단일 테마',
+    title: '디자인 시스템 확정 · 홈 배너 · 다크모드 제거',
     changes: [
       { type: 'feature', text: '기본 색을 토스 블루로 확정하고 라운드·간격 토큰을 정비했어요(스타일 가이드 문서화).' },
       { type: 'feature', text: '홈에 슬라이드 배너(자료 제안·양식)와 전환 진행 게이지를 넣었어요.' },
@@ -105,14 +107,14 @@ export const CHANGELOG: Release[] = [
   },
   {
     date: '2026-08-07',
-    title: 'AI 분석 강화',
+    title: 'AI 분석 강화 — 유튜브·본문 이해',
     changes: [
       { type: 'improve', text: '자료 등록 시 유튜브 영상 내용을 이해하고 아티클 본문까지 분석해 요약·분류 정확도를 높였어요.' },
     ],
   },
   {
     date: '2026-07-29',
-    title: '검색 강화 1차',
+    title: '오타·초성 검색 · 전역 검색 접이식',
     changes: [
       { type: 'feature', text: '오타를 허용하고 초성·태그로도 검색되며, 결과가 없을 때 안내 화면을 보여줘요.' },
       { type: 'improve', text: '헤더 전역 검색을 접이식으로 바꿔 목록 안 검색과 중복 노출을 없앴어요.' },
@@ -124,7 +126,7 @@ export const CHANGELOG: Release[] = [
   },
   {
     date: '2026-07-09',
-    title: '이메일 알림 · FAQ 개선',
+    title: '이메일 알림 · FAQ 마크다운',
     changes: [
       { type: 'feature', text: '자료 제안·승인·반려 시 운영진과 제안자에게 이메일로 알려드려요.' },
       { type: 'feature', text: 'FAQ 답변에 마크다운 서식과 접기/펼치기를 지원해요.' },
@@ -133,7 +135,7 @@ export const CHANGELOG: Release[] = [
   },
   {
     date: '2026-07-06',
-    title: '디자인 전면 개편 · 메뉴 재편',
+    title: '디자인 개편(ADS) · 대메뉴 재편',
     changes: [
       { type: 'improve', text: '디자인을 Atlassian Design System 기준으로 토큰·컴포넌트까지 전면 교체했어요.' },
       { type: 'improve', text: "대메뉴를 자료 형식 기준으로 재편했어요 — 아티클·영상을 '콘텐츠'로 통합." },
