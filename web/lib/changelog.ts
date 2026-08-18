@@ -6,6 +6,8 @@ export type ChangeType = 'feature' | 'improve' | 'fix' | 'remove';
 
 // text 안에 [라벨](/경로) 를 넣으면 그 부분이 링크가 됨(내부 경로 또는 http…).
 // 언급하는 페이지·기능에 실제 목적지가 있으면 걸어서 운영진이 바로 확인하게. 버그·톤 같은 건 링크 없이.
+// 링크 텍스트는 목적지를 온전히 가리키는 구절로 — '의견 관리(VOC) 전용 페이지'처럼 '페이지/탭/보드'
+// 까지 포함해 '어디로 가는지'가 분명하게. (짧은 명사만 걸면 페이지인지 기능명인지 헷갈림)
 export type ChangeItem = { type: ChangeType; text: string };
 
 // 스크린샷·영상·before/after 비교. src는 public/ 기준 경로(예: '/changelog/search.webp').
@@ -63,7 +65,7 @@ export const CHANGELOG: Release[] = [
     title: '백로그 보드 · 의견 관리(VOC) · 카드 액션 · 도메인 이전',
     changes: [
       { type: 'feature', text: '운영진 공용 [백로그 칸반 보드](/admin-mb26/panel/backlog)를 추가해 할 일을 함께 관리해요.' },
-      { type: 'feature', text: '[의견 관리(VOC)](/admin-mb26/panel/feedback) 전용 페이지와 [대시보드](/admin-mb26/panel/dashboard) 피드백 탭이 생겼어요.' },
+      { type: 'feature', text: '[의견 관리(VOC) 전용 페이지](/admin-mb26/panel/feedback)와 [대시보드 피드백 탭](/admin-mb26/panel/dashboard)이 생겼어요.' },
       { type: 'feature', text: '[자료 카드](/files)에 다운로드·바로가기·재생 액션 아이콘과 목록형 보기 토글을 넣었어요.' },
       { type: 'feature', text: '[자료 등록](/submit) 시 파일을 끌어다 놓아 올릴 수 있어요(드래그앤드롭).' },
       { type: 'improve', text: '주소를 [macbe-archive.com](https://macbe-archive.com)으로 옮기고, 옛 주소로 들어와도 자동으로 넘어가게 했어요.' },
