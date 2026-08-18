@@ -1,9 +1,33 @@
+import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { UILinkButton } from '@/components/ui/Button';
 import { getAuthState } from '@/lib/auth';
 import { CHANGELOG, TYPE_META, TYPE_ORDER, type Release, type Media } from '@/lib/changelog';
 
 export const metadata = { title: '업데이트 내역 · 운영/관리' };
+
+// 변경 문구 안의 [라벨](/경로) 를 링크로. 내부는 <Link>, 외부(http)는 새 탭.
+const LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/g;
+const LINK_CLS = 'text-[var(--accent)] underline underline-offset-2 hover:text-[var(--accent-hover)]';
+function linkify(text: string): React.ReactNode[] {
+  const out: React.ReactNode[] = [];
+  let last = 0;
+  for (const m of text.matchAll(LINK_RE)) {
+    const i = m.index ?? 0;
+    if (i > last) out.push(text.slice(last, i));
+    const [full, label, href] = m;
+    out.push(
+      href.startsWith('http') ? (
+        <a key={i} href={href} target="_blank" rel="noopener noreferrer" className={LINK_CLS}>{label}</a>
+      ) : (
+        <Link key={i} href={href} className={LINK_CLS}>{label}</Link>
+      ),
+    );
+    last = i + full.length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
 
 function formatDate(iso: string): string {
   const d = new Date(iso + 'T00:00:00');
@@ -85,7 +109,7 @@ function ReleaseCard({ rel, open }: { rel: Release; open: boolean }) {
                 {items.map((c, i) => (
                   <li key={i} className="flex gap-2">
                     <span className="text-[var(--muted-2)] shrink-0" aria-hidden>·</span>
-                    <span>{c.text}</span>
+                    <span>{linkify(c.text)}</span>
                   </li>
                 ))}
               </ul>
