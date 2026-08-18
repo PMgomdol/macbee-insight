@@ -162,16 +162,18 @@ export function SearchResultsClient({ q, archives, faqs, initialKind, initialMai
             <button
               onClick={() => changeView('card')}
               aria-pressed={view === 'card'}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-medium transition ${view === 'card' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
+              aria-label="카드 보기"
+              className={`inline-flex items-center px-2.5 py-1.5 rounded-full transition ${view === 'card' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
             >
-              <LayoutGrid size={13} aria-hidden /> 카드
+              <LayoutGrid size={14} aria-hidden />
             </button>
             <button
               onClick={() => changeView('list')}
               aria-pressed={view === 'list'}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-medium transition ${view === 'list' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
+              aria-label="목록 보기"
+              className={`inline-flex items-center px-2.5 py-1.5 rounded-full transition ${view === 'list' ? 'bg-[var(--card)] text-[var(--fg)] shadow-sm' : 'text-[var(--muted)] hover:text-[var(--fg)]'}`}
             >
-              <LayoutList size={13} aria-hidden /> 목록
+              <LayoutList size={14} aria-hidden />
             </button>
           </div>
           <button
