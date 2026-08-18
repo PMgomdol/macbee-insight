@@ -258,13 +258,19 @@ function dailySyncCron() {
  * 되돌리려면 installTriggers()를 다시 실행하면 트리거가 재설치된다.
  */
 function disableSheetToSupabaseSync() {
-  if (!supabaseConfigured_()) throw new Error('Supabase 설정 없음 — 중단');
-
-  var res = fullSyncToSupabase();
-  var archiveOk = res.archive ? res.archive.ok : true;
-  var faqOk = res.faq ? res.faq.ok : true;
-  if (!archiveOk || !faqOk) {
-    throw new Error('최종 싱크 실패 — 트리거 그대로 둠. 결과: ' + JSON.stringify(res));
+  var syncNote;
+  if (supabaseConfigured_()) {
+    var res = fullSyncToSupabase();
+    var archiveOk = res.archive ? res.archive.ok : true;
+    var faqOk = res.faq ? res.faq.ok : true;
+    if (!archiveOk || !faqOk) {
+      throw new Error('최종 싱크 실패 — 트리거 그대로 둠. 결과: ' + JSON.stringify(res));
+    }
+    syncNote = '최종 싱크 완료: ' + JSON.stringify(res);
+  } else {
+    // 키가 없으면 동기화는 이미 비활성(둘 다 supabaseConfigured_ 가드로 no-op).
+    // 최종 싱크는 불가하지만, 잠든 트리거를 정리하는 건 안전.
+    syncNote = '동기화가 이미 비활성(Supabase 키 없음) — 최종 싱크 건너뜀. 시트를 최근 직접 편집했다면 Supabase와 별도 대조 필요.';
   }
 
   var removed = [];
@@ -276,10 +282,10 @@ function disableSheetToSupabaseSync() {
       removed.push(fn);
     }
   }
-  Logger.log('최종 싱크 완료: ' + JSON.stringify(res));
+  Logger.log(syncNote);
   Logger.log('삭제한 트리거: ' + (removed.length ? removed.join(', ') : '(없음 — 이미 해제됨)'));
   Logger.log('이제 원본은 Supabase 하나. 시트는 덮어쓰기 중단됨.');
-  return { sync: res, removedTriggers: removed };
+  return { syncNote: syncNote, removedTriggers: removed };
 }
 
 // ---------------- 외부 호출 (link check 등) ----------------
