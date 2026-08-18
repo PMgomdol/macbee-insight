@@ -95,7 +95,7 @@ export default async function ChangelogPage() {
       <section className="flex flex-col gap-1">
         <div className="flex items-baseline justify-between gap-3 flex-wrap">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">업데이트 내역</h1>
-          <span className="text-xs text-[var(--muted-2)]">{displayName ?? user.email} · {role === 'admin' ? '관리자' : '운영진'}</span>
+          <span className="text-xs text-[var(--muted-2)]">{displayName ?? user?.email} · {role === 'admin' ? '관리자' : '운영진'}</span>
         </div>
         <p className="text-sm text-[var(--muted)]">자료실이 어떻게 바뀌어 왔는지 최신순으로 모았어요. 제목을 눌러 자세히 볼 수 있어요.</p>
       </section>

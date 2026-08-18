@@ -60,6 +60,7 @@ export const CHANGELOG: Release[] = [
       { type: 'improve', text: '관리자 메뉴를 홈·대시보드·자료등록요청·VOC·운영진 초대로 재편하고, 안내 문구 존댓말 톤을 통일했어요.' },
       { type: 'fix', text: '운영진 수가 실제보다 적게 표시되던 집계 버그를 고쳤어요.' },
     ],
+    media: [{ type: 'image', src: '/changelog/cards.png', caption: '자료 카드 액션 아이콘·목록 보기 토글' }],
   },
   {
     date: '2026-08-13',
@@ -78,6 +79,7 @@ export const CHANGELOG: Release[] = [
       { type: 'improve', text: '버튼을 사이트 공용 컴포넌트로 통일했어요.' },
       { type: 'fix', text: '카카오톡 웹뷰 표시 문제, iOS에서 검색창을 누르면 화면이 확대되던 문제, 도구·파일 링크가 아티클로 잘못 분류되던 문제를 고쳤어요.' },
     ],
+    media: [{ type: 'image', src: '/changelog/footer.png', caption: '다크 톤 푸터' }],
   },
   {
     date: '2026-08-09',
@@ -105,6 +107,7 @@ export const CHANGELOG: Release[] = [
       { type: 'feature', text: '오타를 허용하고 초성·태그로도 검색되며, 결과가 없을 때 안내 화면을 보여줘요.' },
       { type: 'improve', text: '헤더 전역 검색을 접이식으로 바꿔 목록 안 검색과 중복 노출을 없앴어요.' },
     ],
+    media: [{ type: 'image', src: '/changelog/search.png', caption: '유의어 확장·카테고리별 검색 결과' }],
   },
   {
     date: '2026-07-09',
@@ -113,6 +116,7 @@ export const CHANGELOG: Release[] = [
       { type: 'feature', text: '자료 제안·승인·반려 시 운영진과 제안자에게 이메일로 알려드려요.' },
       { type: 'feature', text: 'FAQ 답변에 마크다운 서식과 접기/펼치기를 지원해요.' },
     ],
+    media: [{ type: 'image', src: '/changelog/faq.png', caption: '실무 Q&A — 카테고리 필터·펼치기' }],
   },
   {
     date: '2026-07-06',
@@ -129,5 +133,6 @@ export const CHANGELOG: Release[] = [
       { type: 'feature', text: '검색 중심 홈, 양식·템플릿/콘텐츠/실무 Q&A 분류, 자료 등록·승인 흐름을 갖춘 자료실을 열었어요.' },
       { type: 'feature', text: '스프레드시트를 Supabase로 자동 동기화하고, 자동완성·동의어·관련도 정렬 검색을 붙였어요.' },
     ],
+    media: [{ type: 'image', src: '/changelog/home.png', caption: '검색 중심 홈 화면' }],
   },
 ];
