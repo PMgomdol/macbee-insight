@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, Pencil, ExternalLink, Eye, EyeOff, Trash2, RotateCcw } from 'lucide-react';
+import { Search, X, Pencil, ExternalLink, Eye, EyeOff, Trash2, RotateCcw, Check } from 'lucide-react';
 import { UIButton } from '@/components/ui/Button';
-import { updateArchiveItem, setArchiveStatus } from './actions';
+import { updateArchiveItem, setArchiveStatus, updateArchiveSummary } from './actions';
 
 const FORMATS = ['아티클', '영상', '기획서', '가이드', '템플릿', '세미나'];
 
@@ -35,6 +35,7 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
   const [kind, setKind] = useState<'' | 'files' | 'insights'>('');
   const [status, setStatus] = useState<'public' | 'hidden' | 'deleted' | 'all'>('public');
   const [showCount, setShowCount] = useState(STEP);
+  const [mode, setMode] = useState<'manage' | 'review'>('manage'); // review = 한 줄 설명 검수(임시)
 
   // 종류·검색까지 적용한 기준 집합 — 상태 탭 숫자와 목록이 항상 같은 기준을 쓰게 한다.
   const byKindSearch = useMemo(() => {
@@ -76,6 +77,23 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">자료 관리</h1>
         <p className="text-sm text-[var(--muted)]">자료실에 올라간 자료를 직접 수정하고 숨기거나 삭제해요. 전체 {items.length}건.</p>
       </section>
+
+      {/* 모드 전환 — '검수'는 한 줄 설명만 촘촘히 보며 바로 수정하는 임시 모드 */}
+      <div role="tablist" className="flex gap-1 border-b border-[var(--border)]">
+        {([['manage', '관리'], ['review', '한 줄 설명 검수']] as const).map(([m, label]) => (
+          <button
+            key={m}
+            role="tab"
+            aria-selected={mode === m}
+            onClick={() => setMode(m)}
+            className={`px-4 py-2.5 text-sm -mb-px border-b-2 transition ${
+              mode === m ? 'border-[var(--accent)] text-[var(--accent)] font-semibold' : 'border-transparent text-[var(--muted)] hover:text-[var(--fg)]'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       {/* 검색 */}
       <div className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)]">
@@ -122,6 +140,12 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
 
       {visible.length === 0 ? (
         <div className="py-12 text-center text-sm text-[var(--muted)]">조건에 맞는 자료가 없어요</div>
+      ) : mode === 'review' ? (
+        <div className="flex flex-col divide-y divide-[var(--border)] border-y border-[var(--border)]">
+          {visible.map((it) => (
+            <SummaryReviewRow key={it.id} item={it} />
+          ))}
+        </div>
       ) : (
         <div className="flex flex-col gap-2">
           {visible.map((it) => (
@@ -150,6 +174,52 @@ function StatusBadge({ status }: { status: string }) {
   };
   const s = map[status] ?? { label: status, cls: 'text-[var(--muted)] bg-[var(--card)]' };
   return <span className={`shrink-0 px-1.5 py-0.5 rounded-[var(--r-sm)] text-[10px] font-semibold ${s.cls}`}>{s.label}</span>;
+}
+
+// 한 줄 설명 검수 행(임시 모드) — 요약만 촘촘히 보며 편집, 포커스 벗어나면 자동 저장.
+function SummaryReviewRow({ item }: { item: ArchiveRowItem }) {
+  const orig = item.summary ?? '';
+  const [val, setVal] = useState(orig);
+  const [state, setState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const src = item.external_url || item.file_url;
+
+  async function saveIfChanged() {
+    if (val.trim() === orig.trim()) return;
+    setState('saving');
+    try { await updateArchiveSummary(item.id, val); setState('saved'); }
+    catch (e: any) { setState('error'); alert(e.message); }
+  }
+
+  return (
+    <div className="py-3 flex flex-col gap-1.5">
+      <div className="flex items-center gap-2 text-[11px] text-[var(--muted-2)] min-w-0">
+        <StatusBadge status={item.status} />
+        <span className="font-medium text-[var(--fg)] text-xs truncate">{item.title}</span>
+        <span className="shrink-0">· {item.main_category}{item.format ? ` · ${item.format}` : ''}</span>
+        {src && (
+          <a href={src} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[var(--accent)] hover:underline inline-flex items-center gap-0.5">
+            원문 <ExternalLink size={10} aria-hidden />
+          </a>
+        )}
+      </div>
+      <div className="flex items-start gap-2">
+        <textarea
+          value={val}
+          onChange={(e) => { setVal(e.target.value); if (state !== 'idle') setState('idle'); }}
+          onBlur={saveIfChanged}
+          rows={2}
+          className="flex-1 min-w-0 px-2.5 py-1.5 rounded-[var(--r-sm)] border border-[var(--border-strong)] bg-[var(--bg)] text-sm resize-y focus:border-[var(--accent)] transition-colors"
+          placeholder="한 줄 설명 (비우면 없음)"
+        />
+        <span className="shrink-0 w-12 pt-1.5 text-right text-[11px]">
+          {state === 'saving' && <span className="text-[var(--muted)]">저장…</span>}
+          {state === 'saved' && <span className="text-[var(--success)] inline-flex items-center gap-0.5"><Check size={11} aria-hidden />저장됨</span>}
+          {state === 'error' && <span className="text-[var(--danger)]">실패</span>}
+          {state === 'idle' && val.trim() !== orig.trim() && <span className="text-[var(--warning)]">수정됨</span>}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function ArchiveRow({ item, categories }: { item: ArchiveRowItem; categories: Cat[] }) {

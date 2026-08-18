@@ -37,6 +37,18 @@ export async function updateArchiveItem(
   revalidatePath('/admin-mb26/panel/archive');
 }
 
+/** 한 줄 설명만 저장 — 검수 모드 전용(임시). 요약 필드만 갱신. */
+export async function updateArchiveSummary(id: number, summary: string) {
+  const me = await getCurrentUser();
+  if (!me) throw new Error('로그인해주세요');
+  const role = await getRole();
+  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
+  const sb = createAdminClient();
+  const { error } = await sb.from('archive_item').update({ summary: summary.trim() || null }).eq('id', id);
+  if (error) throw new Error('저장 실패 — ' + error.message);
+  updateTag('archive');
+}
+
 /** 자료 공개 상태 변경 — public(공개) / hidden(숨김) / deleted(삭제, 되살릴 수 있음). */
 export async function setArchiveStatus(id: number, status: 'public' | 'hidden' | 'deleted') {
   const me = await getCurrentUser();
