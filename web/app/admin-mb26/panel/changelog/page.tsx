@@ -1,13 +1,51 @@
 import { ChevronRight } from 'lucide-react';
 import { UILinkButton } from '@/components/ui/Button';
 import { getAuthState } from '@/lib/auth';
-import { CHANGELOG, TYPE_META, TYPE_ORDER, type Release } from '@/lib/changelog';
+import { CHANGELOG, TYPE_META, TYPE_ORDER, type Release, type Media } from '@/lib/changelog';
 
 export const metadata = { title: '업데이트 내역 · 운영/관리' };
 
 function formatDate(iso: string): string {
   const d = new Date(iso + 'T00:00:00');
   return `${d.getFullYear()}. ${String(d.getMonth() + 1).padStart(2, '0')}. ${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/* eslint-disable @next/next/no-img-element -- 관리자 내부 페이지, 이미지 최적화 불필요 */
+function Shot({ src, alt }: { src: string; alt: string }) {
+  const isVideo = /\.(mp4|webm)$/i.test(src);
+  return (
+    <div className="overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--card)]">
+      {isVideo ? (
+        <video src={src} controls loop muted playsInline className="w-full h-auto block" />
+      ) : (
+        <img src={src} alt={alt} className="w-full h-auto block" loading="lazy" />
+      )}
+    </div>
+  );
+}
+
+function MediaFigure({ m }: { m: Media }) {
+  if (m.type === 'compare') {
+    return (
+      <figure className="sm:col-span-2 flex flex-col gap-1.5">
+        <div className="grid grid-cols-2 gap-2">
+          {(['before', 'after'] as const).map((k) => (
+            <div key={k} className="flex flex-col gap-1">
+              <span className="text-[11px] font-semibold text-[var(--muted-2)]">{k === 'before' ? '기존' : '개선'}</span>
+              <Shot src={m[k]} alt={`${m.caption ?? ''} ${k === 'before' ? '기존' : '개선'}`} />
+            </div>
+          ))}
+        </div>
+        {m.caption && <figcaption className="text-[11px] text-[var(--muted-2)]">{m.caption}</figcaption>}
+      </figure>
+    );
+  }
+  return (
+    <figure className="flex flex-col gap-1.5">
+      <Shot src={m.src} alt={m.caption ?? ''} />
+      {m.caption && <figcaption className="text-[11px] text-[var(--muted-2)]">{m.caption}</figcaption>}
+    </figure>
+  );
 }
 
 function ReleaseCard({ rel, open }: { rel: Release; open: boolean }) {
@@ -58,17 +96,7 @@ function ReleaseCard({ rel, open }: { rel: Release; open: boolean }) {
         {rel.media && rel.media.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
             {rel.media.map((m, i) => (
-              <figure key={i} className="flex flex-col gap-1.5">
-                <div className="overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--card)]">
-                  {m.type === 'image' ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- 관리자 내부 페이지, 최적화 불필요
-                    <img src={m.src} alt={m.caption ?? ''} className="w-full h-auto block" loading="lazy" />
-                  ) : (
-                    <video src={m.src} controls className="w-full h-auto block" />
-                  )}
-                </div>
-                {m.caption && <figcaption className="text-[11px] text-[var(--muted-2)]">{m.caption}</figcaption>}
-              </figure>
+              <MediaFigure key={i} m={m} />
             ))}
           </div>
         )}

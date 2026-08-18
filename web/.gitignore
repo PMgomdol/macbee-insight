@@ -33,6 +33,12 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# 스크린샷 도구의 날짜별 로컬 스냅샷 (반복 캡처가 git을 불리지 않게).
+# before/after로 쓸 스냅샷은 public/changelog/ 로 영구 파일명으로 승격해서 커밋.
+/public/changelog/_archive/
+# 스크린샷 도구 로그인 세션 (민감정보)
+/scripts/.shot-session.json
+
 # vercel
 .vercel
 
