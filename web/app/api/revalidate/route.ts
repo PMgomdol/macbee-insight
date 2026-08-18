@@ -13,6 +13,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
   }
   const tags = ['archive', 'popular', 'faq'];
-  for (const t of tags) revalidateTag(t);
+  for (const t of tags) revalidateTag(t, 'max');
   return NextResponse.json({ ok: true, revalidated: tags });
 }
