@@ -36,16 +36,10 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
   const [status, setStatus] = useState<'public' | 'hidden' | 'deleted' | 'all'>('public');
   const [showCount, setShowCount] = useState(STEP);
 
-  const counts = useMemo(() => {
-    const c = { public: 0, hidden: 0, deleted: 0 };
-    for (const it of items) if (it.status in c) (c as any)[it.status]++;
-    return c;
-  }, [items]);
-
-  const filtered = useMemo(() => {
+  // 종류·검색까지 적용한 기준 집합 — 상태 탭 숫자와 목록이 항상 같은 기준을 쓰게 한다.
+  const byKindSearch = useMemo(() => {
     const kws = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
     return items.filter((it) => {
-      if (status !== 'all' && it.status !== status) return false;
       if (kind && it.kind !== kind) return false;
       if (kws.length) {
         const hay = `${it.title} ${it.summary ?? ''} ${(it.tags ?? []).join(' ')} ${it.main_category} ${it.sub_category ?? ''}`.toLowerCase();
@@ -53,7 +47,19 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
       }
       return true;
     });
-  }, [items, q, kind, status]);
+  }, [items, q, kind]);
+
+  // 상태별 건수 = 현재 종류·검색 필터 기준 (탭 숫자 = 목록과 일치)
+  const counts = useMemo(() => {
+    const c = { public: 0, hidden: 0, deleted: 0 };
+    for (const it of byKindSearch) if (it.status in c) (c as any)[it.status]++;
+    return c;
+  }, [byKindSearch]);
+
+  const filtered = useMemo(
+    () => (status === 'all' ? byKindSearch : byKindSearch.filter((it) => it.status === status)),
+    [byKindSearch, status]
+  );
 
   const visible = filtered.slice(0, showCount);
 
@@ -61,7 +67,7 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
     ['public', `공개 ${counts.public}`],
     ['hidden', `숨김 ${counts.hidden}`],
     ['deleted', `삭제됨 ${counts.deleted}`],
-    ['all', '전체'],
+    ['all', `전체 ${byKindSearch.length}`],
   ] as const;
 
   return (
@@ -113,8 +119,6 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
           ))}
         </div>
       </div>
-
-      <p className="text-xs text-[var(--muted-2)]">{filtered.length}건</p>
 
       {visible.length === 0 ? (
         <div className="py-12 text-center text-sm text-[var(--muted)]">조건에 맞는 자료가 없어요</div>
