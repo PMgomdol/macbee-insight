@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getAuthState } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/server';
 import { UILinkButton } from '@/components/ui/Button';
-import { Inbox, MessageSquare, UserPlus, KanbanSquare, ChevronRight } from 'lucide-react';
+import { Inbox, MessageSquare, UserPlus, KanbanSquare, ScrollText, ChevronRight } from 'lucide-react';
 
 function roleLabel(r: string | null): string {
   if (r === 'admin') return '관리자';
@@ -50,6 +50,7 @@ export default async function AdminHome() {
     { href: '/admin-mb26/panel/feedback', icon: MessageSquare, label: '미처리 VOC', count: voc.count ?? 0, hint: '사용자 의견 처리·답변' },
     { href: '/admin-mb26/panel/backlog', icon: KanbanSquare, label: '진행 중 백로그', count: back.count ?? 0, hint: '운영진 공용 작업 보드' },
     { href: '/admin-mb26/panel/invite', icon: UserPlus, label: '운영진 신청', count: apps.count ?? 0, hint: '새 운영진 승인·초대' },
+    { href: '/admin-mb26/panel/changelog', icon: ScrollText, label: '업데이트 내역', count: 0, hint: '사이트 변경 이력·릴리즈 노트' },
   ];
 
   return (
