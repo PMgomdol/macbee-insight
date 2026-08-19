@@ -9,13 +9,6 @@ function mediaLabel(item: ArchiveItem): '영상' | '파일' | '아티클' {
   return '아티클';
 }
 
-function formatDate(s: string | null): string | null {
-  if (!s) return null;
-  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!m) return null;
-  return `${m[1]}.${m[2]}.${m[3]}`;
-}
-
 function isVideo(item: ArchiveItem): boolean {
   if (item.format === '영상') return true;
   const url = (item.external_url || '').toLowerCase();
@@ -51,23 +44,38 @@ function unwrapRedirect(u: string): string {
   return u;
 }
 
+/** 파일 형식 배지 라벨 — 영문/표준 약어로 통일 (구글 문서→Google Docs, 한글→hwp).
+ *  DB의 file_ext가 한글로 저장된 과거 값도 여기서 영문으로 정규화. */
+const EXT_LABEL: Record<string, string> = {
+  '구글 문서': 'Google Docs',
+  '구글 시트': 'Google Sheets',
+  '구글 슬라이드': 'Google Slides',
+  '구글 드라이브': 'Google Drive',
+  '워드': 'Word',
+  '엑셀': 'Excel',
+  '한글': 'hwp',
+};
+function normalizeExt(v: string): string {
+  return EXT_LABEL[v] ?? v;
+}
+
 /** 파일 확장자 배지 — DB의 file_ext 우선, 없으면 URL 패턴 fallback */
 function fileExtBadge(item: ArchiveItem): string | null {
-  // 1) DB에 미리 판별된 값 있으면 그대로 (Drive 파일 실제 mimeType 반영)
-  if (item.file_ext) return item.file_ext;
+  // 1) DB에 미리 판별된 값 있으면 정규화해서 (Drive 파일 실제 mimeType 반영)
+  if (item.file_ext) return normalizeExt(item.file_ext);
   // 2) URL 패턴 fallback (리다이렉트 URL은 실제 URL로 풀어서 검사)
   const raw = item.file_url || item.external_url || '';
   if (!raw) return null;
   const u = unwrapRedirect(raw).toLowerCase();
-  if (/docs\.google\.com\/document/.test(u)) return '구글 문서';
-  if (/docs\.google\.com\/spreadsheets/.test(u)) return '구글 시트';
-  if (/docs\.google\.com\/presentation/.test(u)) return '구글 슬라이드';
-  if (/drive\.google\.com/.test(u)) return '구글 드라이브';
+  if (/docs\.google\.com\/document/.test(u)) return 'Google Docs';
+  if (/docs\.google\.com\/spreadsheets/.test(u)) return 'Google Sheets';
+  if (/docs\.google\.com\/presentation/.test(u)) return 'Google Slides';
+  if (/drive\.google\.com/.test(u)) return 'Google Drive';
   if (/\.pdf($|[?#])/.test(u)) return 'PDF';
-  if (/\.(docx?|odt)($|[?#])/.test(u)) return '워드';
+  if (/\.(docx?|odt)($|[?#])/.test(u)) return 'Word';
   if (/\.(pptx?|key|odp)($|[?#])/.test(u)) return 'PPT';
-  if (/\.(xlsx?|csv|ods)($|[?#])/.test(u)) return '엑셀';
-  if (/\.hwpx?($|[?#])/.test(u)) return '한글';
+  if (/\.(xlsx?|csv|ods)($|[?#])/.test(u)) return 'Excel';
+  if (/\.hwpx?($|[?#])/.test(u)) return 'hwp';
   if (/\.zip($|[?#])/.test(u)) return 'ZIP';
   return null;
 }
@@ -79,9 +87,9 @@ type BadgeTone = 'file' | 'video' | 'web';
 function topBadgeMeta(item: ArchiveItem): { label: string; tone: BadgeTone } {
   const ext = fileExtBadge(item);
   if (ext) return { label: ext, tone: 'file' };
-  if (isVideo(item)) return { label: '영상', tone: 'video' };
-  if (item.format === '홈페이지') return { label: '사이트', tone: 'web' };
-  return { label: '아티클', tone: 'web' };
+  if (isVideo(item)) return { label: 'Video', tone: 'video' };
+  if (item.format === '홈페이지') return { label: 'Site', tone: 'web' };
+  return { label: 'Article', tone: 'web' };
 }
 function badgeClass(tone: BadgeTone): string {
   return tone === 'file' ? 'app-badge-file' : tone === 'video' ? 'app-badge-video' : 'app-badge-insight';
@@ -93,7 +101,7 @@ function badgeClass(tone: BadgeTone): string {
  *  ② 타이틀                  — 가장 강조 (16px 700)
  *  ③ 카테고리                — 작게 (메타)
  *  ④ 요약                    — 작게 (보조)
- *  ⑤ 날짜·조회수             — 가장 작게 (푸터)
+ *  ⑤ 조회수                  — 가장 작게 (푸터). 날짜는 노출 안 함(DB엔 보존)
  */
 export function ItemCard({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
@@ -141,10 +149,9 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
         </div>
       )}
 
-      {/* ⑤ 푸터 메타 — 왼쪽 날짜·조회, 오른쪽 액션 */}
+      {/* ⑤ 푸터 메타 — 왼쪽 조회수, 오른쪽 액션 (날짜는 노출 안 함, DB엔 보존) */}
       <div className="flex items-center justify-between gap-x-3 gap-y-1 flex-wrap text-[11px] text-[var(--muted-2)] mt-auto pt-1">
         <div className="flex items-center gap-3 min-w-0">
-          {formatDate(item.published_at) && <span className="truncate">{formatDate(item.published_at)}</span>}
           {item.views > 0 && <span className="truncate">조회 {item.views.toLocaleString()}</span>}
         </div>
         <span className="inline-flex items-center gap-1 text-[var(--muted)] group-hover:text-[var(--accent)] transition shrink-0">
