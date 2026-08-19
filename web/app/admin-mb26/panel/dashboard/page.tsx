@@ -1,7 +1,11 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { UILinkButton } from '@/components/ui/Button';
 import { getAuthState } from '@/lib/auth';
 import { DashboardTabs } from './DashboardTabs';
+import { ContentPanel } from './panels/ContentPanel';
+import { TrafficPanel } from './panels/TrafficPanel';
+import { BehaviorEmpty } from './panels/BehaviorEmpty';
 
 export const metadata = {
   title: '지표 대시보드 · 맥비 자료실',
@@ -46,11 +50,23 @@ export default async function AdminDashboardPage() {
           </span>
         </div>
         <p className="text-sm text-[var(--muted)]">
-          PostHog 실시간 지표. 트래픽·콘텐츠·전환 세 관점으로 정리했어요.
+          콘텐츠·유입·행동 세 관점의 운영 지표. 콘텐츠는 실시간, 유입은 최대 1시간 지연.
         </p>
       </section>
 
-      <DashboardTabs />
+      <DashboardTabs
+        content={
+          <Suspense fallback={<div className="text-sm text-[var(--muted)] py-8">불러오는 중…</div>}>
+            <ContentPanel />
+          </Suspense>
+        }
+        traffic={
+          <Suspense fallback={<div className="text-sm text-[var(--muted)] py-8">불러오는 중…</div>}>
+            <TrafficPanel />
+          </Suspense>
+        }
+        behavior={<BehaviorEmpty />}
+      />
     </div>
   );
 }

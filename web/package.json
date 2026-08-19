@@ -21,6 +21,7 @@
     "@atlaskit/textfield": "^9.1.0",
     "@atlaskit/theme": "^26.1.0",
     "@atlaskit/tokens": "^15.4.0",
+    "@google-analytics/data": "^6.1.0",
     "@salesforce-ux/design-system": "^2.30.6",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.105.4",

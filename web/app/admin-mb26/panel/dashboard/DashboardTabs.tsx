@@ -1,94 +1,55 @@
 'use client';
 import { useState } from 'react';
-import Tabs, { Tab, TabList, TabPanel } from '@atlaskit/tabs';
-import { BarChart3, MousePointerClick, TrendingUp, ExternalLink } from 'lucide-react';
+import { BarChart3, MousePointerClick, TrendingUp } from 'lucide-react';
 
-type Board = {
-  key: string;
-  label: string;
-  hint: string;
-  icon: React.ComponentType<{ size?: number; 'aria-hidden'?: boolean }>;
-  shareUrl: string;
-  posthogUrl: string;
-};
+const TABS = [
+  { key: 'content', label: '콘텐츠 성과', icon: TrendingUp },
+  { key: 'traffic', label: '유입', icon: BarChart3 },
+  { key: 'behavior', label: '행동·전환', icon: MousePointerClick },
+] as const;
 
-const BOARDS: Board[] = [
-  {
-    key: 'traffic',
-    label: '트래픽',
-    hint: '페이지뷰·순방문자·유입 소스·디바이스',
-    icon: BarChart3,
-    shareUrl: 'https://us.posthog.com/embedded/M9T2qs0qeLBb6Ci3M-9vOwYfd9JA5A',
-    posthogUrl: 'https://us.posthog.com/project/498450/dashboard/1803216',
-  },
-  {
-    key: 'content',
-    label: '콘텐츠',
-    hint: '인기 자료·필터 사용률·검색어 Top',
-    icon: MousePointerClick,
-    shareUrl: 'https://us.posthog.com/embedded/ukrFup4b469_hJv5bZ0bq6d8VD5X0Q',
-    posthogUrl: 'https://us.posthog.com/project/498450/dashboard/1803219',
-  },
-  {
-    key: 'conversion',
-    label: '전환',
-    hint: '검색→클릭·방문→제안·피드백 참여',
-    icon: TrendingUp,
-    shareUrl: 'https://us.posthog.com/embedded/vf2_qyiXXa3SODqN53izIxLpkgbr8w',
-    posthogUrl: 'https://us.posthog.com/project/498450/dashboard/1803221',
-  },
-];
+type Key = (typeof TABS)[number]['key'];
 
-export function DashboardTabs() {
-  const [selected, setSelected] = useState(0);
-
+export function DashboardTabs({
+  content,
+  traffic,
+  behavior,
+}: {
+  content: React.ReactNode;
+  traffic: React.ReactNode;
+  behavior: React.ReactNode;
+}) {
+  const [sel, setSel] = useState<Key>('content');
+  const panels: Record<Key, React.ReactNode> = { content, traffic, behavior };
   return (
-    <div className="flex flex-col gap-3">
-      <Tabs id="admin-dashboards" selected={selected} onChange={setSelected}>
-        <TabList>
-          {BOARDS.map((b) => {
-            const Icon = b.icon;
-            return (
-              <Tab key={b.key}>
-                <span className="inline-flex items-center gap-1.5">
-                  <Icon size={14} aria-hidden />
-                  {b.label}
-                </span>
-              </Tab>
-            );
-          })}
-        </TabList>
-        {BOARDS.map((b) => (
-          <TabPanel key={b.key}>
-            <div className="flex flex-col gap-3 pt-2">
-              <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                <p className="text-xs text-[var(--muted)]">{b.hint}</p>
-                <a
-                  href={b.posthogUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-[var(--accent)] hover:underline"
-                >
-                  PostHog에서 열기 <ExternalLink size={11} aria-hidden />
-                </a>
-              </div>
-              <div className="relative rounded-[var(--r-md)] border border-[var(--border)] overflow-hidden bg-[var(--card)]">
-                <iframe
-                  src={b.shareUrl}
-                  title={`${b.label} 대시보드`}
-                  className="block w-full h-[calc(100vh-260px)] min-h-[600px]"
-                  loading="lazy"
-                  allow="clipboard-read; clipboard-write"
-                />
-              </div>
-            </div>
-          </TabPanel>
-        ))}
-      </Tabs>
-
-      <p className="text-[11px] text-[var(--muted-2)]">
-        데이터는 최대 몇 분 지연될 수 있어요. 실제 트래픽이 쌓이면 그래프가 채워져요.
-      </p>
+    <div className="flex flex-col gap-4">
+      <div role="tablist" className="flex gap-1 border-b border-[var(--border)] overflow-x-auto no-scrollbar">
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          const active = sel === t.key;
+          return (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setSel(t.key)}
+              className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm -mb-px border-b-2 whitespace-nowrap transition ${
+                active
+                  ? 'border-[var(--accent)] text-[var(--accent)] font-semibold'
+                  : 'border-transparent text-[var(--muted)] hover:text-[var(--fg)]'
+              }`}
+            >
+              <Icon size={14} aria-hidden />
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+      {(['content', 'traffic', 'behavior'] as const).map((k) => (
+        <div key={k} hidden={sel !== k}>
+          {panels[k]}
+        </div>
+      ))}
     </div>
   );
 }

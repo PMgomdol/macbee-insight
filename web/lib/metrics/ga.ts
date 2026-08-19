@@ -33,10 +33,11 @@ async function dims(days: number, dimension: string, metric: string, limit?: num
     orderBys: [{ metric: { metricName: metric }, desc: true }],
     limit,
   });
-  return (res.rows ?? []).map((r) => ({
-    label: r.dimensionValues?.[0]?.value ?? '(기타)',
-    value: Number(r.metricValues?.[0]?.value ?? 0),
-  }));
+  return (res.rows ?? []).map((r) => {
+    const raw = r.dimensionValues?.[0]?.value;
+    const label = raw && raw !== '(not set)' ? raw : '(기타)';
+    return { label, value: Number(r.metricValues?.[0]?.value ?? 0) };
+  });
 }
 
 export async function getSessionsTrend(days = 30): Promise<{ sessions: DayPoint[]; users: DayPoint[] } | null> {
