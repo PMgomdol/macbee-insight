@@ -325,7 +325,7 @@ export function SubmitForm({ categories }: Props) {
               placeholder="https://..."
               className="flex-1 min-w-0 h-12 sm:h-11 px-4 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] text-base sm:text-sm focus:border-[var(--focus-ring)] transition-colors"
             />
-            <UIButton onClick={onAnalyze} disabled={analyzing || !url.trim()}>
+            <UIButton onClick={onAnalyze} disabled={analyzing || !url.trim()} className="min-h-[44px]">
               {analyzing ? <Spinner size="small" /> : <Sparkles size={14} aria-hidden />}
               {analyzing ? '분석 중…' : '자동 분석'}
             </UIButton>
@@ -562,7 +562,7 @@ export function SubmitForm({ categories }: Props) {
             <UIButton
               type="submit"
               disabled={submitting || !title || (!url && !fileUrl) || (!!duplicate && !forceSubmit)}
-              className="w-full"
+              className="w-full min-h-[44px]"
             >
               {submitting ? '보내고 있어요…' : '등록하기'}
             </UIButton>

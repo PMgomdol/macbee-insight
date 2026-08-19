@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BarChart3, Inbox, MessageSquare, UserPlus, KanbanSquare, ScrollText, Library } from 'lucide-react';
+import { Home, BarChart3, Inbox, MessageSquare, UserPlus, KanbanSquare, ScrollText, Library, FolderTree } from 'lucide-react';
 
 type NavItem = { href: string; label: string; icon: typeof Home; exact?: boolean };
 
@@ -11,6 +11,7 @@ const ITEMS: NavItem[] = [
   { href: '/admin-mb26/panel/dashboard', label: '대시보드', icon: BarChart3 },
   { href: '/admin-mb26/panel/requests', label: '자료등록요청', icon: Inbox },
   { href: '/admin-mb26/panel/archive', label: '자료 관리', icon: Library },
+  { href: '/admin-mb26/panel/categories', label: '카테고리', icon: FolderTree },
   { href: '/admin-mb26/panel/feedback', label: 'VOC', icon: MessageSquare },
   { href: '/admin-mb26/panel/backlog', label: '백로그', icon: KanbanSquare },
   { href: '/admin-mb26/panel/invite', label: '운영진 초대', icon: UserPlus },
@@ -33,7 +34,7 @@ export function AdminNav({ badges = {} }: { badges?: Record<string, number> }) {
             key={it.href}
             href={it.href}
             aria-current={active ? 'page' : undefined}
-            className={`inline-flex items-center gap-2 px-3 py-2.5 rounded-[var(--r-sm)] text-sm whitespace-nowrap transition ${
+            className={`inline-flex items-center gap-2 px-3 py-3 md:py-2.5 min-h-[44px] md:min-h-0 rounded-[var(--r-sm)] text-sm whitespace-nowrap transition ${
               active
                 ? 'bg-[var(--accent-bg)] text-[var(--accent)] font-medium'
                 : 'text-[var(--muted)] hover:bg-[var(--card)] hover:text-[var(--fg)]'

@@ -1,10 +1,12 @@
 import { Sparkles, ExternalLink, TriangleAlert } from 'lucide-react';
 import { searchAll } from '@/lib/search';
 import { aiAnswer } from '@/lib/ai-answer';
+import { getAuthState } from '@/lib/auth';
+import { UILinkButton } from '@/components/ui/Button';
 
-// 실검색(/search) 안 건드리는 격리 실험 페이지.
-// 목적: (1) 관련도 점수 컷오프로 무관 결과 제거 (2) 통과분 < 기준이면 AI 답변 보강(내부+웹).
-export const metadata = { title: '검색 고도화 실험 · 자료실' };
+// 실검색(/search) 안 건드리는 격리 실험 페이지. 검색 고도화 기록용으로 보존.
+// 쿼리마다 유료 AI(Gemini+웹검색)를 호출하므로 운영진 전용으로 잠금 + noindex (무단·봇 호출 차단).
+export const metadata = { title: '검색 고도화 실험 · 자료실', robots: { index: false, follow: false } };
 
 const DEFAULT_CUT = 8; // 관련도 하한 (원질의10 / 토큰7 / 동의어5 / +제목5 스케일)
 const DEFAULT_MIN = 3; // 통과 결과가 이 수 미만이면 AI 보강
@@ -18,6 +20,17 @@ export default async function SearchTestPage({
 }: {
   searchParams: Promise<{ q?: string; cut?: string; min?: string }>;
 }) {
+  const { user, isReviewer } = await getAuthState();
+  if (!user || !isReviewer) {
+    return (
+      <div className="flex flex-col gap-3 max-w-md py-8">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">검색 고도화 실험</h1>
+        <p className="text-sm text-[var(--muted)]">운영진 전용 실험 페이지예요.</p>
+        <UILinkButton href="/admin-mb26" className="w-fit">로그인</UILinkButton>
+      </div>
+    );
+  }
+
   const sp = await searchParams;
   const q = (sp.q ?? '').trim();
   const cut = Number.isFinite(+(sp.cut ?? '')) && sp.cut ? Math.max(0, +sp.cut) : DEFAULT_CUT;
