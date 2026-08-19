@@ -72,14 +72,19 @@ function fileExtBadge(item: ArchiveItem): string | null {
   return null;
 }
 
-/** 상단 형식 배지 — 파일 확장자 > 영상 > 홈페이지(사이트) > 아티클.
- *  홈페이지·툴·포털은 '읽는 글'이 아니라 '둘러보는 사이트'라 별도 라벨로 오해를 줄인다. */
-function topBadgeLabel(item: ArchiveItem): string {
+/** 상단 형식 배지 — 라벨과 색을 한 기준으로 함께 정한다.
+ *  tone: file=파랑(문서·파일), video=빨강(영상), web=회색(아티클·사이트).
+ *  색을 fileExtBadge(파일 확장자 + drive/docs URL 포함) 기준으로 잡아, DB에 file_ext가 채워졌는지와 무관하게 일관되게 한다. */
+type BadgeTone = 'file' | 'video' | 'web';
+function topBadgeMeta(item: ArchiveItem): { label: string; tone: BadgeTone } {
   const ext = fileExtBadge(item);
-  if (ext) return ext;
-  if (isVideo(item)) return '영상';
-  if (item.format === '홈페이지') return '사이트';
-  return '아티클';
+  if (ext) return { label: ext, tone: 'file' };
+  if (isVideo(item)) return { label: '영상', tone: 'video' };
+  if (item.format === '홈페이지') return { label: '사이트', tone: 'web' };
+  return { label: '아티클', tone: 'web' };
+}
+function badgeClass(tone: BadgeTone): string {
+  return tone === 'file' ? 'app-badge-file' : tone === 'video' ? 'app-badge-video' : 'app-badge-insight';
 }
 
 /**
@@ -93,9 +98,7 @@ function topBadgeLabel(item: ArchiveItem): string {
 export function ItemCard({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
   const media = mediaLabel(item);
-  const isFile = media === '파일';
-  const video = isVideo(item);
-  const topBadge = topBadgeLabel(item);
+  const badge = topBadgeMeta(item);
   const { Icon: ActionIcon, label: actionLabel } = cardAction(item);
   const tags = (item.tags ?? []).slice(0, 2);
 
@@ -112,12 +115,8 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
     >
       {/* ① 형식 배지 — '무엇'인지만 (행동은 오른쪽 아래) */}
       <div className="flex items-center gap-1.5 flex-wrap min-h-[20px]">
-        <span
-          className={`slds-badge ${
-            video ? 'app-badge-video' : isFile ? 'app-badge-file' : 'app-badge-insight'
-          }`}
-        >
-          {topBadge}
+        <span className={`slds-badge ${badgeClass(badge.tone)}`}>
+          {badge.label}
         </span>
       </div>
 
@@ -159,10 +158,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
 
 export function ItemRow({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
-  const media = mediaLabel(item);
-  const isFile = media === '파일';
-  const video = isVideo(item);
-  const topBadge = topBadgeLabel(item);
+  const badge = topBadgeMeta(item);
   const { Icon: ActionIcon, label: actionLabel } = cardAction(item);
   return (
     <a
@@ -177,12 +173,8 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
       <div className="min-w-0 flex flex-col gap-1">
         {/* 배지(형식) 위로 */}
         <div className="flex items-center gap-1.5 flex-wrap text-[11px] text-[var(--muted-2)]">
-          <span
-            className={`slds-badge ${
-              video ? 'app-badge-video' : isFile ? 'app-badge-file' : 'app-badge-insight'
-            }`}
-          >
-            {topBadge}
+          <span className={`slds-badge ${badgeClass(badge.tone)}`}>
+            {badge.label}
           </span>
           <span className="truncate">{item.main_category}{item.sub_category ? ` · ${item.sub_category}` : ''}</span>
         </div>
