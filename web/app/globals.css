@@ -136,6 +136,8 @@ input[type="search"]::-webkit-search-results-decoration {
 .app-badge-file {
   background: var(--accent-bg);
   color: var(--accent);
+  /* 영문 파일형식 라벨(Google Docs·hwp·PDF)은 대문자 강제 없이 원래 표기대로 */
+  text-transform: none;
 }
 .app-badge-insight {
   background: var(--card);

@@ -87,9 +87,9 @@ type BadgeTone = 'file' | 'video' | 'web';
 function topBadgeMeta(item: ArchiveItem): { label: string; tone: BadgeTone } {
   const ext = fileExtBadge(item);
   if (ext) return { label: ext, tone: 'file' };
-  if (isVideo(item)) return { label: 'Video', tone: 'video' };
-  if (item.format === '홈페이지') return { label: 'Site', tone: 'web' };
-  return { label: 'Article', tone: 'web' };
+  if (isVideo(item)) return { label: '영상', tone: 'video' };
+  if (item.format === '홈페이지') return { label: '사이트', tone: 'web' };
+  return { label: '아티클', tone: 'web' };
 }
 function badgeClass(tone: BadgeTone): string {
   return tone === 'file' ? 'app-badge-file' : tone === 'video' ? 'app-badge-video' : 'app-badge-insight';
