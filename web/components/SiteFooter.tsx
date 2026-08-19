@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { MessageCircle, Video, FolderOpen, ExternalLink } from 'lucide-react';
 import { FooterAdminLink } from './FooterAdminLink';
 
@@ -85,7 +86,9 @@ export function SiteFooter() {
 
         <div className="border-t border-white/10 mt-8 pt-5 flex flex-col sm:flex-row gap-2 sm:gap-4 justify-between text-xs text-white/40">
           <div>© 2026 맥비 자료실 운영팀</div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 items-center">
+            <Link href="/privacy" className="hover:text-white transition-colors">개인정보처리방침</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">이용약관</Link>
             <Suspense fallback={null}><FooterAdminLink /></Suspense>
           </div>
         </div>
