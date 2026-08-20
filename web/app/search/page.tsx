@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Sparkles, SearchX, Send } from 'lucide-react';
 import { SearchAutocomplete } from '@/components/SearchAutocomplete';
@@ -5,6 +6,12 @@ import { SearchResultsClient } from '@/components/SearchResultsClient';
 import { SearchResultsTracker } from '@/components/SearchResultsTracker';
 import { searchAll } from '@/lib/search';
 import { TRENDING } from '@/lib/synonyms';
+
+export const metadata: Metadata = {
+  title: '자료 검색',
+  description:
+    '화면설계서·피그마·기능정의서 등 기획 실무 키워드로 맥비 자료실의 양식·콘텐츠·실무 Q&A를 한 번에 검색하세요.',
+};
 
 export default async function SearchPage({
   searchParams,

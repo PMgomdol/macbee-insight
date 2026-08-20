@@ -1,5 +1,13 @@
+import type { Metadata } from 'next';
 import { getCategories } from '@/lib/queries';
 import { SubmitForm } from './SubmitForm';
+
+// 제보 폼 — 검색 유입 가치 없고 얇은 페이지라 색인 제외(링크는 따라가게).
+export const metadata: Metadata = {
+  title: '자료 등록·제보',
+  description: '기획에 도움 되는 양식·아티클·영상 URL을 제보해 주세요. 운영진 검토를 거쳐 맥비 자료실에 공유됩니다.',
+  robots: { index: false, follow: true },
+};
 
 export default async function SubmitPage() {
   const categories = await getCategories();

@@ -18,12 +18,17 @@ import { SITE_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: '맥비 자료실',
-  description: '기획자에게 필요한 양식·템플릿과 아티클·영상·가이드 콘텐츠, 실무 Q&A를 한 곳에 모았어요.',
-  // 카톡·슬랙 공유 미리보기 — 톡방 공유가 주 유입 경로라 필수
+  // default = 홈 절대 title(템플릿 안 탐). 하위 페이지는 각자 title만 주면 '%s | 맥비 자료실'로.
+  title: {
+    default: '맥비 자료실 | 기획자 실무 자료·템플릿 모음',
+    template: '%s | 맥비 자료실',
+  },
+  description:
+    '서비스 기획자·PM을 위한 실무 자료실. 화면설계서·기획서 양식부터 UX·IA 아티클, 실무 Q&A까지 현직 기획자들이 모아 정리한 자료를 검색해 보세요.',
+  // 카톡·슬랙 공유 미리보기 — 톡방 공유가 주 유입 경로라 필수. (건수는 바뀌므로 넣지 않음)
   openGraph: {
-    title: '맥비 자료실',
-    description: '기획자에게 필요한 양식·템플릿, 아티클·영상 콘텐츠, 실무 Q&A 596건을 한 곳에.',
+    title: '맥비 자료실 | 기획자 실무 자료·템플릿 모음',
+    description: '서비스 기획자·PM을 위한 실무 자료실 — 화면설계서·기획서 양식, UX·IA 아티클, 실무 Q&A를 한 곳에.',
     url: SITE_URL,
     siteName: '맥비 자료실',
     locale: 'ko_KR',

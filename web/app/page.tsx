@@ -5,6 +5,20 @@ import { HorizontalScroll } from '@/components/HorizontalScroll';
 import { SearchAutocomplete } from '@/components/SearchAutocomplete';
 import { HomeBanner } from '@/components/HomeBanner';
 import { getMonthlyPopularItems, getTopTags } from '@/lib/queries';
+import { SITE_URL } from '@/lib/site';
+
+// 구글 sitelinks 검색창 리치결과용 — /search?q= 실검색이 있어 실효 있음.
+const WEBSITE_JSONLD = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: '맥비 자료실',
+  url: SITE_URL,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${SITE_URL}/search?q={query}`,
+    'query-input': 'required name=query',
+  },
+};
 
 // 카톡 실제 요청 패턴에서 뽑은 순환 힌트 (2년치 대화 상위 요청 문구)
 const PLACEHOLDERS = [
@@ -49,6 +63,10 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col items-center gap-10 sm:gap-16 pt-8 sm:pt-20 pb-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSONLD) }}
+      />
       {/* 중앙 검색 영역 */}
       <section
         className="w-full max-w-2xl flex flex-col items-center gap-5 sm:gap-6"
