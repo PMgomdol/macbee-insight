@@ -44,7 +44,19 @@ const SORTS: [SortKey, string][] = [
 ];
 
 type Cat = { main_category: string; sub_category: string | null };
+type LinkInfo = { result: string; checked_at: string | null };
 type StatusTab = 'public' | 'hidden' | 'deleted' | 'rejected' | 'dup' | 'all';
+
+/** 링크 점검 배지 — 죽은링크만 강조, 확인필요는 은은하게, ok/미점검은 표시 안 함. */
+function LinkBadge({ info }: { info?: LinkInfo }) {
+  if (!info || info.result === 'ok') return null;
+  const days = info.checked_at ? Math.floor((Date.now() - new Date(info.checked_at).getTime()) / 86400000) : null;
+  const when = days === null ? '' : days <= 0 ? ' · 오늘 점검' : ` · ${days}일 전 점검`;
+  if (info.result === 'dead') {
+    return <span className="shrink-0 px-1.5 py-0.5 rounded-[var(--r-sm)] text-[10px] font-semibold text-[var(--danger)] bg-[var(--danger)]/10" title={`링크 점검 결과 죽은 링크${when}`}>🔴 죽은 링크</span>;
+  }
+  return <span className="shrink-0 px-1.5 py-0.5 rounded-[var(--r-sm)] text-[10px] font-medium text-[var(--muted-2)] bg-[var(--card)]" title={`자동 점검으로 확정 못 함(봇 차단 등)${when}`}>링크 확인필요</span>;
+}
 
 const TRACKING = ['fbclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'si', 'rd_src', 'usg', 'ust', 'sa'];
 /** 중복 판정용 URL 정규화 — 프로토콜·www·m·추적파라미터·트레일링슬래시 제거. */
@@ -73,10 +85,12 @@ export function ArchiveManager({
   items,
   rejected = [],
   categories,
+  linkStatus = {},
 }: {
   items: ArchiveRowItem[];
   rejected?: RejectedRow[];
   categories: Cat[];
+  linkStatus?: Record<number, LinkInfo>;
 }) {
   const [q, setQ] = useState('');
   const [kind, setKind] = useState<'' | 'files' | 'insights'>('');
@@ -267,6 +281,7 @@ export function ArchiveManager({
                     key={it.id}
                     item={it}
                     categories={categories}
+                    link={linkStatus[it.id]}
                     selected={sel.has(it.id)}
                     onToggle={() => setSel((prev) => { const n = new Set(prev); n.has(it.id) ? n.delete(it.id) : n.add(it.id); return n; })}
                   />
@@ -300,6 +315,7 @@ export function ArchiveManager({
                   key={it.id}
                   item={it}
                   categories={categories}
+                  link={linkStatus[it.id]}
                   selected={sel.has(it.id)}
                   onToggle={() => setSel((prev) => { const n = new Set(prev); n.has(it.id) ? n.delete(it.id) : n.add(it.id); return n; })}
                 />
@@ -413,11 +429,13 @@ function StatusBadge({ status }: { status: string }) {
 function ArchiveRow({
   item,
   categories,
+  link,
   selected,
   onToggle,
 }: {
   item: ArchiveRowItem;
   categories: Cat[];
+  link?: LinkInfo;
   selected: boolean;
   onToggle: () => void;
 }) {
@@ -518,6 +536,7 @@ function ArchiveRow({
       <div className="flex flex-col gap-1 min-w-0 flex-1">
         <div className="flex items-center gap-2 text-[11px] text-[var(--muted-2)] flex-wrap">
           <StatusBadge status={status} />
+          <LinkBadge info={link} />
           <span>{item.kind === 'files' ? '양식·템플릿' : '콘텐츠'}</span>
           <span>· {main || '미분류'}{sub ? ` · ${sub}` : ''}</span>
           {item.format && <span className="slds-badge">{item.format}</span>}

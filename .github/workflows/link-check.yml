@@ -1,0 +1,30 @@
+name: 링크 상태 점검
+
+# 공개 archive_item 링크를 점검해 check_log 스냅샷 갱신 → 자료 관리에 죽은링크 배지 표시.
+# CI 네트워크(정상 DNS)에서 돌려 샌드박스 한계를 피한다. 리포는 건드리지 않음.
+
+on:
+  schedule:
+    - cron: '0 19 * * 1' # 매주 월요일 04:00 KST
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: link-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 링크 점검 → check_log
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://bmsoolrfostbxepzkesy.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python web/scripts/link_check.py
