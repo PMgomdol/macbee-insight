@@ -108,8 +108,9 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
         </p>
       </section>
 
-      {/* 페이지 내 검색 */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)]">
+      {/* 페이지 내 검색 — 높이는 h-11(44px) 고정. py-*로 만들면 모바일 input min-height:44px가
+          패딩 위에 쌓여 pill이 커진다(FaqList·검색페이지와 동일 패턴). */}
+      <div className="flex items-center gap-2 px-4 h-11 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)]">
         <Search size={16} className="text-[var(--muted)] shrink-0" aria-hidden />
         <input
           type="search"
