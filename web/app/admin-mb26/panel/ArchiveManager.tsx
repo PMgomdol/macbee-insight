@@ -44,7 +44,25 @@ const SORTS: [SortKey, string][] = [
 ];
 
 type Cat = { main_category: string; sub_category: string | null };
-type StatusTab = 'public' | 'hidden' | 'deleted' | 'rejected' | 'all';
+type StatusTab = 'public' | 'hidden' | 'deleted' | 'rejected' | 'dup' | 'all';
+
+const TRACKING = ['fbclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'si', 'rd_src', 'usg', 'ust', 'sa'];
+/** 중복 판정용 URL 정규화 — 프로토콜·www·m·추적파라미터·트레일링슬래시 제거. */
+function normUrl(u: string | null): string {
+  if (!u) return '';
+  let s = u.trim();
+  if (s.includes('&sa=D')) s = s.split('&sa=D')[0];
+  try {
+    const p = new URL(s.startsWith('http') ? s : 'https://' + s);
+    TRACKING.forEach((k) => p.searchParams.delete(k));
+    const host = p.hostname.replace(/^www\./, '').replace(/^m\./, '').toLowerCase();
+    const path = p.pathname.replace(/\/+$/, '');
+    const q = p.searchParams.toString();
+    return host + path + (q ? '?' + q : '');
+  } catch {
+    return s.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '').toLowerCase();
+  }
+}
 
 const inputCls =
   'w-full px-2.5 py-1.5 rounded-[var(--r-sm)] border border-[var(--border-strong)] bg-[var(--bg)] text-sm focus:border-[var(--focus-ring)] transition-colors';
@@ -68,9 +86,35 @@ export function ArchiveManager({
   const [sel, setSel] = useState<Set<number>>(new Set());
 
   const isRejectedTab = status === 'rejected';
+  const isDupTab = status === 'dup';
+  const isSpecialTab = isRejectedTab || isDupTab;
 
   // 필터 바꿀 때마다 선택·표시개수 초기화 (안 보이는 항목에 일괄작업 되는 사고 방지)
   function reset() { setShowCount(STEP); setSel(new Set()); }
+
+  // 중복 그룹 — 같은 정규화 URL을 공유하는 공개/숨김 자료 2건 이상. (검색어도 적용)
+  const dupGroups = useMemo(() => {
+    const kws = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const live = items.filter((it) => it.status === 'public' || it.status === 'hidden');
+    const map = new Map<string, ArchiveRowItem[]>();
+    for (const it of live) {
+      const key = normUrl(it.external_url || it.file_url);
+      if (!key) continue;
+      (map.get(key) ?? map.set(key, []).get(key)!).push(it);
+    }
+    let groups = Array.from(map.entries())
+      .filter(([, arr]) => arr.length > 1)
+      .map(([key, arr]) => ({ key, items: arr.sort((a, b) => a.id - b.id) }));
+    if (kws.length) {
+      groups = groups.filter((g) =>
+        g.items.some((it) => {
+          const hay = `${it.title} ${it.main_category} ${it.sub_category ?? ''} ${it.external_url ?? ''} ${it.file_url ?? ''}`.toLowerCase();
+          return kws.every((k) => hay.includes(k));
+        })
+      );
+    }
+    return groups.sort((a, b) => b.items.length - a.items.length);
+  }, [items, q]);
 
   // 종류·검색까지 적용한 기준 집합 — 상태 탭 숫자와 목록이 항상 같은 기준을 쓰게 한다.
   const byKindSearch = useMemo(() => {
@@ -136,6 +180,7 @@ export function ArchiveManager({
     ['hidden', `숨김 ${counts.hidden}`],
     ['deleted', `삭제됨 ${counts.deleted}`],
     ['rejected', `거절됨 ${rejected.length}`],
+    ['dup', `중복 ${dupGroups.length}`],
     ['all', `전체 ${byKindSearch.length}`],
   ];
 
@@ -176,7 +221,7 @@ export function ArchiveManager({
             </button>
           ))}
         </div>
-        {!isRejectedTab && (
+        {!isSpecialTab && (
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               {([['', '전체'], ['files', '양식·템플릿'], ['insights', '콘텐츠']] as const).map(([k, label]) => (
@@ -204,8 +249,33 @@ export function ArchiveManager({
         )}
       </div>
 
-      {/* 거절됨 탭 */}
-      {isRejectedTab ? (
+      {/* 중복 탭 */}
+      {isDupTab ? (
+        dupGroups.length === 0 ? (
+          <div className="py-12 text-center text-sm text-[var(--muted)]">중복(같은 링크) 자료가 없어요</div>
+        ) : (
+          <div className="flex flex-col gap-5">
+            <p className="text-xs text-[var(--muted-2)]">같은 링크를 가진 공개·숨김 자료 묶음이에요. 한 건만 남기고 나머지를 숨김·삭제하면 정리돼요. (각 행에서 바로, 또는 체크해서 일괄 처리)</p>
+            <BulkBar items={dupGroups.flatMap((g) => g.items)} sel={sel} setSel={setSel} categories={categories} />
+            {dupGroups.map((g) => (
+              <div key={g.key} className="flex flex-col gap-2">
+                <div className="text-[11px] text-[var(--muted-2)] break-all">
+                  <span className="font-semibold text-[var(--danger)]">중복 {g.items.length}건</span> · {g.key}
+                </div>
+                {g.items.map((it) => (
+                  <ArchiveRow
+                    key={it.id}
+                    item={it}
+                    categories={categories}
+                    selected={sel.has(it.id)}
+                    onToggle={() => setSel((prev) => { const n = new Set(prev); n.has(it.id) ? n.delete(it.id) : n.add(it.id); return n; })}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        )
+      ) : isRejectedTab ? (
         rejectedFiltered.length === 0 ? (
           <div className="py-12 text-center text-sm text-[var(--muted)]">거절된 자료가 없어요</div>
         ) : (
