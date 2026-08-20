@@ -11,10 +11,13 @@ import {
 } from '@/lib/metrics/supabase';
 import { getDownloadStats } from '@/lib/metrics/posthog';
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
   return (
     <div className="app-card p-4 flex flex-col gap-3">
-      <h3 className="text-sm font-medium text-[var(--fg)]">{title}</h3>
+      <div className="flex flex-col gap-0.5">
+        <h3 className="text-sm font-medium text-[var(--fg)]">{title}</h3>
+        {desc && <p className="text-[11px] text-[var(--muted-2)] leading-snug">{desc}</p>}
+      </div>
       {children}
     </div>
   );
@@ -38,7 +41,7 @@ export async function ContentPanel() {
         <StatTile label="30일 신규 자료" value={newTotal} icon={FileText} />
         <StatTile label="다운로드 클릭 (30일)" value={dl?.total ?? 0} sub="파일·문서 자료 클릭" icon={Download} />
         <StatTile
-          label="제안 승인 소요"
+          label="제안 검토까지 걸린 시간"
           value={`${prop.avgApprovalHours}h`}
           sub={`승인 ${prop.approved} · 반려 ${prop.rejected}`}
           icon={MessageSquare}
@@ -51,16 +54,16 @@ export async function ContentPanel() {
         <Card title="신규 등록 추이 (30일)">
           <MiniLineChart points={newItems} height={56} />
         </Card>
-        <Card title="인기 자료 Top (30일 조회)">
+        <Card title="인기 자료 (30일 조회)" desc="가장 많이 열어본 자료예요.">
           <BarList items={topViewed} />
         </Card>
-        <Card title="다운로드 클릭 추이 (30일)">
+        <Card title="다운로드 클릭 추이 (30일)" desc="파일·문서 자료를 클릭한 횟수 추이예요.">
           <MiniLineChart points={dl?.trend ?? []} height={56} />
         </Card>
-        <Card title="VOC 유입 추이 (30일)">
+        <Card title="이용자 의견 접수 추이 (30일)" desc="이용자가 남긴 의견·문의·오류신고예요.">
           <MiniLineChart points={fb.incoming} height={56} />
         </Card>
-        <Card title={`VOC 종류별 · 평균 해결 ${fb.avgResolutionHours}h`}>
+        <Card title={`의견 종류별 · 평균 해결 ${fb.avgResolutionHours}h`}>
           <BarList items={fb.byKind} />
         </Card>
       </div>
