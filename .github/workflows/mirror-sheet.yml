@@ -1,0 +1,32 @@
+name: Supabase → 시트 미러
+
+# Supabase archive_item(SSOT) → 구글 시트 "자료 DB (Supabase 미러)" 탭 단방향 동기화.
+# 읽기 전용 미러라 시트만 갱신하고 리포지토리는 건드리지 않는다.
+
+on:
+  schedule:
+    - cron: '0 20 * * *' # 매일 20:00 UTC = 05:00 KST
+  workflow_dispatch: {} # 수동 실행 버튼
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-sheet
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install --quiet gspread
+      - name: Sync archive_item → 시트 미러
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://bmsoolrfostbxepzkesy.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SHEETS_SA_JSON: ${{ secrets.SHEETS_SA_JSON }}
+        run: python web/scripts/supabase_to_sheet.py
