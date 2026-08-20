@@ -5,7 +5,7 @@ import { getAuthState } from '@/lib/auth';
 import { DashboardTabs } from './DashboardTabs';
 import { ContentPanel } from './panels/ContentPanel';
 import { TrafficPanel } from './panels/TrafficPanel';
-import { BehaviorEmpty } from './panels/BehaviorEmpty';
+import { BehaviorPanel } from './panels/BehaviorPanel';
 
 export const metadata = {
   title: '지표 대시보드 · 맥비 자료실',
@@ -65,7 +65,11 @@ export default async function AdminDashboardPage() {
             <TrafficPanel />
           </Suspense>
         }
-        behavior={<BehaviorEmpty />}
+        behavior={
+          <Suspense fallback={<div className="text-sm text-[var(--muted)] py-8">불러오는 중…</div>}>
+            <BehaviorPanel />
+          </Suspense>
+        }
       />
     </div>
   );
