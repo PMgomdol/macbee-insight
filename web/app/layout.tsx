@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Script from 'next/script';
 import { Suspense } from 'react';
 import { AuthStatus } from '@/components/AuthStatus';
 import { MobileNavServer } from '@/components/MobileNavServer';
@@ -9,7 +8,8 @@ import { HeaderNavServer } from '@/components/HeaderNavServer';
 import { CardClickTracker } from '@/components/CardClickTracker';
 import { NavProgress } from '@/components/NavProgress';
 import { SiteFooter } from '@/components/SiteFooter';
-import { AnalyticsProvider } from '@/components/AnalyticsProvider';
+import { AnalyticsGate } from '@/components/AnalyticsGate';
+import { ConsentBanner } from '@/components/ConsentBanner';
 import { FeedbackWidgetLoader } from '@/components/FeedbackWidgetLoader';
 import { AtlaskitProvider } from '@/components/AtlaskitProvider';
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
@@ -55,14 +55,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--fg)]">
-        {/* GA4 — 유입 채널 분석용 (행동 이벤트는 PostHog 담당). 측정 ID는 공개 값이라 하드코딩 (env 오설정 사고 방지). */}
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-LT2K006JPF" strategy="afterInteractive" />
-        <Script id="ga4-init" strategy="afterInteractive">{`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-LT2K006JPF');
-        `}</Script>
+        {/* GA4·PostHog는 쿠키 동의 후에만 로드 (AnalyticsGate). 동의 배너는 ConsentBanner. */}
+        <Suspense fallback={null}><AnalyticsGate /></Suspense>
+        <ConsentBanner />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-3 focus:py-2 focus:bg-[var(--accent)] focus:text-white focus:rounded-[var(--r-sm)]"
@@ -70,7 +65,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           본문 바로가기
         </a>
         <AtlaskitProvider>
-        <Suspense fallback={null}><AnalyticsProvider /></Suspense>
         <VercelAnalytics />
         <NavProgress />
         <CardClickTracker />

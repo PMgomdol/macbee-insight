@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { MessageCircle, Video, FolderOpen, ExternalLink } from 'lucide-react';
 import { FooterAdminLink } from './FooterAdminLink';
+import { ConsentResetLink } from './ConsentResetLink';
 
 const ROOMS = [
   { label: '1번방', url: 'https://bit.ly/맥비' },
@@ -89,6 +90,7 @@ export function SiteFooter() {
           <div className="flex flex-wrap gap-3 items-center">
             <Link href="/privacy" className="hover:text-white transition-colors">개인정보처리방침</Link>
             <Link href="/terms" className="hover:text-white transition-colors">이용약관</Link>
+            <ConsentResetLink />
             <Suspense fallback={null}><FooterAdminLink /></Suspense>
           </div>
         </div>

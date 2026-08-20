@@ -7,10 +7,14 @@
  * idle init보다 먼저 발화하면 전량 유실 (실제로 search_submit이 8일간 0건).
  * getPosthog()를 통과하면 항상 init 완료된 인스턴스를 받는다.
  */
+import { hasConsent } from './consent';
+
 let posthogPromise: Promise<any> | null = null;
 
 export function getPosthog(): Promise<any> | null {
   if (typeof window === 'undefined') return null;
+  // 분석 쿠키 동의 전에는 어떤 호출 지점(track 등)에서도 로드 금지.
+  if (!hasConsent()) return null;
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   if (!key) return null;
   if (!posthogPromise) {
