@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   },
   description:
     '서비스 기획자·PM을 위한 실무 자료실. 화면설계서·기획서 양식부터 UX·IA 아티클, 실무 Q&A까지 현직 기획자들이 모아 정리한 자료를 검색해 보세요.',
+  // Google Search Console 소유권 확인 (HTML 태그 방식) → <head>에 meta 렌더
+  verification: { google: 'dfXxCDr107K4DJR_dCCIe7aWRvKAJup_fLAZKYk1keE' },
   // 카톡·슬랙 공유 미리보기 — 톡방 공유가 주 유입 경로라 필수. (건수는 바뀌므로 넣지 않음)
   openGraph: {
     title: '맥비 자료실 | 기획자 실무 자료·템플릿 모음',
