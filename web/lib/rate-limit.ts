@@ -27,8 +27,11 @@ function allow(key: string, limit: number, windowMs: number): boolean {
 
 async function clientIp(): Promise<string> {
   const h = await headers();
-  return (h.get('x-forwarded-for')?.split(',')[0]?.trim())
+  // Vercel이 주입하는 값 우선 — 클라이언트가 위조 못 함. x-forwarded-for 맨 앞값은
+  // 클라이언트가 임의로 넣을 수 있어(슬로틀 우회) 마지막 폴백으로만 쓴다.
+  return h.get('x-vercel-forwarded-for')
     || h.get('x-real-ip')
+    || h.get('x-forwarded-for')?.split(',')[0]?.trim()
     || 'unknown';
 }
 
