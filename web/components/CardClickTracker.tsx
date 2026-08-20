@@ -38,6 +38,7 @@ export function CardClickTracker() {
         kind: (target.dataset.cardKind as 'files' | 'insights') ?? 'insights',
         category: target.dataset.cardCategory ?? '',
         from: window.location.pathname,
+        action: (target.dataset.cardAction as 'download' | 'external' | 'video') ?? 'external',
       });
     }
     document.addEventListener('click', handler);

@@ -26,9 +26,9 @@ function isDownload(item: ArchiveItem): boolean {
 
 /** 오른쪽 아래 액션 표시 — 무엇을 클릭하는지 명확히. */
 function cardAction(item: ArchiveItem) {
-  if (isVideo(item)) return { Icon: PlayCircle, label: '재생' };
-  if (isDownload(item)) return { Icon: Download, label: '다운로드' };
-  return { Icon: ExternalLink, label: '바로가기' };
+  if (isVideo(item)) return { Icon: PlayCircle, label: '재생', type: 'video' as const };
+  if (isDownload(item)) return { Icon: Download, label: '다운로드', type: 'download' as const };
+  return { Icon: ExternalLink, label: '바로가기', type: 'external' as const };
 }
 
 // 구글 리다이렉트 URL(www.google.com/url?q=...) → 실제 URL로 풀기.
@@ -107,7 +107,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
   const media = mediaLabel(item);
   const badge = topBadgeMeta(item);
-  const { Icon: ActionIcon, label: actionLabel } = cardAction(item);
+  const { Icon: ActionIcon, label: actionLabel, type: actionType } = cardAction(item);
   const tags = (item.tags ?? []).slice(0, 2);
 
   return (
@@ -118,6 +118,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
       data-card-id={item.id}
       data-card-kind={item.kind}
       data-card-category={item.main_category}
+      data-card-action={actionType}
       className="app-card group flex flex-col gap-2.5 p-4 min-h-[180px] h-full overflow-hidden"
       aria-label={`${media}: ${item.title} (새 탭에서 열어요)`}
     >
@@ -166,7 +167,7 @@ export function ItemCard({ item }: { item: ArchiveItem }) {
 export function ItemRow({ item }: { item: ArchiveItem }) {
   const url = item.file_url || item.external_url || '#';
   const badge = topBadgeMeta(item);
-  const { Icon: ActionIcon, label: actionLabel } = cardAction(item);
+  const { Icon: ActionIcon, label: actionLabel, type: actionType } = cardAction(item);
   return (
     <a
       href={url}
@@ -175,6 +176,7 @@ export function ItemRow({ item }: { item: ArchiveItem }) {
       data-card-id={item.id}
       data-card-kind={item.kind}
       data-card-category={item.main_category}
+      data-card-action={actionType}
       className="group flex items-start justify-between gap-3 px-3 py-3 min-h-[44px] hover:bg-[var(--card)] transition"
     >
       <div className="min-w-0 flex flex-col gap-1">

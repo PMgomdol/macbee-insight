@@ -1,5 +1,6 @@
 import 'server-only';
-import type { LabelValue } from './types';
+import type { DayPoint, LabelValue } from './types';
+import { bucketDaily } from './util';
 
 // HogQL Query API. 수집키(phc_)가 아니라 개인키(phx_)가 필요 — 읽기 전용.
 // 쿼리엔 사용자 입력이 안 들어가고 days/limit는 코드가 통제하는 정수라 인젝션 위험 없음.
@@ -88,6 +89,18 @@ export async function getConversion(days = 30) {
     searchSuccessRate: pct(resultClicks, searches),
     zeroRate: pct(zeroResults, searchResults),
   };
+}
+
+// 다운로드 = card_click 중 action='download'인 것 (파일/문서형 자료 클릭).
+// 조회수와 뭉뚱그리지 않고 여기서만 집계. 추이는 배포 후 쌓인 이벤트 기준(소급 불가).
+export async function getDownloadStats(days = 30): Promise<{ total: number; trend: DayPoint[] } | null> {
+  const rows = await hogql(
+    `SELECT timestamp FROM events
+     WHERE event='card_click' AND properties.action='download' AND ${since(days)}`
+  );
+  if (!rows) return null;
+  const ts = rows.map((r) => String(r[0]));
+  return { total: ts.length, trend: bucketDaily(ts, days, Date.now()) };
 }
 
 export async function getReturningRate(days = 30) {

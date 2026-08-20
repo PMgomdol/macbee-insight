@@ -6,10 +6,10 @@ import {
   getViewsTrend,
   getNewItemsTrend,
   getTopViewedItems,
-  getDownloadsSummary,
   getProposalThroughput,
   getFeedbackThroughput,
 } from '@/lib/metrics/supabase';
+import { getDownloadStats } from '@/lib/metrics/posthog';
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -25,7 +25,7 @@ export async function ContentPanel() {
     getViewsTrend(30),
     getNewItemsTrend(30),
     getTopViewedItems(30, 8),
-    getDownloadsSummary(8),
+    getDownloadStats(30),
     getProposalThroughput(30),
     getFeedbackThroughput(30),
   ]);
@@ -36,7 +36,7 @@ export async function ContentPanel() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatTile label="30일 조회수" value={viewsTotal} icon={Eye} />
         <StatTile label="30일 신규 자료" value={newTotal} icon={FileText} />
-        <StatTile label="총 다운로드" value={dl.total} icon={Download} />
+        <StatTile label="30일 다운로드" value={dl?.total ?? 0} sub="파일·문서 클릭" icon={Download} />
         <StatTile
           label="제안 승인 소요"
           value={`${prop.avgApprovalHours}h`}
@@ -54,8 +54,8 @@ export async function ContentPanel() {
         <Card title="인기 자료 Top (30일 조회)">
           <BarList items={topViewed} />
         </Card>
-        <Card title="다운로드 Top">
-          <BarList items={dl.top} />
+        <Card title="다운로드 추이 (30일)">
+          <MiniLineChart points={dl?.trend ?? []} height={56} />
         </Card>
         <Card title="VOC 유입 추이 (30일)">
           <MiniLineChart points={fb.incoming} height={56} />

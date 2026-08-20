@@ -33,19 +33,6 @@ export async function getTopViewedItems(days = DEFAULT_DAYS, limit = 10): Promis
   return top.map(([id, value]) => ({ label: titles.get(id) ?? `#${id}`, value }));
 }
 
-export async function getDownloadsSummary(limit = 10): Promise<{ total: number; top: LabelValue[] }> {
-  const sb = createAdminClient();
-  const { data } = await sb
-    .from('archive_item')
-    .select('title, downloads')
-    .gt('downloads', 0)
-    .order('downloads', { ascending: false })
-    .limit(limit);
-  const { data: all } = await sb.from('archive_item').select('downloads').gt('downloads', 0);
-  const total = (all ?? []).reduce((a, r) => a + (r.downloads as number), 0);
-  return { total, top: (data ?? []).map((r) => ({ label: r.title as string, value: r.downloads as number })) };
-}
-
 export async function getProposalThroughput(days = DEFAULT_DAYS) {
   const sb = createAdminClient();
   const since = new Date(Date.now() - days * DAY_MS).toISOString();

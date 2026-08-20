@@ -49,6 +49,7 @@ export const CHANGELOG: Release[] = [
       { type: 'feature', text: '[자료 관리](/admin-mb26/panel/archive)에서 여러 자료를 골라 한 번에 숨김·삭제·분류 변경하고(일괄 작업), 최신·조회·이름·분류순으로 정렬할 수 있어요. 자료의 링크(URL)도 직접 고칠 수 있어요.' },
       { type: 'feature', text: '[자료 관리](/admin-mb26/panel/archive)에 "중복" 탭(같은 링크 자료를 묶어 보여줌)과 죽은 링크 배지(매주 자동 점검)를 추가했어요.' },
       { type: 'feature', text: '[개인정보처리방침](/privacy)·[이용약관](/terms) 페이지를 추가했어요.' },
+      { type: 'improve', text: '[지표 대시보드](/admin-mb26/panel/dashboard)의 다운로드 지표를 실제 측정으로 바꿨어요 — 파일·문서 자료 클릭만 따로 집계해 "30일 다운로드"와 추이로 보여드려요. (추이는 이번 배포 시점부터 쌓여요)' },
       { type: 'improve', text: '모든 자료의 한 줄 설명을 명사형 개조식으로 통일했어요.' },
       { type: 'improve', text: '자료 카드의 형식 배지를 정리했어요 — 파일 형식은 영문(Google Docs·PDF·hwp 등)으로, 노출하지 않던 날짜는 걷어냈어요.' },
       { type: 'remove', text: '죽은 링크·중복 자료를 실제로 열어 확인한 뒤 정리했어요 — 접속 불가 2건·중복 1건 삭제(되살릴 수 있게 백업 보관).' },
