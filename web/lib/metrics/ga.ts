@@ -40,30 +40,33 @@ async function dims(days: number, dimension: string, metric: string, limit?: num
   });
 }
 
-export async function getSessionsTrend(days = 30): Promise<{ sessions: DayPoint[]; users: DayPoint[] } | null> {
+// 추이는 '참여 방문(engagedSessions)'과 '전체 방문(sessions)' 둘 다 반환.
+// 참여 = 10초+ 머물거나·2페이지+ 보거나·전환한 방문 → 1페이지 찍고 튀는 봇/크롤러 자동 제외.
+export async function getSessionsTrend(days = 30): Promise<{ engaged: DayPoint[]; total: DayPoint[] } | null> {
   const c = client();
   if (!c) return null;
   const [res] = await c.runReport({
     property: prop(),
     dateRanges: range(days),
     dimensions: [{ name: 'date' }],
-    metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+    metrics: [{ name: 'engagedSessions' }, { name: 'sessions' }],
     orderBys: [{ dimension: { dimensionName: 'date' } }],
   });
-  const sessions: DayPoint[] = [];
-  const users: DayPoint[] = [];
+  const engaged: DayPoint[] = [];
+  const total: DayPoint[] = [];
   for (const r of res.rows ?? []) {
     const date = gaDateToISO(r.dimensionValues?.[0]?.value ?? '');
-    sessions.push({ date, value: Number(r.metricValues?.[0]?.value ?? 0) });
-    users.push({ date, value: Number(r.metricValues?.[1]?.value ?? 0) });
+    engaged.push({ date, value: Number(r.metricValues?.[0]?.value ?? 0) });
+    total.push({ date, value: Number(r.metricValues?.[1]?.value ?? 0) });
   }
-  return { sessions, users };
+  return { engaged, total };
 }
 
-export const getChannelBreakdown = (days = 30) => dims(days, 'sessionDefaultChannelGroup', 'sessions');
-export const getDeviceBreakdown = (days = 30) => dims(days, 'deviceCategory', 'sessions');
-export const getNewVsReturning = (days = 30) => dims(days, 'newVsReturning', 'activeUsers');
-export const getTopCountries = (days = 30, limit = 6) => dims(days, 'country', 'activeUsers', limit);
+// 지역·채널·기기·신규재방문 = 참여 세션 기준 (봇에 덜 흔들리는 업계 표준 지표).
+export const getChannelBreakdown = (days = 30) => dims(days, 'sessionDefaultChannelGroup', 'engagedSessions');
+export const getDeviceBreakdown = (days = 30) => dims(days, 'deviceCategory', 'engagedSessions');
+export const getNewVsReturning = (days = 30) => dims(days, 'newVsReturning', 'engagedSessions');
+export const getTopCountries = (days = 30, limit = 6) => dims(days, 'country', 'engagedSessions', limit);
 
 export async function getEngagement(days = 30): Promise<{ avgSessionSec: number; engagementRate: number } | null> {
   const c = client();

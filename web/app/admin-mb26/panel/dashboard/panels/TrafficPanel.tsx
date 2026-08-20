@@ -44,19 +44,19 @@ export async function TrafficPanel() {
     getTopCountries(30, 6),
     getEngagement(30),
   ]);
-  const sessTotal = trend?.sessions.reduce((a, p) => a + p.value, 0) ?? 0;
-  const userTotal = trend?.users.reduce((a, p) => a + p.value, 0) ?? 0;
+  const engagedTotal = trend?.engaged.reduce((a, p) => a + p.value, 0) ?? 0;
+  const rawTotal = trend?.total.reduce((a, p) => a + p.value, 0) ?? 0;
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile label="30일 방문 횟수" value={sessTotal} sub="사이트에 들어온 총 횟수(세션)" icon={Users} />
-        <StatTile label="30일 방문자 수" value={userTotal} sub="중복 제외 사람 수" icon={Users} />
+        <StatTile label="참여 방문 (30일)" value={engagedTotal} sub="실제 둘러본 방문 · 봇·즉시이탈 제외" icon={Users} />
+        <StatTile label="전체 방문 (30일)" value={rawTotal} sub="봇·크롤러 포함 전체 (참고용)" icon={Users} />
         <StatTile label="평균 체류시간" value={`${eng?.avgSessionSec ?? 0}s`} sub="한 번 방문에 머문 시간" icon={Clock} />
-        <StatTile label="참여율" value={`${eng?.engagementRate ?? 0}%`} sub="그냥 안 나가고 둘러본 방문 비율" icon={Clock} />
+        <StatTile label="참여율" value={`${eng?.engagementRate ?? 0}%`} sub="전체 방문 중 실제 둘러본 비율" icon={Clock} />
       </div>
       <div className="grid md:grid-cols-2 gap-3">
-        <Card title="방문 추이 (30일)">
-          <MiniLineChart points={trend?.sessions ?? []} height={56} />
+        <Card title="참여 방문 추이 (30일)" desc="봇·즉시이탈을 뺀 실제 방문이에요.">
+          <MiniLineChart points={trend?.engaged ?? []} height={56} />
         </Card>
         <Card title="유입 경로" desc="이용자가 어떤 경로로 들어왔는지예요 (검색·직접 접속·외부 링크 등).">
           <BarList items={channels ?? []} />
