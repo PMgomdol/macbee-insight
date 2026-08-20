@@ -23,7 +23,7 @@ export default async function ArchivePage() {
   const [itemsRes, cats] = await Promise.all([
     sb
       .from('archive_item')
-      .select('id, title, summary, main_category, sub_category, tags, format, kind, status, external_url, file_url, views')
+      .select('id, title, summary, main_category, sub_category, tags, format, kind, status, external_url, file_url, views, registered_at')
       .order('id', { ascending: false })
       .limit(5000),
     getCategories(),

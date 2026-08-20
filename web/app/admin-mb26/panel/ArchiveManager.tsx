@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, Pencil, ExternalLink, Eye, EyeOff, Trash2, RotateCcw } from 'lucide-react';
+import { Search, X, Pencil, ExternalLink, Eye, EyeOff, Trash2, RotateCcw, ArrowUpDown } from 'lucide-react';
 import { UIButton } from '@/components/ui/Button';
 import { updateArchiveItem, setArchiveStatus } from './actions';
 
@@ -21,7 +21,16 @@ export type ArchiveRowItem = {
   external_url: string | null;
   file_url: string | null;
   views: number;
+  registered_at?: string | null;
 };
+
+type SortKey = 'recent' | 'views' | 'title' | 'category';
+const SORTS: [SortKey, string][] = [
+  ['recent', '최신순'],
+  ['views', '조회순'],
+  ['title', '이름순'],
+  ['category', '분류순'],
+];
 
 type Cat = { main_category: string; sub_category: string | null };
 
@@ -34,6 +43,7 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
   const [q, setQ] = useState('');
   const [kind, setKind] = useState<'' | 'files' | 'insights'>('');
   const [status, setStatus] = useState<'public' | 'hidden' | 'deleted' | 'all'>('public');
+  const [sort, setSort] = useState<SortKey>('recent');
   const [showCount, setShowCount] = useState(STEP);
 
   // 종류·검색까지 적용한 기준 집합 — 상태 탭 숫자와 목록이 항상 같은 기준을 쓰게 한다.
@@ -61,7 +71,31 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
     [byKindSearch, status]
   );
 
-  const visible = filtered.slice(0, showCount);
+  // 정렬 — 검색·필터 뒤에 적용. recent(등록 최신) 기본.
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    switch (sort) {
+      case 'views':
+        arr.sort((a, b) => b.views - a.views);
+        break;
+      case 'title':
+        arr.sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+        break;
+      case 'category':
+        arr.sort(
+          (a, b) =>
+            (a.main_category || '').localeCompare(b.main_category || '', 'ko') ||
+            (a.sub_category || '').localeCompare(b.sub_category || '', 'ko') ||
+            a.title.localeCompare(b.title, 'ko')
+        );
+        break;
+      default: // recent
+        arr.sort((a, b) => (b.registered_at || '').localeCompare(a.registered_at || '') || b.id - a.id);
+    }
+    return arr;
+  }, [filtered, sort]);
+
+  const visible = sorted.slice(0, showCount);
 
   const statusTabs = [
     ['public', `공개 ${counts.public}`],
@@ -107,16 +141,29 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
             </button>
           ))}
         </div>
-        <div className="flex gap-1">
-          {([['', '전체'], ['files', '양식·템플릿'], ['insights', '콘텐츠']] as const).map(([k, label]) => (
-            <button
-              key={k}
-              onClick={() => { setKind(k); setShowCount(STEP); }}
-              className={`px-2.5 py-1 rounded-full font-medium transition ${kind === k ? 'bg-[var(--card)] text-[var(--fg)]' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            {([['', '전체'], ['files', '양식·템플릿'], ['insights', '콘텐츠']] as const).map(([k, label]) => (
+              <button
+                key={k}
+                onClick={() => { setKind(k); setShowCount(STEP); }}
+                className={`px-2.5 py-1 rounded-full font-medium transition ${kind === k ? 'bg-[var(--card)] text-[var(--fg)]' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <label className="inline-flex items-center gap-1 text-[var(--muted)]">
+            <ArrowUpDown size={13} aria-hidden />
+            <span className="sr-only">정렬</span>
+            <select
+              value={sort}
+              onChange={(e) => { setSort(e.target.value as SortKey); setShowCount(STEP); }}
+              className="px-1.5 py-1 rounded-[var(--r-sm)] border border-[var(--border-strong)] bg-[var(--bg)] text-xs text-[var(--fg)] outline-none focus:border-[var(--accent)] cursor-pointer"
             >
-              {label}
-            </button>
-          ))}
+              {SORTS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+            </select>
+          </label>
         </div>
       </div>
 
