@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/server';
 import { notifyFeedbackSubmitted } from '@/lib/notify';
+import { tooMany } from '@/lib/rate-limit';
 
 export type FeedbackKind = 'suggestion' | 'bug' | 'inquiry' | 'praise';
 
@@ -16,6 +17,7 @@ export async function submitFeedback(input: {
   pageUrl?: string;
   userAgent?: string;
 }): Promise<{ ok: boolean; error?: string }> {
+  if (await tooMany('feedback', 10)) return { ok: false, error: '요청이 몰렸어요. 잠시 후 다시 시도해주세요.' };
   const kind = KIND_SET.has(input.kind as FeedbackKind) ? (input.kind as FeedbackKind) : 'inquiry';
   const message = (input.message ?? '').trim();
   if (!message) return { ok: false, error: '내용을 입력해주세요' };

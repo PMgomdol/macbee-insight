@@ -176,6 +176,11 @@ create policy "profile_self_select" on profile for select using (auth.uid() = id
 -- profile — 본인 행만 INSERT/UPDATE (callback에서 자기 profile 생성 가능)
 create policy "profile_self_insert" on profile for insert with check (auth.uid() = id);
 create policy "profile_self_update" on profile for update using (auth.uid() = id);
+-- role·team 은 service_role만 쓸 수 있게 컬럼 단위로 제한 (RLS만으론 컬럼을 못 막아
+-- 본인 행 UPDATE로 자가 admin 승격이 가능해진다 — 20260820 마이그레이션 참고).
+revoke insert, update on table profile from anon, authenticated;
+grant insert (id, display_name) on table profile to authenticated;
+grant update (display_name)     on table profile to authenticated;
 
 -- review_queue, broken_archive, check_log — admin/reviewer만
 create policy "review_queue_admin" on review_queue for all using (

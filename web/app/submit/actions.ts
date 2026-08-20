@@ -3,9 +3,13 @@
 import { after } from 'next/server';
 import { createClient, createAdminClient, createPublicClient } from '@/lib/supabase/server';
 import { fetchUrlMeta, isFileUrl, isYouTubeUrl, normalizeUrl } from '@/lib/url-meta';
+import { safeFetch } from '@/lib/safe-fetch';
+import { tooMany } from '@/lib/rate-limit';
 import { classify, type InlineData } from '@/lib/ai-classify';
 import { notifyProposalSubmitted } from '@/lib/notify';
 import { randomUUID } from 'crypto';
+
+const BUSY = '요청이 몰렸어요. 잠시 후 다시 시도해주세요.';
 
 export type SubmitResult = { ok: true; id: string | null } | { ok: false; error: string };
 
@@ -84,6 +88,7 @@ function escapeIlike(s: string): string {
 
 /** 외부에서 사용 — 자료 등록 폼이 분석 직후 호출하여 미리 중복 알림 */
 export async function checkDuplicate(externalUrl: string, fileUrl: string): Promise<DuplicateMatch | null> {
+  if (await tooMany('dup', 40)) return null;
   return findDuplicate(externalUrl.trim(), fileUrl.trim());
 }
 
@@ -126,7 +131,7 @@ async function fetchInlineForVision(fileUrl: string, ext: string): Promise<Inlin
   const mime = VISION_MIME[ext];
   if (!mime) return null;
   try {
-    const resp = await fetch(fileUrl, { signal: AbortSignal.timeout(20000) });
+    const resp = await safeFetch(fileUrl, { signal: AbortSignal.timeout(20000) });
     if (!resp.ok) return null;
     const buf = Buffer.from(await resp.arrayBuffer());
     if (buf.byteLength === 0 || buf.byteLength > VISION_MAX_BYTES) return null;
@@ -206,7 +211,7 @@ async function extractFileText(fileUrl: string, ext: string): Promise<string> {
   const SUPPORTED = ['pdf', 'docx', 'pptx', 'xlsx', 'xlsm', 'hwp', 'hwpx', 'txt', 'md', 'csv'];
   if (!SUPPORTED.includes(ext)) return '';
   try {
-    const resp = await fetch(fileUrl, { signal: AbortSignal.timeout(20000) });
+    const resp = await safeFetch(fileUrl, { signal: AbortSignal.timeout(20000) });
     if (!resp.ok) return '';
     const buf = Buffer.from(await resp.arrayBuffer());
 
@@ -247,6 +252,7 @@ async function extractFileText(fileUrl: string, ext: string): Promise<string> {
  *   ③ 그 외 (PPTX/XLSX/HWP 등): 파일명만 사용
  */
 export async function analyzeFile(fileUrl: string, fileName: string): Promise<AnalyzeResult> {
+  if (await tooMany('analyze', 20)) return { ok: false, error: BUSY };
   fileUrl = fileUrl.trim();
   fileName = fileName.trim();
   if (!fileUrl || !fileName) return { ok: false, error: '파일 정보가 부족해요' };
@@ -367,6 +373,7 @@ async function analyzeYouTube(url: string): Promise<AnalyzeResult> {
 }
 
 export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
+  if (await tooMany('analyze', 20)) return { ok: false, error: BUSY };
   url = url.trim();
   if (!url) return { ok: false, error: 'URL을 먼저 입력해주세요' };
   if (!/^https?:\/\//i.test(url)) return { ok: false, error: 'URL은 http:// 또는 https://로 시작해요' };
@@ -411,6 +418,7 @@ export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
 export type SubmitDuplicateResult = { ok: false; duplicate: DuplicateMatch };
 
 export async function submitProposal(formData: FormData): Promise<SubmitResult | SubmitDuplicateResult> {
+  if (await tooMany('submit', 15)) return { ok: false, error: BUSY };
   const url = String(formData.get('url') ?? '').trim();
   const fileUrl = String(formData.get('file_url') ?? '').trim();
   const title = String(formData.get('title') ?? '').trim();
@@ -529,10 +537,16 @@ export async function createUploadTicket(
   name: string,
   size: number
 ): Promise<{ ok: true; path: string; token: string; publicUrl: string } | { ok: false; error: string }> {
+  if (await tooMany('upload', 20)) return { ok: false, error: BUSY };
   if (!name) return { ok: false, error: '파일 이름이 없어요' };
   if (!size || size <= 0) return { ok: false, error: '비어있는 파일이에요' };
   if (size > MAX_UPLOAD_BYTES) {
     return { ok: false, error: `파일이 ${(size / 1024 / 1024).toFixed(1)}MB예요. 10MB까지 올릴 수 있어요. 더 큰 파일은 Google Drive 링크를 URL로 등록해주세요.` };
+  }
+  // 브라우저에서 스크립트로 해석될 수 있는 확장자 거부 — 공개 버킷 URL을 통한 XSS·피싱 방지
+  const uploadExt = (name.split('.').pop() || '').toLowerCase();
+  if (['svg', 'html', 'htm', 'xhtml', 'xml', 'js', 'mjs', 'htaccess'].includes(uploadExt)) {
+    return { ok: false, error: '이 형식은 올릴 수 없어요. 문서·이미지 파일로 올려주세요.' };
   }
 
   const safeName = name.replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ\.\-]/g, '_').slice(0, 80);

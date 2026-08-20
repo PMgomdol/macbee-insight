@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase/server';
+import { tooMany } from '@/lib/rate-limit';
 
 /**
  * 일별 UV 측정 — 카드 클릭 시 호출.
@@ -32,6 +33,9 @@ function parseCookie(raw: string | undefined): Seen {
 
 export async function POST(req: Request) {
   try {
+    if (await tooMany('view', 60)) {
+      return NextResponse.json({ ok: false, error: 'rate limited' }, { status: 429 });
+    }
     const body = await req.json();
     const id = Number(body?.id);
     if (!id || !Number.isFinite(id)) {

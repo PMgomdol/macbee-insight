@@ -2,6 +2,7 @@
  * URL → og:title, og:description, og:image, article:published_time 등 추출.
  * Apps Script url_metadata.gs 포트.
  */
+import { safeFetch } from './safe-fetch';
 
 export type UrlMeta = {
   url: string;
@@ -165,13 +166,12 @@ const UA_GOOGLEBOT = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google
 
 async function tryFetch(url: string, ua: string): Promise<{ ok: boolean; status: number; finalUrl: string; html?: string; error?: string }> {
   try {
-    const resp = await fetch(url, {
+    const resp = await safeFetch(url, {
       headers: {
         'User-Agent': ua,
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
       },
-      redirect: 'follow',
       signal: AbortSignal.timeout(10000),
     });
     if (!resp.ok) {
