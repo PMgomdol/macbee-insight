@@ -56,6 +56,60 @@ export async function setArchiveStatus(id: number, status: 'public' | 'hidden' |
   revalidatePath('/admin-mb26/panel/archive');
 }
 
+/** 일괄 상태 변경 — 선택한 여러 자료를 한 번에 공개/숨김/삭제. */
+export async function bulkSetArchiveStatus(ids: number[], status: 'public' | 'hidden' | 'deleted') {
+  const me = await getCurrentUser();
+  if (!me) throw new Error('로그인해주세요');
+  const role = await getRole();
+  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
+  if (!['public', 'hidden', 'deleted'].includes(status)) throw new Error('알 수 없는 상태예요');
+  if (!ids.length) return;
+
+  const sb = createAdminClient();
+  const { error } = await sb.from('archive_item').update({ status }).in('id', ids);
+  if (error) throw new Error('일괄 상태 변경에 실패했어요 — ' + error.message);
+  updateTag('archive');
+  revalidatePath('/admin-mb26/panel/archive');
+}
+
+/** 일괄 분류 변경 — 선택한 여러 자료의 대/소분류를 한 번에. */
+export async function bulkSetCategory(ids: number[], main_category: string, sub_category: string) {
+  const me = await getCurrentUser();
+  if (!me) throw new Error('로그인해주세요');
+  const role = await getRole();
+  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
+  if (!ids.length) return;
+  const main = main_category.trim();
+  if (!main) throw new Error('대분류를 선택해주세요');
+
+  const sb = createAdminClient();
+  const { error } = await sb
+    .from('archive_item')
+    .update({ main_category: main, sub_category: sub_category.trim() || null })
+    .in('id', ids);
+  if (error) throw new Error('일괄 분류 변경에 실패했어요 — ' + error.message);
+  updateTag('archive');
+  revalidatePath('/admin-mb26/panel/archive');
+}
+
+/** 거절된 제안을 다시 검토 대기(pending)로 — 자료등록요청 큐에 다시 뜬다. */
+export async function reconsiderProposal(id: string) {
+  const me = await getCurrentUser();
+  if (!me) throw new Error('로그인해주세요');
+  const role = await getRole();
+  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
+
+  const sb = createAdminClient();
+  const { error } = await sb
+    .from('staging_proposal')
+    .update({ status: 'pending', reviewed_at: null })
+    .eq('id', id)
+    .eq('status', 'rejected');
+  if (error) throw new Error('다시 검토로 돌리지 못했어요 — ' + error.message);
+  updateTag('archive');
+  revalidatePath('/admin-mb26/panel');
+}
+
 /** 승인 전 제안 내용 보정 — 운영진이 제목·요약·분류·태그·형식을 다듬어 저장. */
 export async function updateProposal(
   id: string,

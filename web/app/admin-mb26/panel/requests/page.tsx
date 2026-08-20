@@ -24,17 +24,6 @@ type Proposal = {
   approvers: string[] | null;
 };
 
-type RejectedProposal = {
-  id: string;
-  title: string;
-  external_url: string | null;
-  file_url: string | null;
-  proposer: string | null;
-  proposed_at: string;
-  reviewer_note: string | null;
-  reviewed_at: string | null;
-};
-
 export default async function RequestsPage() {
   const { user, isReviewer, isAdmin } = await getAuthState();
 
@@ -49,25 +38,18 @@ export default async function RequestsPage() {
   }
 
   const sb = createAdminClient();
-  const [countRes, pendingRes, rejectedRes, cats] = await Promise.all([
+  const [countRes, pendingRes, cats] = await Promise.all([
     sb.from('profile').select('id', { count: 'exact', head: true }).in('role', ['reviewer', 'admin']),
     sb
       .from('staging_proposal')
       .select('id, title, summary, external_url, file_url, main_category, sub_category, tags, format, proposer, proposed_at, approvers')
       .eq('status', 'pending')
       .order('proposed_at', { ascending: true }),
-    sb
-      .from('staging_proposal')
-      .select('id, title, external_url, file_url, proposer, proposed_at, reviewer_note, reviewed_at')
-      .eq('status', 'rejected')
-      .order('reviewed_at', { ascending: false })
-      .limit(200),
     getCategories(),
   ]);
   const categories = cats.map((c) => ({ main_category: c.main_category, sub_category: c.sub_category }));
   const reviewerCount = countRes.count ?? 0;
   const items = (pendingRes.data ?? []) as Proposal[];
-  const rejected = (rejectedRes.data ?? []) as RejectedProposal[];
 
   // 승인자 email → 운영진 이름 매핑 (profile엔 email이 없어 auth에서 uid↔email을 가져와 join)
   const emailToName = new Map<string, string>();
@@ -135,44 +117,6 @@ export default async function RequestsPage() {
             </article>
           ))}
         </div>
-      )}
-
-      {rejected.length > 0 && (
-        <details className="mt-6">
-          <summary className="cursor-pointer select-none text-sm font-medium text-[var(--muted)] hover:text-[var(--fg)] transition">
-            거절된 자료 ({rejected.length}) — 사유 기록
-          </summary>
-          <p className="text-xs text-[var(--muted-2)] mt-1 mb-3">거절된 제안과 사유를 남겨둔 기록이에요. 같은 자료가 다시 올라오면 여기서 이유를 확인할 수 있어요.</p>
-          <div className="flex flex-col gap-2">
-            {rejected.map((p) => (
-              <article key={p.id} className="app-card flex flex-col gap-1.5 p-3 bg-[var(--card)] min-w-0">
-                <div className="flex items-start justify-between gap-2 flex-wrap">
-                  <h3 className="text-sm font-semibold text-[var(--fg)] min-w-0 break-words">{p.title}</h3>
-                  <span className="slds-badge app-badge-video shrink-0">거절됨</span>
-                </div>
-                {(p.external_url || p.file_url) && (
-                  <a
-                    href={p.external_url ?? p.file_url ?? '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-[var(--muted-2)] hover:text-[var(--accent)] hover:underline break-all line-clamp-1 inline-flex items-center gap-1"
-                  >
-                    <ExternalLink size={12} className="shrink-0" aria-hidden />
-                    <span>{p.external_url ?? p.file_url}</span>
-                  </a>
-                )}
-                <p className="text-xs text-[var(--fg)] bg-[var(--bg)] border border-[var(--border)] rounded-[var(--r-sm)] px-2 py-1.5 break-words">
-                  <span className="text-[var(--muted-2)]">거절 사유 · </span>
-                  {p.reviewer_note || '사유 없음'}
-                </p>
-                <div className="text-[11px] text-[var(--muted-2)]">
-                  제안 <strong className="font-medium text-[var(--muted)]">{p.proposer ?? '익명'}</strong> · {new Date(p.proposed_at).toLocaleDateString('ko-KR')}
-                  {p.reviewed_at && <> · 거절 {new Date(p.reviewed_at).toLocaleDateString('ko-KR')}</>}
-                </div>
-              </article>
-            ))}
-          </div>
-        </details>
       )}
     </div>
   );

@@ -2,7 +2,7 @@ import { getAuthState } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getCategories } from '@/lib/queries';
 import { UILinkButton } from '@/components/ui/Button';
-import { ArchiveManager, type ArchiveRowItem } from '../ArchiveManager';
+import { ArchiveManager, type ArchiveRowItem, type RejectedRow } from '../ArchiveManager';
 
 export const metadata = { title: '자료 관리 · 운영/관리' };
 
@@ -20,16 +20,23 @@ export default async function ArchivePage() {
   }
 
   const sb = createAdminClient();
-  const [itemsRes, cats] = await Promise.all([
+  const [itemsRes, rejectedRes, cats] = await Promise.all([
     sb
       .from('archive_item')
       .select('id, title, summary, main_category, sub_category, tags, format, kind, status, external_url, file_url, views, registered_at')
       .order('id', { ascending: false })
       .limit(5000),
+    sb
+      .from('staging_proposal')
+      .select('id, title, external_url, file_url, proposer, proposed_at, reviewer_note, reviewed_at')
+      .eq('status', 'rejected')
+      .order('reviewed_at', { ascending: false })
+      .limit(500),
     getCategories(),
   ]);
   const items = (itemsRes.data ?? []) as ArchiveRowItem[];
+  const rejected = (rejectedRes.data ?? []) as RejectedRow[];
   const categories = cats.map((c) => ({ main_category: c.main_category, sub_category: c.sub_category }));
 
-  return <ArchiveManager items={items} categories={categories} />;
+  return <ArchiveManager items={items} rejected={rejected} categories={categories} />;
 }

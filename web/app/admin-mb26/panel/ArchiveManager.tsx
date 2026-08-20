@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, Pencil, ExternalLink, Eye, EyeOff, Trash2, RotateCcw, ArrowUpDown } from 'lucide-react';
+import { Search, X, Pencil, ExternalLink, Eye, EyeOff, Trash2, RotateCcw, ArrowUpDown, Undo2, FolderInput } from 'lucide-react';
 import { UIButton } from '@/components/ui/Button';
-import { updateArchiveItem, setArchiveStatus } from './actions';
+import { updateArchiveItem, setArchiveStatus, bulkSetArchiveStatus, bulkSetCategory, reconsiderProposal } from './actions';
 
 const FORMATS = ['아티클', '영상', '기획서', '가이드', '템플릿', '세미나'];
 
@@ -24,6 +24,17 @@ export type ArchiveRowItem = {
   registered_at?: string | null;
 };
 
+export type RejectedRow = {
+  id: string;
+  title: string;
+  external_url: string | null;
+  file_url: string | null;
+  proposer: string | null;
+  proposed_at: string;
+  reviewer_note: string | null;
+  reviewed_at: string | null;
+};
+
 type SortKey = 'recent' | 'views' | 'title' | 'category';
 const SORTS: [SortKey, string][] = [
   ['recent', '최신순'],
@@ -33,18 +44,33 @@ const SORTS: [SortKey, string][] = [
 ];
 
 type Cat = { main_category: string; sub_category: string | null };
+type StatusTab = 'public' | 'hidden' | 'deleted' | 'rejected' | 'all';
 
 const inputCls =
   'w-full px-2.5 py-1.5 rounded-[var(--r-sm)] border border-[var(--border-strong)] bg-[var(--bg)] text-sm focus:border-[var(--focus-ring)] transition-colors';
 
 const STEP = 30;
 
-export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[]; categories: Cat[] }) {
+export function ArchiveManager({
+  items,
+  rejected = [],
+  categories,
+}: {
+  items: ArchiveRowItem[];
+  rejected?: RejectedRow[];
+  categories: Cat[];
+}) {
   const [q, setQ] = useState('');
   const [kind, setKind] = useState<'' | 'files' | 'insights'>('');
-  const [status, setStatus] = useState<'public' | 'hidden' | 'deleted' | 'all'>('public');
+  const [status, setStatus] = useState<StatusTab>('public');
   const [sort, setSort] = useState<SortKey>('recent');
   const [showCount, setShowCount] = useState(STEP);
+  const [sel, setSel] = useState<Set<number>>(new Set());
+
+  const isRejectedTab = status === 'rejected';
+
+  // 필터 바꿀 때마다 선택·표시개수 초기화 (안 보이는 항목에 일괄작업 되는 사고 방지)
+  function reset() { setShowCount(STEP); setSel(new Set()); }
 
   // 종류·검색까지 적용한 기준 집합 — 상태 탭 숫자와 목록이 항상 같은 기준을 쓰게 한다.
   const byKindSearch = useMemo(() => {
@@ -59,19 +85,27 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
     });
   }, [items, q, kind]);
 
-  // 상태별 건수 = 현재 종류·검색 필터 기준 (탭 숫자 = 목록과 일치)
   const counts = useMemo(() => {
     const c = { public: 0, hidden: 0, deleted: 0 };
     for (const it of byKindSearch) if (it.status in c) (c as any)[it.status]++;
     return c;
   }, [byKindSearch]);
 
+  // 거절됨 — staging_proposal, 검색어(제목·링크)만 적용
+  const rejectedFiltered = useMemo(() => {
+    const kws = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!kws.length) return rejected;
+    return rejected.filter((r) => {
+      const hay = `${r.title} ${r.external_url ?? ''} ${r.file_url ?? ''} ${r.reviewer_note ?? ''}`.toLowerCase();
+      return kws.every((k) => hay.includes(k));
+    });
+  }, [rejected, q]);
+
   const filtered = useMemo(
     () => (status === 'all' ? byKindSearch : byKindSearch.filter((it) => it.status === status)),
     [byKindSearch, status]
   );
 
-  // 정렬 — 검색·필터 뒤에 적용. recent(등록 최신) 기본.
   const sorted = useMemo(() => {
     const arr = [...filtered];
     switch (sort) {
@@ -97,12 +131,13 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
 
   const visible = sorted.slice(0, showCount);
 
-  const statusTabs = [
+  const statusTabs: [StatusTab, string][] = [
     ['public', `공개 ${counts.public}`],
     ['hidden', `숨김 ${counts.hidden}`],
     ['deleted', `삭제됨 ${counts.deleted}`],
+    ['rejected', `거절됨 ${rejected.length}`],
     ['all', `전체 ${byKindSearch.length}`],
-  ] as const;
+  ];
 
   return (
     <div className="flex flex-col gap-4">
@@ -116,7 +151,7 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
         <Search size={16} className="text-[var(--muted)] shrink-0" aria-hidden />
         <input
           value={q}
-          onChange={(e) => { setQ(e.target.value); setShowCount(STEP); }}
+          onChange={(e) => { setQ(e.target.value); reset(); }}
           placeholder="제목·설명·태그·분류로 찾기"
           className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-sm"
           aria-label="자료 검색"
@@ -124,7 +159,7 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
         {q && <button onClick={() => setQ('')} className="text-[var(--muted)] hover:text-[var(--fg)] p-1 -m-1" aria-label="지우기"><X size={14} /></button>}
       </div>
 
-      {/* 상태 탭 + 종류 필터 */}
+      {/* 상태 탭 + 종류 필터 + 정렬 */}
       <div className="flex items-center justify-between gap-2 flex-wrap text-xs">
         <div role="tablist" className="flex gap-1 border-b border-[var(--border)] -mb-px">
           {statusTabs.map(([s, label]) => (
@@ -132,7 +167,7 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
               key={s}
               role="tab"
               aria-selected={status === s}
-              onClick={() => { setStatus(s); setShowCount(STEP); }}
+              onClick={() => { setStatus(s); reset(); }}
               className={`px-3 py-2 -mb-px border-b-2 whitespace-nowrap transition ${
                 status === s ? 'border-[var(--accent)] text-[var(--accent)] font-semibold' : 'border-transparent text-[var(--muted)] hover:text-[var(--fg)]'
               }`}
@@ -141,49 +176,155 @@ export function ArchiveManager({ items, categories }: { items: ArchiveRowItem[];
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1">
-            {([['', '전체'], ['files', '양식·템플릿'], ['insights', '콘텐츠']] as const).map(([k, label]) => (
-              <button
-                key={k}
-                onClick={() => { setKind(k); setShowCount(STEP); }}
-                className={`px-2.5 py-1 rounded-full font-medium transition ${kind === k ? 'bg-[var(--card)] text-[var(--fg)]' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+        {!isRejectedTab && (
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {([['', '전체'], ['files', '양식·템플릿'], ['insights', '콘텐츠']] as const).map(([k, label]) => (
+                <button
+                  key={k}
+                  onClick={() => { setKind(k); reset(); }}
+                  className={`px-2.5 py-1 rounded-full font-medium transition ${kind === k ? 'bg-[var(--card)] text-[var(--fg)]' : 'text-[var(--muted)] hover:bg-[var(--card)]'}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <label className="inline-flex items-center gap-1 text-[var(--muted)]">
+              <ArrowUpDown size={13} aria-hidden />
+              <span className="sr-only">정렬</span>
+              <select
+                value={sort}
+                onChange={(e) => { setSort(e.target.value as SortKey); reset(); }}
+                className="px-1.5 py-1 rounded-[var(--r-sm)] border border-[var(--border-strong)] bg-[var(--bg)] text-xs text-[var(--fg)] outline-none focus:border-[var(--accent)] cursor-pointer"
               >
-                {label}
-              </button>
-            ))}
+                {SORTS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+              </select>
+            </label>
           </div>
-          <label className="inline-flex items-center gap-1 text-[var(--muted)]">
-            <ArrowUpDown size={13} aria-hidden />
-            <span className="sr-only">정렬</span>
-            <select
-              value={sort}
-              onChange={(e) => { setSort(e.target.value as SortKey); setShowCount(STEP); }}
-              className="px-1.5 py-1 rounded-[var(--r-sm)] border border-[var(--border-strong)] bg-[var(--bg)] text-xs text-[var(--fg)] outline-none focus:border-[var(--accent)] cursor-pointer"
-            >
-              {SORTS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
-            </select>
-          </label>
-        </div>
+        )}
       </div>
 
-      {visible.length === 0 ? (
-        <div className="py-12 text-center text-sm text-[var(--muted)]">조건에 맞는 자료가 없어요</div>
+      {/* 거절됨 탭 */}
+      {isRejectedTab ? (
+        rejectedFiltered.length === 0 ? (
+          <div className="py-12 text-center text-sm text-[var(--muted)]">거절된 자료가 없어요</div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-[var(--muted-2)]">거절된 제안과 사유 기록이에요. 같은 자료가 다시 올라오면 여기서 이유를 확인할 수 있어요. 다시 올릴 만하면 "다시 검토"로 등록요청 큐에 되돌릴 수 있어요.</p>
+            {rejectedFiltered.map((r) => <RejectedRowItem key={r.id} item={r} />)}
+          </div>
+        )
       ) : (
-        <div className="flex flex-col gap-2">
-          {visible.map((it) => (
-            <ArchiveRow key={it.id} item={it} categories={categories} />
-          ))}
-        </div>
-      )}
+        <>
+          {/* 일괄 작업 툴바 */}
+          {sorted.length > 0 && (
+            <BulkBar items={sorted} sel={sel} setSel={setSel} categories={categories} />
+          )}
 
-      {filtered.length > showCount && (
-        <button
-          onClick={() => setShowCount((c) => c + STEP)}
-          className="self-center mt-1 px-5 py-2.5 rounded-[var(--r-sm)] border border-[var(--border-strong)] hover:bg-[var(--card)] text-sm font-medium"
-        >
-          더 보기 ({filtered.length - showCount}건)
-        </button>
+          {visible.length === 0 ? (
+            <div className="py-12 text-center text-sm text-[var(--muted)]">조건에 맞는 자료가 없어요</div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {visible.map((it) => (
+                <ArchiveRow
+                  key={it.id}
+                  item={it}
+                  categories={categories}
+                  selected={sel.has(it.id)}
+                  onToggle={() => setSel((prev) => { const n = new Set(prev); n.has(it.id) ? n.delete(it.id) : n.add(it.id); return n; })}
+                />
+              ))}
+            </div>
+          )}
+
+          {sorted.length > showCount && (
+            <button
+              onClick={() => setShowCount((c) => c + STEP)}
+              className="self-center mt-1 px-5 py-2.5 rounded-[var(--r-sm)] border border-[var(--border-strong)] hover:bg-[var(--card)] text-sm font-medium"
+            >
+              더 보기 ({sorted.length - showCount}건)
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/** 일괄 작업 바 — 전체선택 + 선택 건에 숨김/공개/삭제/분류변경. */
+function BulkBar({
+  items,
+  sel,
+  setSel,
+  categories,
+}: {
+  items: ArchiveRowItem[];
+  sel: Set<number>;
+  setSel: (s: Set<number>) => void;
+  categories: Cat[];
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [catOpen, setCatOpen] = useState(false);
+  const [main, setMain] = useState('');
+  const [sub, setSub] = useState('');
+
+  const ids = items.map((it) => it.id);
+  const allSel = ids.length > 0 && ids.every((id) => sel.has(id));
+  const mains = Array.from(new Set(categories.map((c) => c.main_category)));
+  const subs = categories.filter((c) => c.main_category === main && c.sub_category).map((c) => c.sub_category!);
+
+  function toggleAll() {
+    setSel(allSel ? new Set() : new Set(ids));
+  }
+
+  async function run(fn: () => Promise<void>) {
+    setBusy(true);
+    try { await fn(); setSel(new Set()); setCatOpen(false); router.refresh(); }
+    catch (e: any) { alert(e.message); } finally { setBusy(false); }
+  }
+
+  const selIds = Array.from(sel);
+
+  async function bulkStatus(next: 'public' | 'hidden' | 'deleted') {
+    const labels = { public: '공개', hidden: '숨김', deleted: '삭제' } as const;
+    if (next === 'deleted' && !confirm(`선택한 ${selIds.length}건을 삭제할까요? "삭제됨"에서 되살릴 수 있어요.`)) return;
+    await run(() => bulkSetArchiveStatus(selIds, next).then(() => { void labels; }));
+  }
+
+  async function applyCategory() {
+    if (!main) { alert('대분류를 선택해주세요'); return; }
+    await run(() => bulkSetCategory(selIds, main, sub));
+  }
+
+  return (
+    <div className="flex flex-col gap-2 text-xs">
+      <div className="flex items-center gap-3 flex-wrap">
+        <label className="inline-flex items-center gap-1.5 cursor-pointer text-[var(--muted)] select-none">
+          <input type="checkbox" checked={allSel} onChange={toggleAll} className="accent-[var(--accent)] w-3.5 h-3.5" />
+          전체 선택
+        </label>
+        {sel.size > 0 && (
+          <>
+            <span className="font-medium text-[var(--fg)]">{sel.size}건 선택</span>
+            <button onClick={() => bulkStatus('public')} disabled={busy} className="inline-flex items-center gap-1 hover:text-[var(--success)] transition"><Eye size={13} /> 공개</button>
+            <button onClick={() => bulkStatus('hidden')} disabled={busy} className="inline-flex items-center gap-1 hover:text-[var(--warning)] transition"><EyeOff size={13} /> 숨김</button>
+            <button onClick={() => bulkStatus('deleted')} disabled={busy} className="inline-flex items-center gap-1 hover:text-[var(--danger)] transition"><Trash2 size={13} /> 삭제</button>
+            <button onClick={() => setCatOpen((v) => !v)} disabled={busy} className="inline-flex items-center gap-1 hover:text-[var(--accent)] transition"><FolderInput size={13} /> 분류 변경</button>
+            <button onClick={() => setSel(new Set())} disabled={busy} className="text-[var(--muted-2)] hover:text-[var(--fg)] transition">선택 해제</button>
+          </>
+        )}
+      </div>
+      {sel.size > 0 && catOpen && (
+        <div className="flex items-center gap-2 flex-wrap p-2 rounded-[var(--r-sm)] bg-[var(--card)] border border-[var(--border)]">
+          <select value={main} onChange={(e) => { setMain(e.target.value); setSub(''); }} className={`${inputCls} w-auto`}>
+            <option value="">대분류 선택</option>
+            {mains.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <input value={sub} onChange={(e) => setSub(e.target.value)} list="bulk-sub" placeholder="소분류(선택)" className={`${inputCls} w-auto`} />
+          <datalist id="bulk-sub">{subs.map((s) => <option key={s} value={s} />)}</datalist>
+          <UIButton size="sm" onClick={applyCategory} disabled={busy || !main}>{busy ? '적용 중…' : `${sel.size}건 분류 적용`}</UIButton>
+        </div>
       )}
     </div>
   );
@@ -199,7 +340,17 @@ function StatusBadge({ status }: { status: string }) {
   return <span className={`shrink-0 px-1.5 py-0.5 rounded-[var(--r-sm)] text-[10px] font-semibold ${s.cls}`}>{s.label}</span>;
 }
 
-function ArchiveRow({ item, categories }: { item: ArchiveRowItem; categories: Cat[] }) {
+function ArchiveRow({
+  item,
+  categories,
+  selected,
+  onToggle,
+}: {
+  item: ArchiveRowItem;
+  categories: Cat[];
+  selected: boolean;
+  onToggle: () => void;
+}) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -286,7 +437,14 @@ function ArchiveRow({ item, categories }: { item: ArchiveRowItem; categories: Ca
   }
 
   return (
-    <div className="app-card flex items-start justify-between gap-3 p-3 sm:p-4 bg-[var(--card)] min-w-0">
+    <div className={`app-card flex items-start gap-3 p-3 sm:p-4 bg-[var(--card)] min-w-0 ${selected ? 'ring-1 ring-[var(--accent)]' : ''}`}>
+      <input
+        type="checkbox"
+        checked={selected}
+        onChange={onToggle}
+        className="mt-1 shrink-0 accent-[var(--accent)] w-4 h-4"
+        aria-label={`${item.title} 선택`}
+      />
       <div className="flex flex-col gap-1 min-w-0 flex-1">
         <div className="flex items-center gap-2 text-[11px] text-[var(--muted-2)] flex-wrap">
           <StatusBadge status={status} />
@@ -326,6 +484,43 @@ function ArchiveRow({ item, categories }: { item: ArchiveRowItem; categories: Ca
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/** 거절된 제안 한 건 — 사유 표시 + "다시 검토"(pending 복귀). */
+function RejectedRowItem({ item }: { item: RejectedRow }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const src = item.external_url || item.file_url;
+
+  async function reconsider() {
+    if (!confirm('이 자료를 다시 검토 대기로 되돌릴까요? 자료등록요청 큐에 다시 떠요.')) return;
+    setBusy(true);
+    try { await reconsiderProposal(item.id); router.refresh(); }
+    catch (e: any) { alert(e.message); } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="app-card flex items-start justify-between gap-3 p-3 sm:p-4 bg-[var(--card)] min-w-0">
+      <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <StatusBadge status="rejected" />
+          <span className="text-[11px] text-[var(--muted-2)]">제안 {item.proposer ?? '익명'} · {new Date(item.proposed_at).toLocaleDateString('ko-KR')}{item.reviewed_at ? ` · 거절 ${new Date(item.reviewed_at).toLocaleDateString('ko-KR')}` : ''}</span>
+        </div>
+        <h3 className="font-semibold text-sm break-words">{item.title}</h3>
+        {src && (
+          <a href={src} target="_blank" rel="noopener noreferrer" className="text-[11px] text-[var(--muted-2)] hover:text-[var(--accent)] hover:underline break-all inline-flex items-center gap-1 line-clamp-1">
+            <ExternalLink size={11} className="shrink-0" aria-hidden /><span>{src}</span>
+          </a>
+        )}
+        <p className="text-xs text-[var(--fg)] bg-[var(--bg)] border border-[var(--border)] rounded-[var(--r-sm)] px-2 py-1.5 break-words">
+          <span className="text-[var(--muted-2)]">거절 사유 · </span>{item.reviewer_note || '사유 없음'}
+        </p>
+      </div>
+      <button onClick={reconsider} disabled={busy} className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)] hover:text-[var(--accent)] transition shrink-0">
+        <Undo2 size={12} aria-hidden /> {busy ? '처리 중…' : '다시 검토'}
+      </button>
     </div>
   );
 }
