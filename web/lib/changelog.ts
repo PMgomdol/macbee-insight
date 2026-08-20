@@ -51,7 +51,7 @@ export const CHANGELOG: Release[] = [
       { type: 'feature', text: '[개인정보처리방침](/privacy)·[이용약관](/terms) 페이지를 추가했어요.' },
       { type: 'improve', text: '모든 자료의 한 줄 설명을 명사형 개조식으로 통일했어요.' },
       { type: 'improve', text: '자료 카드의 형식 배지를 정리했어요 — 파일 형식은 영문(Google Docs·PDF·hwp 등)으로, 노출하지 않던 날짜는 걷어냈어요.' },
-      { type: 'remove', text: '죽은 링크·중복 자료를 실제로 열어 확인한 뒤 정리했어요.' },
+      { type: 'remove', text: '죽은 링크·중복 자료를 실제로 열어 확인한 뒤 정리했어요 — 접속 불가 2건·중복 1건 삭제(되살릴 수 있게 백업 보관).' },
     ],
   },
   {
