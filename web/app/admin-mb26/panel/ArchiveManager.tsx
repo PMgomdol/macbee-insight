@@ -47,15 +47,12 @@ type Cat = { main_category: string; sub_category: string | null };
 type LinkInfo = { result: string; checked_at: string | null };
 type StatusTab = 'public' | 'hidden' | 'deleted' | 'rejected' | 'dup' | 'all';
 
-/** 링크 점검 배지 — 죽은링크만 강조, 확인필요는 은은하게, ok/미점검은 표시 안 함. */
+/** 링크 점검 배지 — 확정 죽음만 강조. ok·미점검·확인불가(봇차단 등)는 표시 안 함(오탐 노이즈 방지). */
 function LinkBadge({ info }: { info?: LinkInfo }) {
-  if (!info || info.result === 'ok') return null;
+  if (!info || info.result !== 'dead') return null;
   const days = info.checked_at ? Math.floor((Date.now() - new Date(info.checked_at).getTime()) / 86400000) : null;
   const when = days === null ? '' : days <= 0 ? ' · 오늘 점검' : ` · ${days}일 전 점검`;
-  if (info.result === 'dead') {
-    return <span className="shrink-0 px-1.5 py-0.5 rounded-[var(--r-sm)] text-[10px] font-semibold text-[var(--danger)] bg-[var(--danger)]/10" title={`링크 점검 결과 죽은 링크${when}`}>🔴 죽은 링크</span>;
-  }
-  return <span className="shrink-0 px-1.5 py-0.5 rounded-[var(--r-sm)] text-[10px] font-medium text-[var(--muted-2)] bg-[var(--card)]" title={`자동 점검으로 확정 못 함(봇 차단 등)${when}`}>링크 확인필요</span>;
+  return <span className="shrink-0 px-1.5 py-0.5 rounded-[var(--r-sm)] text-[10px] font-semibold text-[var(--danger)] bg-[var(--danger)]/10" title={`링크 점검 결과 죽은 링크${when}`}>🔴 죽은 링크</span>;
 }
 
 const TRACKING = ['fbclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'si', 'rd_src', 'usg', 'ust', 'sa'];
