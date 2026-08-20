@@ -10,7 +10,7 @@ const MIN_APPROVALS = 2;
 /** 게시된 자료 수정 — 운영진이 제목·요약·분류·태그·형식·메뉴위치를 직접 보정. */
 export async function updateArchiveItem(
   id: number,
-  fields: { title: string; summary: string; main_category: string; sub_category: string; tags: string[]; format: string; kind: 'files' | 'insights' }
+  fields: { title: string; summary: string; main_category: string; sub_category: string; tags: string[]; format: string; kind: 'files' | 'insights'; external_url?: string; file_url?: string }
 ) {
   const me = await getCurrentUser();
   if (!me) throw new Error('로그인해주세요');
@@ -20,17 +20,21 @@ export async function updateArchiveItem(
   if (!title) throw new Error('제목은 비울 수 없어요');
 
   const sb = createAdminClient();
+  const patch: Record<string, unknown> = {
+    title,
+    summary: fields.summary.trim() || null,
+    main_category: fields.main_category.trim() || '미분류',
+    sub_category: fields.sub_category.trim() || null,
+    tags: fields.tags.length ? fields.tags : [],
+    format: fields.format.trim() || null,
+    kind: fields.kind === 'files' ? 'files' : 'insights',
+  };
+  // URL은 넘어온 경우에만 patch (실수로 링크 지워지는 것 방지). 빈 문자열이면 null로 비움.
+  if (fields.external_url !== undefined) patch.external_url = fields.external_url.trim() || null;
+  if (fields.file_url !== undefined) patch.file_url = fields.file_url.trim() || null;
   const { error } = await sb
     .from('archive_item')
-    .update({
-      title,
-      summary: fields.summary.trim() || null,
-      main_category: fields.main_category.trim() || '미분류',
-      sub_category: fields.sub_category.trim() || null,
-      tags: fields.tags.length ? fields.tags : [],
-      format: fields.format.trim() || null,
-      kind: fields.kind === 'files' ? 'files' : 'insights',
-    })
+    .update(patch)
     .eq('id', id);
   if (error) throw new Error('수정에 실패했어요 — ' + error.message);
   updateTag('archive');

@@ -164,6 +164,8 @@ function ArchiveRow({ item, categories }: { item: ArchiveRowItem; categories: Ca
   const [tags, setTags] = useState((item.tags ?? []).join(', '));
   const [format, setFormat] = useState(item.format ?? '');
   const [kind, setKind] = useState<'files' | 'insights'>(item.kind);
+  const [extUrl, setExtUrl] = useState(item.external_url ?? '');
+  const [fileUrl, setFileUrl] = useState(item.file_url ?? '');
   const [status, setStatus] = useState(item.status);
 
   const mains = Array.from(new Set(categories.map((c) => c.main_category)));
@@ -173,7 +175,7 @@ function ArchiveRow({ item, categories }: { item: ArchiveRowItem; categories: Ca
   function cancel() {
     setTitle(item.title); setSummary(item.summary ?? ''); setMain(item.main_category ?? '');
     setSub(item.sub_category ?? ''); setTags((item.tags ?? []).join(', ')); setFormat(item.format ?? '');
-    setKind(item.kind); setEditing(false);
+    setKind(item.kind); setExtUrl(item.external_url ?? ''); setFileUrl(item.file_url ?? ''); setEditing(false);
   }
 
   async function save() {
@@ -183,6 +185,7 @@ function ArchiveRow({ item, categories }: { item: ArchiveRowItem; categories: Ca
       await updateArchiveItem(item.id, {
         title: title.trim(), summary, main_category: main, sub_category: sub,
         tags: tags.split(',').map((t) => t.trim()).filter(Boolean), format, kind,
+        external_url: extUrl, file_url: fileUrl,
       });
       setEditing(false);
       router.refresh();
@@ -223,6 +226,10 @@ function ArchiveRow({ item, categories }: { item: ArchiveRowItem; categories: Ca
           </select>
         </div>
         <input className={inputCls} value={tags} onChange={(e) => setTags(e.target.value)} placeholder="태그 (쉼표 구분)" />
+        <label className="text-[11px] text-[var(--muted-2)] -mb-1">외부 링크</label>
+        <input className={inputCls} value={extUrl} onChange={(e) => setExtUrl(e.target.value)} placeholder="https:// (외부 링크가 없으면 비움)" inputMode="url" />
+        <label className="text-[11px] text-[var(--muted-2)] -mb-1">파일 링크</label>
+        <input className={inputCls} value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="업로드된 파일 링크 (없으면 비움)" inputMode="url" />
         <div className="flex gap-1.5 mt-0.5">
           <UIButton size="sm" onClick={save} disabled={busy}>{busy ? '저장 중…' : '저장'}</UIButton>
           <UIButton size="sm" variant="secondary" onClick={cancel} disabled={busy}>취소</UIButton>

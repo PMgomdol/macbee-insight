@@ -41,6 +41,19 @@ export const TYPE_META: Record<ChangeType, { label: string; color: string }> = {
 
 export const CHANGELOG: Release[] = [
   {
+    date: '2026-08-20',
+    title: '지표 대시보드 · 거절 자료 기록 · 링크 직접 수정',
+    changes: [
+      { type: 'feature', text: '[지표 대시보드](/admin-mb26/panel/dashboard)를 새로 만들었어요. 임베드 화면 대신 운영에 필요한 지표를 직접 보여드려요 — 콘텐츠 성과(조회수·신규 등록·인기 자료·VOC 추이)와 유입(방문·채널·기기·지역)을 탭으로 나눠서요. (유입 지표는 순차 반영)' },
+      { type: 'feature', text: '거절한 [제안 자료](/admin-mb26/panel/requests)를 사유와 함께 기록으로 남겨요. 같은 자료가 다시 올라와도 왜 거절했는지 바로 확인할 수 있어요.' },
+      { type: 'feature', text: '[자료 관리](/admin-mb26/panel/archive)에서 자료의 링크(URL)를 직접 고칠 수 있어요. 링크에 붙은 불필요한 꼬리로 깨진 주소도 바로잡을 수 있어요.' },
+      { type: 'feature', text: '[개인정보처리방침](/privacy)·[이용약관](/terms) 페이지를 추가했어요.' },
+      { type: 'improve', text: '모든 자료의 한 줄 설명을 명사형 개조식으로 통일했어요.' },
+      { type: 'improve', text: '자료 카드의 형식 배지를 정리했어요 — 파일 형식은 영문(Google Docs·PDF·hwp 등)으로, 노출하지 않던 날짜는 걷어냈어요.' },
+      { type: 'remove', text: '죽은 링크·중복 자료를 실제로 열어 확인한 뒤 정리했어요.' },
+    ],
+  },
+  {
     date: '2026-08-18',
     title: '승인 전 제안 수정 · 업로드 진행률 · 메일 알림',
     changes: [

@@ -52,7 +52,7 @@ export function RejectButton({ id }: { id: string }) {
       size="sm"
       disabled={loading}
       onClick={async () => {
-        const note = window.prompt('거절 사유를 적어주세요 (선택):') ?? '';
+        const note = window.prompt('거절 사유를 적어주세요.\n(거절 기록에 남고, 제안자에게도 전달돼요)') ?? '';
         if (!confirm('거절할게요. 계속할까요?')) return;
         setLoading(true);
         try { await rejectProposal(id, note); }

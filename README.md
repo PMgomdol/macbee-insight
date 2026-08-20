@@ -1,37 +1,58 @@
-# 맥비기획 자료실 개선 프로젝트 (운영팀)
+# 맥비기획 자료실 (Phase 2)
 
-맥비기획 자료실(약 8,000명 규모 IT 기획 커뮤니티)의 자료실을 효율화하기 위한 운영팀 작업 공간.
+맥비기획(약 8,000명 규모 IT 기획 커뮤니티) 자료실. 링크·파일 자료를 분류·검색·다운로드할 수 있는 웹 아카이브.
 
-## 배경
+- **운영 사이트**: https://macbe-archive.com
+- **상태**: Phase 2 운영 중 (Vercel + Supabase). 신규 자료 등록·검수·노출 전부 웹 앱에서 처리.
 
-- **현 상태**: 구글 스프레드시트로 공동 관리 중이나, 편집 권한 오픈 + 단일 시트 나열 + 1인(맥비) 위주 등록으로 인해 관리가 잘 안 되는 상황.
-- **1차 협의 방향**: 비용을 들이지 않고 스프레드시트 베이스로 운영을 정착시킨다.
-- **목표**: 정비팀이 넘긴 자료를 운영팀이 받아 **링크뿐 아니라 실파일까지 다운로드 가능한 형태로 아카이빙**.
+## 아키텍처 (현재)
 
-## 팀 구성
+| 구성 | 내용 |
+|---|---|
+| 앱 | Next.js 16 (App Router, Server Components) — `web/` |
+| 원본 데이터(SSOT) | **Supabase Postgres** `archive_item` 등. 사이트는 Supabase만 읽음 |
+| 파일 저장소 | Supabase Storage (`archive-files` 버킷) |
+| 인증 | Google OAuth (운영진 role: reviewer/admin) |
+| 배포 | GitHub `main` push → Vercel 자동 배포 (Root Directory = `web`) |
 
-| 팀 | 팀장 | 역할 |
-|---|---|---|
-| 정비팀 | 전용구 | 기존 자료 분류·정리, 카테고리/삭제·유지 정책 수립 |
-| **운영팀** | **서지연** | **신규 자료 수급 프로세스, 자료실 활성화, 시스템 관리** |
-| 구독서비스팀 | 이종석 | 2026년 상반기 유료 구독 모델 런칭 |
+### 데이터 흐름
+- **신규 자료**: (1) `web/scripts/drive_import.mjs`가 드라이브에서 Supabase로 직접 임포트, (2) `/submit` 폼 → `staging_proposal` → 운영진 2인 승인 → `archive_item`.
+- **어드민**: `/admin-mb26/panel` — 자료 관리·자료등록요청·대시보드·카테고리·VOC 등.
+
+> ⚠️ **구글 시트는 레거시**다. 과거 Phase 1(Apps Script + 시트)의 원본이었으나, 시트↔Supabase 자동 동기화는 2026-08-18 종료됨. 지금 시트는 사람이 손으로 하는 검수·삭제 워크시트일 뿐이며 사이트 데이터의 원본이 아니다. 자세한 내용은 운영 시트의 `_README` 탭 참고.
 
 ## 폴더 구조
 
 ```
 chan-macbee/
-├── README.md                       # 본 문서
-├── docs/                           # 회의록·기획안 원본 자료
-│   ├── 맥비기획자료실 개선 방향 (1).pdf
-│   ├── 맥비기획 자료실_운영팀.pdf
-│   ├── 맥비기획_자료실 운영진 오프모임_2026.01.29.docx
-│   └── 맥비기획_자료실_운영팀 DB_v2.xlsx
-└── proposals/
-    └── 운영팀_효율화_제안_v1.md   # 비용 0 기반 운영 효율화 제안
+├── web/               # ⭐ 운영 웹 앱 (Next.js 16) — 실제 서비스. 개발 규칙은 web/AGENTS.md
+│   ├── app/           # 라우트 (홈·검색·submit·admin-mb26 등)
+│   ├── components/    # UI 컴포넌트 (디자인 기준 = app/design)
+│   ├── lib/           # supabase·queries·metrics·search 등
+│   ├── scripts/       # drive_import.mjs 등 운영 스크립트
+│   └── supabase/      # schema.sql + 마이그레이션
+├── apps_script/       # 레거시 Phase 1 (Google Apps Script). 현재 미사용, 히스토리 보존
+├── scripts/           # 프로젝트 레벨 스크립트
+├── docs/              # 기획안·회의자료·가이드 (UX_Writing_가이드.md 등)
+├── proposals/         # 운영 효율화 제안
+├── templates/ · prototype/ · macbee-document/   # 자료·시안·문서 원본
+└── meeting/           # 내부 회의록 (gitignore)
 ```
 
-## 다음 액션
+## 개발
 
-1. [proposals/운영팀_효율화_제안_v1.md](proposals/운영팀_효율화_제안_v1.md) 검토 및 의견 추가
-2. 운영팀 내부 합의 → 정비팀·구독팀과 얼라인
-3. 파일럿(50건)으로 검증 후 전체 이관
+```bash
+cd web
+npm run dev      # localhost:3000
+```
+
+- 개발·UI 규칙: [web/AGENTS.md](web/AGENTS.md) (Next 16 주의사항 + UI 일관성 규칙)
+- `.env.local`에 Supabase 4개 키 + `NEXT_PUBLIC_SITE_URL` 필요
+
+## 팀
+
+| 팀 | 팀장 | 역할 |
+|---|---|---|
+| 정비팀 | 전용구 | 기존 자료 분류·정리, 카테고리/삭제·유지 정책 |
+| 운영팀 | 서지연 | 신규 자료 수급, 자료실 활성화, 시스템 관리 |
+| 구독서비스팀 | 이종석 | 유료 구독 모델 |
