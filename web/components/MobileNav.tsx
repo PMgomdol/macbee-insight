@@ -115,7 +115,8 @@ export function MobileNavClient({
             </button>
           </div>
           <form onSubmit={onSearch} className="px-4 py-3 border-b border-[var(--border)]">
-            <div className="app-input !rounded-full px-4 py-2.5">
+            {/* py-*는 금지 — .app-input이 모바일 min-height:44px라 상하 패딩이 얹혀 pill이 커진다. 높이는 min-height가 담당. */}
+            <div className="app-input !rounded-full px-4">
               <Search size={16} className="text-[var(--muted)]" aria-hidden />
               <input
                 type="search"
