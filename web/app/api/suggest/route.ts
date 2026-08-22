@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { createPublicClient } from '@/lib/supabase/server';
 import { expand, allKeys, TRENDING } from '@/lib/synonyms';
 import { getSearchIndex, isChosungQuery, toChosung } from '@/lib/search-index';
 
@@ -16,23 +15,21 @@ type Resp = {
   suggestions: Suggestion[];
 };
 
+// 자동완성은 키 입력마다 호출되므로 지연이 곧 체감 렉.
+// 예전엔 매 호출마다 Supabase ilike 3회(제목·태그·카테고리) 왕복 → ~1s.
+// 이제 1시간 캐시된 인메모리 인덱스(getSearchIndex)만 필터 → DB 왕복 0, ~수십ms.
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const q = (url.searchParams.get('q') ?? '').trim();
   const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '10') || 10, 20);
 
-  const sb = createPublicClient();
+  const index = await getSearchIndex();
 
   // 입력 없음 → 트렌드 + 인기 태그
   if (!q) {
-    const { data: items } = await sb
-      .from('archive_item')
-      .select('tags')
-      .eq('status', 'public')
-      .limit(500);
     const tagc = new Map<string, number>();
-    for (const it of items ?? []) {
-      for (const t of (it.tags as string[] | null) ?? []) {
+    for (const e of index) {
+      for (const t of e.tags) {
         const k = t.trim();
         if (k) tagc.set(k, (tagc.get(k) ?? 0) + 1);
       }
@@ -44,15 +41,14 @@ export async function GET(req: Request) {
     return NextResponse.json<Resp>({ query: '', trending: TRENDING, synonyms: null, suggestions: topTags });
   }
 
-  // 초성 입력("ㅍㄱㅁ") — ilike로는 안 잡히므로 초성 인덱스로 제목·태그 제안
+  // 초성 입력("ㅍㄱㅁ") — 초성 인덱스로 제목·태그 제안
   if (isChosungQuery(q)) {
     const needle = q.replace(/\s+/g, '');
-    const index = await getSearchIndex();
     const titles: Suggestion[] = [];
     const tagc = new Map<string, number>();
     for (const e of index) {
       if (titles.length < 6 && e.cho.includes(needle)) {
-        titles.push({ type: 'title', text: e.title, url: `/search?q=${encodeURIComponent(e.title)}` });
+        titles.push({ type: 'title', text: e.title, url: e.url || `/search?q=${encodeURIComponent(e.title)}`, meta: e.category });
       }
       for (const t of e.tags) {
         if (toChosung(t.replace(/\s+/g, '')).includes(needle)) {
@@ -72,54 +68,27 @@ export async function GET(req: Request) {
     });
   }
 
-  // 동의어 확장
+  // 일반 텍스트 — 인메모리 부분일치 필터
+  const ql = q.toLowerCase();
   const syn = expand(q);
 
-  // 검색어 본체 + 동의어를 OR로 묶어서 후보 ilike — like-escape 안전
-  const safe = q.replace(/[%_,()]/g, '');
-  const like = `%${safe}%`;
+  // 제목 (부분일치, 조회수 높은 순)
+  const titles: Suggestion[] = index
+    .filter((e) => e.title.toLowerCase().includes(ql))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 8)
+    .map((e) => ({
+      type: 'title',
+      text: e.title,
+      url: e.url || `/${e.kind === 'files' ? 'files' : 'insights'}`,
+      meta: e.category,
+    }));
 
-  // 제목 prefix·contain 매칭
-  const titleP = sb
-    .from('archive_item')
-    .select('id, title, kind, main_category, file_url, external_url')
-    .eq('status', 'public')
-    .ilike('title', like)
-    .order('views', { ascending: false })
-    .limit(8);
-
-  // 태그 contains
-  const tagP = sb
-    .from('archive_item')
-    .select('tags')
-    .eq('status', 'public')
-    .ilike('tags::text', like)
-    .limit(200);
-
-  // 카테고리 매칭
-  const catP = sb
-    .from('archive_item')
-    .select('main_category')
-    .eq('status', 'public')
-    .ilike('main_category', like)
-    .limit(50);
-
-  const [titleR, tagR, catR] = await Promise.all([titleP, tagP, catP]);
-
-  const titles: Suggestion[] = (titleR.data ?? []).map((it: any) => ({
-    type: 'title',
-    text: it.title,
-    url: it.file_url || it.external_url || `/${it.kind === 'files' ? 'files' : 'insights'}`,
-    meta: it.main_category,
-  }));
-
-  // 태그 빈도 집계 (q 부분일치만)
+  // 태그 빈도 (q 부분일치)
   const tagc = new Map<string, number>();
-  for (const it of tagR.data ?? []) {
-    for (const t of (it.tags as string[] | null) ?? []) {
-      if (t.toLowerCase().includes(q.toLowerCase())) {
-        tagc.set(t, (tagc.get(t) ?? 0) + 1);
-      }
+  for (const e of index) {
+    for (const t of e.tags) {
+      if (t.toLowerCase().includes(ql)) tagc.set(t, (tagc.get(t) ?? 0) + 1);
     }
   }
   const tags: Suggestion[] = [...tagc.entries()]
@@ -127,23 +96,21 @@ export async function GET(req: Request) {
     .slice(0, 5)
     .map(([text, count]) => ({ type: 'tag', text, count }));
 
+  // 카테고리 (q 부분일치)
   const catc = new Map<string, number>();
-  for (const it of catR.data ?? []) {
-    catc.set(it.main_category, (catc.get(it.main_category) ?? 0) + 1);
+  for (const e of index) {
+    if (e.category && e.category.toLowerCase().includes(ql)) catc.set(e.category, (catc.get(e.category) ?? 0) + 1);
   }
   const cats: Suggestion[] = [...catc.entries()]
+    .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .map(([text, count]) => ({ type: 'category', text, count }));
 
-  // 동의어 제안 — 본 검색어가 매핑 사전에 없어도 비슷한 키 노출
+  // 동의어 제안
   const synSugs: Suggestion[] = [];
   if (syn) {
-    for (const e of syn.expanded.slice(0, 4)) {
-      synSugs.push({ type: 'synonym', text: e, from: syn.canonical });
-    }
+    for (const e of syn.expanded.slice(0, 4)) synSugs.push({ type: 'synonym', text: e, from: syn.canonical });
   } else {
-    // 사전 키 prefix·contains 매칭
-    const ql = q.toLowerCase();
     const matched = allKeys()
       .filter((k) => k.toLowerCase().includes(ql) && k.toLowerCase() !== ql)
       .slice(0, 3);

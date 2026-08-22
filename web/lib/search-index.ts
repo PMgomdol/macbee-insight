@@ -15,6 +15,11 @@ export type IndexEntry = {
   tags: string[];
   /** 제목의 초성 문자열 (공백 제거) — "피그마 가이드" → "ㅍㄱㅁㄱㅇㄷ" */
   cho: string;
+  /** 자동완성 제안용 메타 — DB 재조회 없이 인덱스만으로 제안 구성 */
+  category: string;
+  kind: string;
+  url: string;
+  views: number;
 };
 
 const CHO = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
@@ -78,17 +83,22 @@ export const getSearchIndex = unstable_cache(
     const sb = createPublicClient();
     const { data } = await sb
       .from('archive_item')
-      .select('id, title, tags')
+      .select('id, title, tags, main_category, kind, file_url, external_url, views')
       .eq('status', 'public')
       .limit(2000);
-    return (data ?? []).map((r) => ({
+    return (data ?? []).map((r: any) => ({
       id: r.id as number,
       title: (r.title as string) ?? '',
       tags: ((r.tags as string[] | null) ?? []).filter(Boolean),
       cho: toChosung(((r.title as string) ?? '').replace(/\s+/g, '')),
+      category: (r.main_category as string) ?? '',
+      kind: (r.kind as string) ?? '',
+      url: (r.file_url as string) || (r.external_url as string) || '',
+      views: (r.views as number) ?? 0,
     }));
   },
-  ['search-fuzzy-index'],
+  // 캐시 키 v2 — 인덱스에 category·kind·url·views 필드 추가(자동완성 인메모리화)
+  ['search-fuzzy-index-v2'],
   { revalidate: 60 * 60, tags: ['archive'] }
 );
 
