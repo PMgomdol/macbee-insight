@@ -1,0 +1,30 @@
+name: 운영진 페이지 워밍
+
+# admin 서버리스 함수를 활동시간대에 주기적으로 깨워 콜드스타트 지연(첫 클릭 ~0.6s)을 없앤다.
+# 인증 없이 핑만 보냄 → 함수만 워밍(로그인 뷰 반환, 데이터 쿼리는 auth 게이트 전에 종료돼 비용 저렴).
+# 리포·시크릿 안 건드림.
+
+on:
+  schedule:
+    - cron: '*/10 0-15 * * *' # 10분마다, 09:00~00:59 KST (한국 활동시간대만 — 심야 낭비 없음)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: true
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 운영진 주요 페이지 워밍
+        run: |
+          BASE="https://macbe-archive.com"
+          PATHS="/admin-mb26/panel /admin-mb26/panel/archive /admin-mb26/panel/requests /admin-mb26/panel/dashboard /admin-mb26/panel/feedback /admin-mb26/panel/backlog /admin-mb26/panel/categories"
+          for p in $PATHS; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$BASE$p")
+            echo "warmed $p -> $code"
+          done
