@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import localFont from 'next/font/local';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { AuthStatus } from '@/components/AuthStatus';
@@ -15,6 +16,15 @@ import { AtlaskitProvider } from '@/components/AtlaskitProvider';
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import './globals.css';
 import { SITE_URL } from '@/lib/site';
+
+// Pretendard 변수폰트 셀프호스팅 — CDN(jsdelivr) 의존/렌더블로킹 제거.
+// display:swap → 폰트 로드 전 시스템 폰트로 즉시 렌더, 로드되면 교체.
+const pretendard = localFont({
+  src: './fonts/PretendardVariable.woff2',
+  display: 'swap',
+  weight: '45 920',
+  variable: '--font-pretendard',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -47,14 +57,9 @@ const EARLY_STYLE = `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className="h-full antialiased">
+    <html lang="ko" className={`h-full antialiased ${pretendard.variable}`}>
       <head>
         <style dangerouslySetInnerHTML={{ __html: EARLY_STYLE }} />
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
-        />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--fg)]">
         {/* GA4·PostHog는 쿠키 동의 후에만 로드 (AnalyticsGate). 동의 배너는 ConsentBanner. */}

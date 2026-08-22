@@ -52,7 +52,7 @@
   --color-card: var(--card);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
-  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, sans-serif;
+  --font-sans: var(--font-pretendard), 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, sans-serif;
 }
 
 * { box-sizing: border-box; }

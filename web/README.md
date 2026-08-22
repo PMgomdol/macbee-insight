@@ -29,7 +29,9 @@ web/
 ```bash
 cd web
 cp .env.local.example .env.local
-# .env.local 안에 Supabase URL/키 + Gemini 키 입력
+# .env.local 값 채우기 — Supabase·사이트 URL·Gemini·GA4·PostHog·메일알림.
+# 각 변수 용도와 발급 위치는 .env.local.example 주석 참고 (Supabase만 있어도 개발은 뜸,
+# 분석/메일 기능은 해당 키가 있어야 동작)
 npm install
 npm run dev
 # http://localhost:3000
