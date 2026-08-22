@@ -126,6 +126,41 @@ export default async function GuidePage() {
         </p>
       </section>
 
+      {/* 시트 → 사이트 다리 (예전 방식만 아는 운영진용 오리엔테이션) */}
+      <section className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--accent-bg)] p-4 flex flex-col gap-2.5">
+        <h2 className="text-base font-bold tracking-tight text-[var(--accent)]">예전에 구글 시트로 일하셨다면 — 먼저 읽어보세요</h2>
+        <p className="text-sm text-[var(--fg)]">
+          맥비 자료실은 이제 <b>구글 시트가 아니라 웹사이트</b>에서 운영해요. 예전엔 시트에 줄을 추가하고 셀을 고쳤다면,
+          지금은 같은 일을 이 관리 화면에서 해요. <b>시트는 더 이상 직접 편집하지 않고, 이 사이트가 진짜 기준(원본)</b>이에요.
+          방식이 꽤 바뀌었으니, 무엇이 어디로 옮겨졌는지부터 보고 시작하면 훨씬 수월해요.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13px] border-collapse min-w-[440px] bg-[var(--bg)] rounded-[var(--r-sm)]">
+            <thead>
+              <tr className="text-left text-[var(--muted-2)] border-b border-[var(--border)]">
+                <th className="py-1.5 px-3 font-semibold w-1/2">예전 — 구글 시트에서</th>
+                <th className="py-1.5 px-3 font-semibold">지금 — 이 사이트에서</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ['시트에 줄을 추가해 자료 등록', '자료 등록 폼에 URL을 넣어 제안 → 승인되면 게시 (3번)'],
+                ['셀을 고쳐 자료 내용 수정', '자료 관리에서 수정 (4번)'],
+                ['시트에서 행 삭제', '자료 관리에서 삭제 — 되살리기 가능 (4번)'],
+                ['시트 공유 링크로 아무나 접근', '구글 로그인 + 운영진 권한 (1번)'],
+                ['(없던 일)', '방문자가 직접 자료를 제안 → 운영진이 승인 (3번)'],
+                ['(없던 기능)', '대시보드·의견(VOC)·백로그가 새로 생김'],
+              ].map(([before, after]) => (
+                <tr key={before} className="border-b border-[var(--border)] last:border-0 align-top">
+                  <td className="py-1.5 px-3 text-[var(--muted)]">{before}</td>
+                  <td className="py-1.5 px-3">{after}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       {/* 목차 */}
       <nav className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--card)] p-3">
         <p className="text-[11px] font-semibold text-[var(--muted-2)] mb-1.5">목차</p>
@@ -191,6 +226,13 @@ export default async function GuidePage() {
         </Step>
         <Shot src="/guide-assets/03-requests.png" alt="자료 등록요청 목록 화면" caption="자료등록요청 — 대기 중인 제안을 검토·승인·반려" />
         <Note>승인하거나 반려하면 제안한 사람에게 결과 메일이 자동으로 나가요(→ 13번). 승인된 자료는 곧바로 사이트에 반영되지만, 화면에 보이기까지 몇 분 걸릴 수 있어요.</Note>
+
+        <GroupHeading>운영진이 직접 자료를 올리고 싶을 때</GroupHeading>
+        <p>
+          예전엔 시트에 줄을 직접 추가했지만, 지금은 <b>따로 &lsquo;자료 추가&rsquo; 버튼이 없어요.</b>
+          운영진도 방문자와 똑같이 사이트 상단 <K>자료 등록</K> 폼에 URL을 넣으면 돼요. 그러면 위 <b>자료등록요청</b> 대기 목록에 들어오고,
+          거기서 승인하면 게시돼요. (혼자 올린 자료도 원칙은 다른 운영진 한 명의 승인이 더 필요하고, 급하면 관리자가 단독 승인할 수 있어요.)
+        </p>
       </Section>
 
       <Section n="4" title="자료 관리 — 고치고, 숨기고, 지우고, 되살리기">
@@ -401,7 +443,8 @@ export default async function GuidePage() {
 
       <Section n="16" title="시스템·계정 구성">
         <p>
-          자료실은 아래 서비스들이 연결돼 돌아가요. 문제가 생기거나 설정을 바꿔야 할 때 &ldquo;어디를 봐야 하는지&rdquo; 알아두는 용도예요.
+          <b>평소 운영에는 이 부분을 몰라도 전혀 지장 없어요.</b> 자료실이 어떤 서비스들 위에서 돌아가는지, 그리고
+          문제가 생기거나 설정을 바꿔야 할 때 &ldquo;어디를 봐야 하는지&rdquo;를 알아두는 참고용이에요.
           (비밀번호·키 값은 여기 적지 않아요. 각 서비스 관리 콘솔에서 확인하세요.)
         </p>
         <div className="overflow-x-auto">
