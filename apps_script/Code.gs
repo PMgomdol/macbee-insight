@@ -31,58 +31,19 @@ const CONFIG = {
 };
 
 function doGet(e) {
-  const page = e && e.parameter && e.parameter.page;
-  const ROUTES = {
-    submit: { tmpl: 'webapp', active: 'submit', kind: '' },
-    admin: { tmpl: 'admin', active: 'admin', kind: '' },
-    files: { tmpl: 'archive_list', active: 'files', kind: 'files' },
-    insights: { tmpl: 'archive_list', active: 'insights', kind: 'insights' },
-    faq: { tmpl: 'faq', active: 'faq', kind: '' },
-    home: { tmpl: 'home', active: 'home', kind: '' },
-  };
-  const route = ROUTES[page] || ROUTES.home;
-  const appUrl = ScriptApp.getService().getUrl();
-
-  // nav를 server-side에서 미리 렌더 (include는 scriptlet 평가 안 함)
-  const navTmpl = HtmlService.createTemplateFromFile('nav');
-  navTmpl.appUrl = appUrl;
-  navTmpl.activePage = route.active;
-  const navHtml = navTmpl.evaluate().getContent();
-
-  // icons sprite (plain SVG, scriptlet 없어 include 그대로 사용 가능)
-  const iconsHtml = HtmlService.createHtmlOutputFromFile('icons').getContent();
-
-  const tmpl = HtmlService.createTemplateFromFile(route.tmpl);
-  tmpl.activePage = route.active;
-  tmpl.kind = route.kind;
-  tmpl.initialQuery = (e && e.parameter && e.parameter.q) || '';
-  tmpl.appUrl = appUrl;
-  tmpl.navHtml = navHtml;
-  tmpl.iconsHtml = iconsHtml;
-
-  // 페이지별 데이터 inline 주입 (RPC 1회 절약 → 첫 렌더 즉시)
-  if (route.active === 'faq') {
-    try { tmpl.faqInitial = JSON.stringify(getFaqItems({})); }
-    catch (e) { tmpl.faqInitial = JSON.stringify({ ok: false, items: [], categories: {} }); }
-  } else {
-    tmpl.faqInitial = '';
-  }
-  if (route.active === 'home') {
-    try { tmpl.homeInitial = JSON.stringify(getHomeOverview()); }
-    catch (e) { tmpl.homeInitial = JSON.stringify({ ok: false, files: [], insights: [], popular: [], totalFiles: 0, totalInsights: 0 }); }
-  } else {
-    tmpl.homeInitial = '';
-  }
-  if (route.active === 'files' || route.active === 'insights') {
-    try { tmpl.categoryTreeInitial = JSON.stringify(getCategoryTree()); }
-    catch (e) { tmpl.categoryTreeInitial = JSON.stringify({ ok: false, tree: {} }); }
-  } else {
-    tmpl.categoryTreeInitial = '';
-  }
-  return tmpl.evaluate()
-    .setTitle('맥비기획 자료실')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  // [보안] 이 Apps Script 웹앱(Phase1 UI)은 macbe-archive.com로 이관됨.
+  // 어떤 페이지도 서빙하지 않고 리다이렉트만 한다 → doGet이 앱/관리자 HTML을 안 주므로
+  // google.script.run으로 서버함수를 호출할 진입점 자체가 사라진다(익명 관리자 접근 차단).
+  // meta-refresh는 iframe 안에서 우리 사이트 X-Frame 정책에 막히므로 top 네비게이션 사용.
+  var dest = 'https://macbe-archive.com';
+  var html = '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    + '<title>맥비 자료실</title>'
+    + '<script>try{window.top.location.replace(' + JSON.stringify(dest) + ');}catch(err){location.replace(' + JSON.stringify(dest) + ');}</script>'
+    + '</head><body style="font-family:system-ui,sans-serif;text-align:center;padding:48px 16px;color:#16202b">'
+    + '자료실이 이관되었습니다. <a href="' + dest + '" target="_top">macbe-archive.com로 이동하기</a>'
+    + '</body></html>';
+  return HtmlService.createHtmlOutput(html).setTitle('맥비 자료실');
 }
 
 function include(filename) {
@@ -92,6 +53,7 @@ function include(filename) {
 // ---------------- 등록 ----------------
 
 function analyzeUrl(url) {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화
   if (!url || !/^https?:\/\//i.test(url)) {
     return { ok: false, error: 'URL 형식이 올바르지 않습니다.' };
   }
@@ -105,6 +67,7 @@ function analyzeUrl(url) {
 }
 
 function submitProposal(payload) {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
   let sheet = ss.getSheetByName(CONFIG.SHEETS.STAGING);
   if (!sheet) sheet = createStagingSheet_(ss);
@@ -143,6 +106,7 @@ function submitProposal(payload) {
 }
 
 function uploadFile(meta, base64Data) {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화
   const root = DriveApp.getFolderById(CONFIG.DRIVE_ROOT_ID);
   const stagingFolder = getOrCreateChildFolder_(root, '_staging_uploads');
   const blob = Utilities.newBlob(
@@ -158,6 +122,7 @@ function uploadFile(meta, base64Data) {
 // ---------------- 검토 (2인 승인) ----------------
 
 function listStaging() {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화(제안자 PII 노출 차단)
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
   const sheet = ss.getSheetByName(CONFIG.SHEETS.STAGING);
   if (!sheet || sheet.getLastRow() < 2) return { ok: true, items: [], minApprovals: CONFIG.MIN_APPROVALS };
@@ -186,6 +151,7 @@ function listStaging() {
  * @param {object} edits - 편집된 필드 (선택)
  */
 function approveStaging(id, reviewerName, edits) {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화(익명 2인승인 우회 차단)
   if (!reviewerName) throw new Error('승인자 이름이 필요합니다.');
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
   const stagingSheet = ss.getSheetByName(CONFIG.SHEETS.STAGING);
@@ -232,6 +198,7 @@ function approveStaging(id, reviewerName, edits) {
 }
 
 function rejectStaging(id, reviewerName, reason) {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
   const sheet = ss.getSheetByName(CONFIG.SHEETS.STAGING);
   const rowIndex = findRowByIdInSheet_(sheet, id, 1);
@@ -280,6 +247,7 @@ function promoteToSsot_(ss, stagingSheet, stagingRowIndex) {
 // ---------------- 자료실 뷰어 (공개) ----------------
 
 function getCategoryTree() {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
   const sheet = ss.getSheetByName(CONFIG.SHEETS.CATEGORY);
   if (!sheet) return { ok: true, tree: {}, owners: {} };
@@ -303,6 +271,7 @@ function getCategoryTree() {
  * @param {object} filter - { query, mainCategory, subCategory, page, format }
  */
 function getArchiveItems(filter) {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화
   filter = filter || {};
   const values = getSsotRows_();
   if (values.length === 0) {
@@ -371,6 +340,7 @@ function getArchiveItems(filter) {
  * @param {string} kind - 'view' | 'download'
  */
 function incrementCount(no, kind) {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화
   if (!no) return { ok: false };
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
   const sheet = ss.getSheetByName(CONFIG.SHEETS.SSOT);
@@ -398,6 +368,7 @@ function getPopularItems(limit) {
 // ---------------- FAQ ----------------
 
 function getFaqItems(filter) {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화(스펙 외 추가 — 읽기 진입점 완전 차단)
   filter = filter || {};
   const cache = CacheService.getScriptCache();
 
@@ -450,6 +421,7 @@ function invalidateFaqCache_() {
 }
 
 function incrementFaqView(no) {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화
   if (!no) return { ok: false };
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
   const sheet = ss.getSheetByName('FAQ');
@@ -623,6 +595,7 @@ function normalizeUrl_(url) {
  * 홈 화면 overview: 자료실 6 + 인사이트 6 + 인기 8 + 카운트
  */
 function getHomeOverview() {
+  throw new Error('macbe-archive.com로 이관되었습니다'); // [보안] Phase1 웹앱 함수 무력화
   const cache = CacheService.getScriptCache();
   const cached = cache.get('home_overview');
   if (cached) {
