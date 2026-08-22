@@ -417,7 +417,7 @@ export default async function GuidePage() {
               {[
                 ['사이트 주소', 'macbe-archive.com (Vercel 커스텀 도메인)', '도메인 등록기관 미확인'],
                 ['코드 저장소', 'GitHub · PMgomdol/macbee-insight (main 자동 배포)', 'asa067714 (개인, 핸들 PMgomdol)'],
-                ['배포·호스팅', 'Vercel · pmgomdols-projects/macbee-insight (서울 리전)', 'asa067714 (개인)'],
+                ['배포·호스팅', 'Vercel · pmgomdols-projects/macbe-archive (서울 리전)', 'asa067714 (개인)'],
                 ['데이터·로그인', 'Supabase · bmsoolrfostbxepzkesy (서울 리전)', 'asa067714 (개인)'],
                 ['구글 로그인', 'Google Cloud · OAuth "macbe-archive-web"', 'asa067714 (개인 구글)'],
                 ['방문 분석', 'Google Analytics 4 · G-LT2K006JPF (속성 549238948)', 'asa067714 (개인)'],
