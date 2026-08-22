@@ -8,7 +8,9 @@ export type ChangeType = 'feature' | 'improve' | 'fix' | 'remove';
 // 언급하는 페이지·기능에 실제 목적지가 있으면 걸어서 운영진이 바로 확인하게. 버그·톤 같은 건 링크 없이.
 // 링크 텍스트는 목적지를 온전히 가리키는 구절로 — '의견 관리(VOC) 전용 페이지'처럼 '페이지/탭/보드'
 // 까지 포함해 '어디로 가는지'가 분명하게. (짧은 명사만 걸면 페이지인지 기능명인지 헷갈림)
-export type ChangeItem = { type: ChangeType; text: string };
+// media를 달면 그 변경 문구 "바로 아래"에 스크린샷/영상이 붙는다(무엇에 대한 것인지 분명하게).
+// 릴리즈 전체를 아우르는 대표 이미지가 필요하면 Release.media에 둔다(카드 맨 아래).
+export type ChangeItem = { type: ChangeType; text: string; media?: Media[] };
 
 // 스크린샷·영상·before/after 비교. src는 public/ 기준 경로(예: '/changelog/search.webp').
 // - image: png/webp/gif 모두 <img>로 렌더 (gif면 자동 재생)
@@ -66,31 +68,27 @@ export const CHANGELOG: Release[] = [
       { type: 'fix', text: '모바일 메뉴 오버레이에 배경이 비치던 문제와, 파일 업로드·분석이 실패하면 페이지가 통째로 멈추던 문제를 고쳤어요.' },
       { type: 'fix', text: '자료 한 줄 설명이 문장 중간에 잘리거나, 못 읽는 파일 내용을 지어내던 문제를 고쳤어요.' },
     ],
-    // 미디어 넣는 법: `node scripts/shots.mjs` 로 캡처 → public/changelog/ 에 생김 → 아래처럼 참조.
-    // before/after: 바꾸기 전에 미리 캡처해 둔 스냅샷(_archive/<날짜>/)을 영구 파일명으로 복사해
-    //   public/changelog/ 에 넣고 compare로 짝지음. (_archive/ 자체는 git 제외)
-    // media: [
-    //   { type: 'image', src: '/changelog/cards.jpg', caption: '개선된 화면' },
-    //   { type: 'video', src: '/changelog/search-flow.webm', caption: '동작 데모' },
-    //   { type: 'compare', before: '/changelog/home-before.jpg', after: '/changelog/home.jpg', caption: '홈 개편' },
-    // ],
+    // 미디어 넣는 법: `node scripts/shots.mjs` 로 캡처 → public/changelog/ 에 생김.
+    // 그 변경 "바로 아래"에 붙이려면 해당 change 객체에 media를 단다(권장 — 무엇에 대한 것인지 분명):
+    //   { type: 'feature', text: '...', media: [{ type: 'image', src: '/changelog/cards.jpg', caption: '개선된 화면' }] },
+    // 릴리즈 전체를 아우르는 대표 이미지는 아래 Release.media에(카드 맨 아래에 뜸).
+    // before/after 비교: 바꾸기 전 스냅샷(_archive/<날짜>/)을 public/changelog/ 에 복사해 compare로 짝지음.
+    //   { type: 'compare', before: '/changelog/home-before.jpg', after: '/changelog/home.jpg', caption: '홈 개편' }
   },
   {
     date: '2026-08-17',
     title: '백로그 보드 · 의견 관리(VOC) · 카드 액션 · 도메인 이전',
     changes: [
-      { type: 'feature', text: '운영진 공용 [백로그 칸반 보드](/admin-mb26/panel/backlog)를 추가해 할 일을 함께 관리해요.' },
-      { type: 'feature', text: '[의견 관리(VOC) 전용 페이지](/admin-mb26/panel/feedback)와 [대시보드 피드백 탭](/admin-mb26/panel/dashboard)이 생겼어요.' },
-      { type: 'feature', text: '[자료 카드](/files)에 다운로드·바로가기·재생 액션 아이콘과 목록형 보기 토글을 넣었어요.' },
+      { type: 'feature', text: '운영진 공용 [백로그 칸반 보드](/admin-mb26/panel/backlog)를 추가해 할 일을 함께 관리해요.',
+        media: [{ type: 'image', src: '/changelog/admin-backlog.jpg', caption: '운영진 공용 백로그 칸반 보드' }] },
+      { type: 'feature', text: '[의견 관리(VOC) 전용 페이지](/admin-mb26/panel/feedback)와 [대시보드 피드백 탭](/admin-mb26/panel/dashboard)이 생겼어요.',
+        media: [{ type: 'image', src: '/changelog/admin-voc.jpg', caption: '의견 관리(VOC) 보드' }] },
+      { type: 'feature', text: '[자료 카드](/files)에 다운로드·바로가기·재생 액션 아이콘과 목록형 보기 토글을 넣었어요.',
+        media: [{ type: 'image', src: '/changelog/cards.jpg', caption: '자료 카드 액션 아이콘·목록 보기 토글' }] },
       { type: 'feature', text: '[자료 등록](/submit) 시 파일을 끌어다 놓아 올릴 수 있어요(드래그앤드롭).' },
       { type: 'improve', text: '주소를 [macbe-archive.com](https://macbe-archive.com)으로 옮기고, 옛 주소로 들어와도 자동으로 넘어가게 했어요.' },
       { type: 'improve', text: '관리자 메뉴를 홈·대시보드·자료등록요청·VOC·운영진 초대로 재편하고, 안내 문구 존댓말 톤을 통일했어요.' },
       { type: 'fix', text: '운영진 수가 실제보다 적게 표시되던 집계 버그를 고쳤어요.' },
-    ],
-    media: [
-      { type: 'image', src: '/changelog/admin-backlog.jpg', caption: '운영진 공용 백로그 칸반 보드' },
-      { type: 'image', src: '/changelog/admin-voc.jpg', caption: '의견 관리(VOC) 보드' },
-      { type: 'image', src: '/changelog/cards.jpg', caption: '자료 카드 액션 아이콘·목록 보기 토글' },
     ],
   },
   {
@@ -105,12 +103,12 @@ export const CHANGELOG: Release[] = [
     date: '2026-08-10',
     title: '다크 푸터 · 모바일 사용성 · 버튼 통일',
     changes: [
-      { type: 'feature', text: '다크 톤 푸터와 [검색 결과](/search)에서 [FAQ](/faq) 펼쳐보기를 추가했어요.' },
+      { type: 'feature', text: '다크 톤 푸터와 [검색 결과](/search)에서 [FAQ](/faq) 펼쳐보기를 추가했어요.',
+        media: [{ type: 'image', src: '/changelog/footer.jpg', caption: '다크 톤 푸터' }] },
       { type: 'improve', text: '모바일 사용성 검수 결과를 반영하고, 검색이 걸러야 할 불용어를 넓혔어요.' },
       { type: 'improve', text: '버튼을 사이트 공용 컴포넌트로 통일했어요.' },
       { type: 'fix', text: '카카오톡 웹뷰 표시 문제, iOS에서 검색창을 누르면 화면이 확대되던 문제, 도구·파일 링크가 아티클로 잘못 분류되던 문제를 고쳤어요.' },
     ],
-    media: [{ type: 'image', src: '/changelog/footer.jpg', caption: '다크 톤 푸터' }],
   },
   {
     date: '2026-08-09',
@@ -135,12 +133,12 @@ export const CHANGELOG: Release[] = [
     date: '2026-07-29',
     title: '오타·초성 검색 · 전역 검색 접이식',
     changes: [
-      { type: 'feature', text: '오타를 허용하고 초성·태그로도 [검색](/search)되며, 결과가 없을 때 안내 화면을 보여줘요.' },
+      { type: 'feature', text: '오타를 허용하고 초성·태그로도 [검색](/search)되며, 결과가 없을 때 안내 화면을 보여줘요.',
+        media: [
+          { type: 'video', src: '/changelog/search-flow.webm', caption: '검색 데모 — 오타·유의어까지 잡아내는 검색' },
+          { type: 'image', src: '/changelog/search.jpg', caption: '유의어 확장·카테고리별 검색 결과' },
+        ] },
       { type: 'improve', text: '헤더 전역 검색을 접이식으로 바꿔 목록 안 검색과 중복 노출을 없앴어요.' },
-    ],
-    media: [
-      { type: 'video', src: '/changelog/search-flow.webm', caption: '검색 데모 — 오타·유의어까지 잡아내는 검색' },
-      { type: 'image', src: '/changelog/search.jpg', caption: '유의어 확장·카테고리별 검색 결과' },
     ],
   },
   {
@@ -148,9 +146,9 @@ export const CHANGELOG: Release[] = [
     title: '이메일 알림 · FAQ 마크다운',
     changes: [
       { type: 'feature', text: '[자료 제안](/submit)·승인·반려 시 운영진과 제안자에게 이메일로 알려드려요.' },
-      { type: 'feature', text: '[FAQ](/faq) 답변에 마크다운 서식과 접기/펼치기를 지원해요.' },
+      { type: 'feature', text: '[FAQ](/faq) 답변에 마크다운 서식과 접기/펼치기를 지원해요.',
+        media: [{ type: 'image', src: '/changelog/faq.jpg', caption: '실무 Q&A — 카테고리 필터·펼치기' }] },
     ],
-    media: [{ type: 'image', src: '/changelog/faq.jpg', caption: '실무 Q&A — 카테고리 필터·펼치기' }],
   },
   {
     date: '2026-07-06',
@@ -164,9 +162,9 @@ export const CHANGELOG: Release[] = [
     date: '2026-06-01',
     title: '맥비 자료실 정식 오픈',
     changes: [
-      { type: 'feature', text: '검색 중심 [홈](/), [양식·템플릿](/files)/[콘텐츠](/insights)/[실무 Q&A](/faq) 분류, [자료 등록](/submit)·승인 흐름을 갖춘 자료실을 열었어요.' },
+      { type: 'feature', text: '검색 중심 [홈](/), [양식·템플릿](/files)/[콘텐츠](/insights)/[실무 Q&A](/faq) 분류, [자료 등록](/submit)·승인 흐름을 갖춘 자료실을 열었어요.',
+        media: [{ type: 'image', src: '/changelog/home.jpg', caption: '검색 중심 홈 화면' }] },
       { type: 'feature', text: '스프레드시트를 Supabase로 자동 동기화하고, 자동완성·동의어·관련도 정렬 [검색](/search)을 붙였어요.' },
     ],
-    media: [{ type: 'image', src: '/changelog/home.jpg', caption: '검색 중심 홈 화면' }],
   },
 ];

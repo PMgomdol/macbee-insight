@@ -105,11 +105,20 @@ function ReleaseCard({ rel, open }: { rel: Release; open: boolean }) {
               >
                 {meta.label}
               </span>
-              <ul className="flex flex-col gap-1 text-sm leading-relaxed text-[var(--fg)]">
+              <ul className="flex flex-col gap-2.5 text-sm leading-relaxed text-[var(--fg)]">
                 {items.map((c, i) => (
-                  <li key={i} className="flex gap-2">
-                    <span className="text-[var(--muted-2)] shrink-0" aria-hidden>·</span>
-                    <span>{linkify(c.text)}</span>
+                  <li key={i} className="flex flex-col gap-1.5">
+                    <div className="flex gap-2">
+                      <span className="text-[var(--muted-2)] shrink-0" aria-hidden>·</span>
+                      <span>{linkify(c.text)}</span>
+                    </div>
+                    {c.media && c.media.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-4 mt-0.5">
+                        {c.media.map((m, j) => (
+                          <MediaFigure key={j} m={m} />
+                        ))}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
