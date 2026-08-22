@@ -23,7 +23,7 @@ jobs:
       - name: 운영진 주요 페이지 워밍
         run: |
           BASE="https://macbe-archive.com"
-          PATHS="/admin-mb26/panel /admin-mb26/panel/archive /admin-mb26/panel/requests /admin-mb26/panel/dashboard /admin-mb26/panel/feedback /admin-mb26/panel/backlog /admin-mb26/panel/categories"
+          PATHS="/admin-mb26/panel /admin-mb26/panel/archive /admin-mb26/panel/requests /admin-mb26/panel/dashboard /admin-mb26/panel/feedback /admin-mb26/panel/backlog /admin-mb26/panel/categories /api/suggest?q="
           for p in $PATHS; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$BASE$p")
             echo "warmed $p -> $code"

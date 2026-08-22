@@ -70,6 +70,9 @@ export function SearchAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const listboxId = useId();
   const debouncer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 쿼리별 제안 캐시(세션) + 진행 중 요청 취소 — 반복/역타이핑 즉시 응답, 서버 왕복·레이스 최소화
+  const cacheRef = useRef<Map<string, Resp>>(new Map());
+  const abortRef = useRef<AbortController | null>(null);
 
   // 최초 마운트 — 최근 검색 로드
   useEffect(() => { setRecent(loadRecent()); }, []);
@@ -108,9 +111,22 @@ export function SearchAutocomplete({
   }, []);
 
   const fetchSuggest = useCallback((query: string) => {
-    fetch(`/api/suggest?q=${encodeURIComponent(query)}&limit=10`)
+    const key = query.trim();
+    // 캐시 히트 → 네트워크 없이 즉시 (반복·역타이핑 시 체감 0ms)
+    const cached = cacheRef.current.get(key);
+    if (cached) { setResp(cached); return; }
+    // 진행 중 요청 취소 (오래된 응답이 최신을 덮어쓰는 레이스 방지)
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+    fetch(`/api/suggest?q=${encodeURIComponent(query)}&limit=10`, { signal: ac.signal })
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d) setResp(d); })
+      .then((d) => {
+        if (!d) return;
+        cacheRef.current.set(key, d);
+        if (cacheRef.current.size > 100) cacheRef.current.delete(cacheRef.current.keys().next().value as string);
+        setResp(d);
+      })
       .catch(() => {});
   }, []);
 
