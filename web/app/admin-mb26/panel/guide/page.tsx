@@ -32,19 +32,27 @@ function Shot({ src, alt, caption }: { src: string; alt: string; caption?: strin
   );
 }
 
+// 6개 대그룹 구분선
+function GroupTitle({ id, children }: { id?: string; children: React.ReactNode }) {
+  return (
+    <h2 id={id} className="text-[13px] font-bold tracking-wide text-[var(--accent)] uppercase mt-6 pt-3 border-t border-[var(--border)] scroll-mt-20">
+      {children}
+    </h2>
+  );
+}
+// 섹션 안의 소제목
+function SubHeading({ children }: { children: React.ReactNode }) {
+  return <p className="text-[13px] font-semibold text-[var(--fg)] mt-1.5">{children}</p>;
+}
 function Section({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
   return (
     <section id={`s${n}`} className="flex flex-col gap-3 scroll-mt-20">
-      <h2 className="text-base sm:text-lg font-bold tracking-tight border-b border-[var(--border)] pb-1.5">
+      <h3 className="text-base sm:text-lg font-bold tracking-tight">
         <span className="text-[var(--muted-2)] font-mono text-sm mr-2">{n}</span>{title}
-      </h2>
+      </h3>
       <div className="text-sm leading-relaxed text-[var(--fg)] flex flex-col gap-2.5">{children}</div>
     </section>
   );
-}
-
-function GroupHeading({ children }: { children: React.ReactNode }) {
-  return <p className="text-[11px] font-semibold tracking-wide text-[var(--muted-2)] uppercase mt-2">{children}</p>;
 }
 function Step({ children }: { children: React.ReactNode }) {
   return <ol className="list-decimal pl-5 flex flex-col gap-1.5 marker:text-[var(--muted-2)]">{children}</ol>;
@@ -63,25 +71,40 @@ function K({ children }: { children: React.ReactNode }) {
   return <code className="px-1 py-0.5 rounded bg-[var(--card)] text-[var(--fg)] text-[12px] border border-[var(--border)]">{children}</code>;
 }
 
-const TOC = [
-  ['1', '처음 오셨다면 — 로그인과 권한'],
-  ['2', '화면 둘러보기'],
-  ['3', '자료 등록요청 처리하기'],
-  ['4', '자료 관리 — 고치고, 숨기고, 지우고, 되살리기'],
-  ['5', '의견(VOC)에 답하기'],
-  ['6', '백로그로 할 일 나누기'],
-  ['7', '카테고리 손보기'],
-  ['8', '새 운영진 들이기'],
-  ['9', '대시보드 읽는 법'],
-  ['10', '업데이트 내역 남기기'],
-  ['11', '자료 하나가 게시되기까지 (전체 흐름)'],
-  ['12', '좋은 자료로 다듬는 요령'],
-  ['13', '알림 메일은 언제 나가나'],
-  ['14', '지금 운영진'],
-  ['15', '담당 나눔'],
-  ['16', '시스템·계정 구성'],
-  ['17', '자주 묻는 것'],
-] as const;
+// 목차 = 6개 그룹으로 묶음
+const TOC_GROUPS: { group: string; gid: string; items: [string, string][] }[] = [
+  { group: '개요와 원리', gid: 'g-concept', items: [
+    ['1', '맥비 자료실이란'],
+    ['2', '데이터 구조 — 자료의 구성과 저장'],
+    ['3', '등록 원리 — 자료가 게시되기까지'],
+  ] },
+  { group: '시작하기', gid: 'g-start', items: [
+    ['4', '로그인과 권한'],
+    ['5', '화면 둘러보기'],
+  ] },
+  { group: '자주 하는 일', gid: 'g-daily', items: [
+    ['6', '자료 등록요청 처리'],
+    ['7', '자료 관리'],
+    ['8', '의견(VOC) 답변'],
+    ['9', '백로그'],
+  ] },
+  { group: '가끔 하는 일', gid: 'g-occasional', items: [
+    ['10', '카테고리'],
+    ['11', '운영진 초대'],
+    ['12', '대시보드 보는 법'],
+    ['13', '업데이트 내역 남기기'],
+  ] },
+  { group: '참고 자료', gid: 'g-reference', items: [
+    ['14', '콘텐츠 작성 규칙'],
+    ['15', '알림 메일'],
+    ['16', '지금 운영진'],
+    ['17', '담당 나눔'],
+    ['18', '시스템·계정 구성'],
+  ] },
+  { group: '도움말', gid: 'g-help', items: [
+    ['19', '자주 묻는 것'],
+  ] },
+];
 
 async function getOperators(): Promise<{ display_name: string | null; role: string | null }[]> {
   try {
@@ -121,72 +144,137 @@ export default async function GuidePage() {
           <span className="text-xs text-[var(--muted-2)]">{displayName ?? user?.email} · {role === 'admin' ? '관리자' : '운영진'}</span>
         </div>
         <p className="text-sm text-[var(--muted)]">
-          맥비 자료실을 함께 운영하는 분들을 위한 안내서예요. 운영진이 새로 오거나 바뀌어도 이 문서 하나만 보면
-          같은 방식으로 일할 수 있게 정리했어요. 처음이라면 위에서부터 천천히 읽어보시고, 익숙해지면 필요한 부분만 찾아보세요.
+          맥비 자료실을 함께 운영하는 분들을 위한 안내서예요. 운영진이 새로 오거나 바뀌어도 이 문서 하나로 같은 방식으로 일할 수 있게 정리했어요.
+          <b> 처음이라면 &lsquo;개요와 원리&rsquo;부터</b> 읽어 자료실이 어떻게 돌아가는지 감을 잡고, 그다음 &lsquo;시작하기&rsquo;로 넘어가세요. 익숙해지면 필요한 부분만 찾아봐도 돼요.
         </p>
       </section>
 
-      {/* 시트 → 사이트 다리 (예전 방식만 아는 운영진용 오리엔테이션) */}
-      <section className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--accent-bg)] p-4 flex flex-col gap-2.5">
-        <h2 className="text-base font-bold tracking-tight text-[var(--accent)]">예전에 구글 시트로 일하셨다면 — 먼저 읽어보세요</h2>
-        <p className="text-sm text-[var(--fg)]">
-          맥비 자료실은 이제 <b>구글 시트가 아니라 웹사이트</b>에서 운영해요. 예전엔 시트에 줄을 추가하고 셀을 고쳤다면,
-          지금은 같은 일을 이 관리 화면에서 해요. <b>시트는 더 이상 직접 편집하지 않고, 이 사이트가 진짜 기준(원본)</b>이에요.
-          방식이 꽤 바뀌었으니, 무엇이 어디로 옮겨졌는지부터 보고 시작하면 훨씬 수월해요.
+      {/* 목차 — 6개 그룹 */}
+      <nav className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--card)] p-4">
+        <p className="text-[11px] font-semibold text-[var(--muted-2)] mb-2">목차</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3">
+          {TOC_GROUPS.map(({ group, gid, items }) => (
+            <div key={gid} className="flex flex-col gap-1">
+              <a href={`#${gid}`} className="text-[11px] font-bold uppercase tracking-wide text-[var(--accent)] hover:underline">{group}</a>
+              <ol className="flex flex-col gap-0.5 text-[13px]">
+                {items.map(([n, t]) => (
+                  <li key={n}>
+                    <a href={`#s${n}`} className="text-[var(--muted)] hover:text-[var(--accent)] transition-colors">
+                      <span className="font-mono text-[var(--muted-2)] mr-1.5">{n}</span>{t}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </div>
+      </nav>
+
+      {/* ─────────── 개요와 원리 ─────────── */}
+      <GroupTitle id="g-concept">개요와 원리</GroupTitle>
+
+      <Section n="1" title="맥비 자료실이란">
+        <p>
+          맥비 자료실은 기획 업무에 도움 되는 자료(양식·템플릿, 아티클, 영상, 사이트, 강의 등)를 한곳에 모아
+          <b> 검색하고 공유하는 웹사이트</b>예요. 방문자는 자료를 찾아보고 제안할 수 있고, <b>운영진은 그 자료를 검수하고 관리</b>해요.
         </p>
+        <p>
+          예전엔 이 일을 구글 시트에서 했지만, 지금은 전용 웹사이트에서 해요. 운영진 업무는 관리 화면 <K>macbe-archive.com/admin-mb26</K> 에서 이뤄져요(→ 4번).
+          권한은 <b>운영진</b>과 <b>관리자</b> 두 단계가 있어요(자세히는 4번).
+        </p>
+        <SubHeading>방문자가 보는 공개 화면</SubHeading>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Shot src="/guide-assets/11-home.png" alt="사이트 홈" caption="홈 — 검색 중심" />
+          <Shot src="/guide-assets/12-submit.png" alt="자료 제안 폼" caption="자료 등록(제안)" />
+          <Shot src="/guide-assets/13-faq.png" alt="실무 Q&A" caption="실무 Q&A" />
+        </div>
+      </Section>
+
+      <Section n="2" title="데이터 구조 — 자료의 구성과 저장">
+        <p>운영을 시작하기 전에, 자료가 <b>어떻게 생겼고 어디에 저장되는지</b>만 알아두면 나머지가 쉽게 이해돼요.</p>
+        <SubHeading>자료 한 건은 이런 정보로 이뤄져요</SubHeading>
+        <Ul>
+          <li><b>제목</b> · <b>한 줄 설명</b> — 목록·검색에 보이는 이름표(작성 규칙은 14번)</li>
+          <li><b>링크(URL)</b> 또는 <b>업로드 파일</b> — 실제 자료로 가는 곳</li>
+          <li><b>분류</b> — 대분류 / 소분류 (예: 기획·PM / 프로세스)</li>
+          <li><b>태그</b> — 검색용 키워드 5~6개</li>
+          <li><b>형식</b> — 아티클 · 가이드 · 템플릿 · 영상 · 홈페이지 · 강의</li>
+          <li><b>상태</b> — 공개 · 숨김 · 삭제 (아래)</li>
+        </Ul>
+        <SubHeading>모든 자료는 &lsquo;상태&rsquo; 하나를 가져요</SubHeading>
+        <Ul>
+          <li><b>공개</b> — 사이트에 정상적으로 보임</li>
+          <li><b>숨김</b> — 잠깐 안 보이게 내려둠(쉽게 되돌림)</li>
+          <li><b>삭제</b> — 목록에서 치우지만 데이터는 남아 <b>언제든 복원</b> 가능</li>
+        </Ul>
+        <p>
+          이 모든 자료는 시트가 아니라 <b>데이터베이스(Supabase)</b> 한 곳에 저장돼요. 예전에 시트 여기저기 흩어져 있던 걸 한군데로 모은 셈이에요.
+          <b> 지금은 사이트(데이터베이스)가 진짜 기준(원본)</b>이고, 예전 구글 시트는 백업·대조용으로만 남아 있어요 — 시트를 직접 고치지 않아요.
+        </p>
+        <SubHeading>예전 시트에서 무엇이 어디로 옮겨졌나</SubHeading>
         <div className="overflow-x-auto">
-          <table className="w-full text-[13px] border-collapse min-w-[440px] bg-[var(--bg)] rounded-[var(--r-sm)]">
+          <table className="w-full text-[13px] border-collapse min-w-[440px]">
             <thead>
               <tr className="text-left text-[var(--muted-2)] border-b border-[var(--border)]">
-                <th className="py-1.5 px-3 font-semibold w-1/2">예전 — 구글 시트에서</th>
-                <th className="py-1.5 px-3 font-semibold">지금 — 이 사이트에서</th>
+                <th className="py-1.5 pr-3 font-semibold w-1/2">예전 — 구글 시트에서</th>
+                <th className="py-1.5 pr-3 font-semibold">지금 — 이 사이트에서</th>
               </tr>
             </thead>
             <tbody>
               {[
-                ['시트에 줄을 추가해 자료 등록', '자료 등록 폼에 URL을 넣어 제안 → 승인되면 게시 (3번)'],
-                ['셀을 고쳐 자료 내용 수정', '자료 관리에서 수정 (4번)'],
-                ['시트에서 행 삭제', '자료 관리에서 삭제 — 되살리기 가능 (4번)'],
-                ['시트 공유 링크로 아무나 접근', '구글 로그인 + 운영진 권한 (1번)'],
-                ['(없던 일)', '방문자가 직접 자료를 제안 → 운영진이 승인 (3번)'],
-                ['(없던 기능)', '대시보드·의견(VOC)·백로그가 새로 생김'],
+                ['시트에 줄을 추가해 자료 등록', '자료 등록 폼으로 제안 → 승인되면 게시 (6번)'],
+                ['셀을 고쳐 자료 수정', '자료 관리에서 수정 (7번)'],
+                ['시트에서 행 삭제', '자료 관리에서 삭제 — 되살리기 가능 (7번)'],
+                ['시트 공유 링크로 아무나 접근', '구글 로그인 + 운영진 권한 (4번)'],
+                ['(없던 일)', '방문자가 직접 자료 제안 → 운영진 승인 (6번)'],
+                ['(없던 기능)', '대시보드 · 의견(VOC) · 백로그'],
               ].map(([before, after]) => (
                 <tr key={before} className="border-b border-[var(--border)] last:border-0 align-top">
-                  <td className="py-1.5 px-3 text-[var(--muted)]">{before}</td>
-                  <td className="py-1.5 px-3">{after}</td>
+                  <td className="py-1.5 pr-3 text-[var(--muted)]">{before}</td>
+                  <td className="py-1.5 pr-3">{after}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </section>
+      </Section>
 
-      {/* 목차 */}
-      <nav className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--card)] p-3">
-        <p className="text-[11px] font-semibold text-[var(--muted-2)] mb-1.5">목차</p>
-        <ol className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[13px]">
-          {TOC.map(([n, t]) => (
-            <li key={n}>
-              <a href={`#s${n}`} className="text-[var(--muted)] hover:text-[var(--accent)] transition-colors">
-                <span className="font-mono text-[var(--muted-2)] mr-1.5">{n}</span>{t}
-              </a>
-            </li>
-          ))}
-        </ol>
-      </nav>
+      <Section n="3" title="등록 원리 — 자료가 게시되기까지">
+        <p>
+          자료 한 건이 사이트에 오르기까지의 흐름이에요. 핵심은 <b>제안 → 검수 → 2명 승인 → 게시</b>이고, 모든 과정이 사이트 안에서 끝나요.
+        </p>
+        <pre className="text-[12px] leading-relaxed bg-[var(--card)] border border-[var(--border)] rounded-[var(--r-md)] p-3 overflow-x-auto">{`누가 자료를 제안  (방문자 또는 운영진이 [자료 등록] 폼으로)
+   │  제출할 때 중복 자동 확인
+   ▼
+대기 목록에 쌓임  ──▶ 운영진에게 "새 제안" 알림 메일
+   │  운영진이 내용을 확인하고 다듬음(제목·설명·분류·태그)
+   ▼
+운영진 2명이 승인  (2명이 안 되면 관리자가 단독 승인)
+   ▼
+사이트에 게시  ──▶ 제안한 사람에게 "승인" 메일`}</pre>
+        <SubHeading>왜 2명이 승인하나요?</SubHeading>
+        <p>
+          한 사람만 보면 놓치기 쉬운 걸 <b>서로 다른 두 사람이 한 번씩 확인</b>해, 자료실 성격에 맞는지·중복은 아닌지·설명이 적절한지를 걸러내려는 거예요.
+          그래서 자기가 올린 자료도 다른 운영진 한 명의 승인이 더 필요해요. (운영진이 2명이 안 될 땐 관리자가 사유를 적고 단독 승인할 수 있어요.)
+        </p>
+        <Note>제안은 <b>방문자</b>가 할 수도, <b>운영진이 직접</b> 할 수도 있어요. 둘 다 같은 &lsquo;대기 목록&rsquo;으로 들어와 같은 방식으로 승인돼요(→ 6번).</Note>
+      </Section>
 
-      <Section n="1" title="처음 오셨다면 — 로그인과 권한">
+      {/* ─────────── 시작하기 ─────────── */}
+      <GroupTitle id="g-start">시작하기</GroupTitle>
+
+      <Section n="4" title="로그인과 권한">
         <p>
           운영과 관련된 모든 일은 관리자 페이지 <K>macbe-archive.com/admin-mb26</K> 에서 해요.
           이 주소는 검색이나 사이트 메뉴에는 안 나오니, 즐겨찾기에 담아두면 편해요.
         </p>
         <Step>
-          <li>위 주소로 들어가 <b>구글 계정으로 로그인</b>해요.</li>
+          <li>위 주소로 들어가 <b>구글 계정으로 로그인</b>해요. (예전 시트는 공유 링크였지만, 지금은 로그인해야 관리 화면이 열려요.)</li>
           <li>이미 운영진 권한이 있으면 왼쪽에 메뉴가 있는 관리 화면으로 바로 들어가져요.</li>
-          <li>아직 권한이 없으면 <b>운영진 신청 화면</b>이 보여요. 신청하면 기존 관리자가 확인하고 권한을 줘요(→ 8번 참고).</li>
+          <li>아직 권한이 없으면 <b>운영진 신청 화면</b>이 보여요. 신청하면 기존 관리자가 확인하고 권한을 줘요(→ 11번).</li>
         </Step>
         <Shot src="/guide-assets/01-login.png" alt="운영진 진입 로그인 화면" caption="운영진 진입 화면 — 구글 로그인" />
-        <p>운영진은 하는 일에 따라 두 단계로 나뉘어요. 대부분은 <b>운영진(reviewer)</b>이고, 일부만 <b>관리자(admin)</b>예요.</p>
+        <SubHeading>권한 두 단계</SubHeading>
         <Ul>
           <li><b>운영진(reviewer)</b> — 자료 제안을 검토·승인·반려하고, 자료·의견·카테고리를 관리해요. 평소 운영 업무는 여기서 다 돼요.</li>
           <li><b>관리자(admin)</b> — 위의 모든 것에 더해, 운영진이 2명이 안 될 때의 <b>단독 승인</b>과 <b>새 운영진 권한 부여</b>를 할 수 있어요.</li>
@@ -194,86 +282,77 @@ export default async function GuidePage() {
         <Note>로그인만 하고 권한을 안 받은 사람은 자료를 <b>제안</b>만 할 수 있고, 관리 화면은 못 봐요.</Note>
       </Section>
 
-      <Section n="2" title="화면 둘러보기">
+      <Section n="5" title="화면 둘러보기">
         <p>왼쪽 메뉴에서 모든 기능으로 갈 수 있어요. 각 메뉴가 무슨 일을 하는지 먼저 감을 잡아두면 좋아요.</p>
         <Ul>
           <li><b>홈</b> — 지금 처리할 일(대기 중인 제안·미답변 의견 등)을 한눈에 보여주는 시작 화면</li>
-          <li><b>대시보드</b> — 방문 추이, 인기 자료, 사람들이 검색한 말 같은 지표(→ 9번)</li>
-          <li><b>자료등록요청</b> — 방문자가 제안한 자료를 검토·승인·반려(옆 숫자 = 대기 건수) (→ 3번)</li>
-          <li><b>자료 관리</b> — 이미 올라간 자료를 고치거나 숨기고 지우고 되살리기 (→ 4번)</li>
-          <li><b>카테고리</b> — 자료를 분류하는 대분류·소분류 관리 (→ 7번)</li>
-          <li><b>VOC</b> — 방문자가 남긴 의견·문의·버그·칭찬 (→ 5번)</li>
-          <li><b>백로그</b> — 운영진이 함께 쓰는 할 일 보드 (→ 6번)</li>
-          <li><b>운영진 초대</b> — 새 운영진을 들이고 권한 주기 (→ 8번)</li>
-          <li><b>업데이트 내역</b> — 사이트가 어떻게 바뀌어 왔는지 기록 (→ 10번)</li>
+          <li><b>대시보드</b> — 방문 추이, 인기 자료, 사람들이 검색한 말 같은 지표(→ 12번)</li>
+          <li><b>자료등록요청</b> — 제안된 자료를 검토·승인·반려(옆 숫자 = 대기 건수) (→ 6번)</li>
+          <li><b>자료 관리</b> — 이미 올라간 자료를 고치거나 숨기고 지우고 되살리기 (→ 7번)</li>
+          <li><b>카테고리</b> — 자료를 분류하는 대분류·소분류 관리 (→ 10번)</li>
+          <li><b>VOC</b> — 방문자가 남긴 의견·문의·버그·칭찬 (→ 8번)</li>
+          <li><b>백로그</b> — 운영진이 함께 쓰는 할 일 보드 (→ 9번)</li>
+          <li><b>운영진 초대</b> — 새 운영진을 들이고 권한 주기 (→ 11번)</li>
+          <li><b>업데이트 내역</b> — 사이트가 어떻게 바뀌어 왔는지 기록 (→ 13번)</li>
           <li><b>운영 가이드</b> — 지금 보고 있는 이 문서</li>
         </Ul>
         <Shot src="/guide-assets/02-panel-home.png" alt="관리자 홈 화면과 좌측 메뉴" caption="관리자 홈 — 왼쪽 메뉴로 모든 기능에 접근" />
       </Section>
 
-      <GroupHeading>자주 하는 일</GroupHeading>
+      {/* ─────────── 자주 하는 일 ─────────── */}
+      <GroupTitle id="g-daily">자주 하는 일</GroupTitle>
 
-      <Section n="3" title="자료 등록요청 처리하기">
+      <Section n="6" title="자료 등록요청 처리">
         <p>
-          방문자가 <K>자료 등록</K> 폼으로 자료를 제안하면, 그 자료가 <b>자료등록요청</b> 화면에 <b>대기</b> 상태로 쌓여요.
-          운영진이 확인하고 승인해야 사이트에 올라가요. 이렇게 처리해요.
+          제안된 자료가 <b>자료등록요청</b> 화면에 <b>대기</b> 상태로 쌓여요. 운영진이 확인하고 승인해야 사이트에 올라가요(원리는 3번). 이렇게 처리해요.
         </p>
         <Step>
           <li><b>내용을 확인해요.</b> 링크가 잘 열리는지, 이미 올라온 자료와 겹치지 않는지(제출할 때 자동으로 한 번 걸러지긴 해요), 자료실 성격에 맞는지 봐요.</li>
-          <li><b>다듬어요.</b> 제목·한 줄 설명·분류·태그를 12번의 요령대로 손봐요. 승인 전에 바로 고칠 수 있어요.</li>
-          <li><b>승인해요.</b> <b>운영진 2명</b>이 승인하면 자동으로 사이트에 게시돼요. 서로 다른 사람이 한 번씩 눌러야 해요. (운영진이 2명이 안 되면 관리자가 사유를 적고 혼자 승인할 수 있어요.)</li>
+          <li><b>다듬어요.</b> 제목·한 줄 설명·분류·태그를 14번 규칙대로 손봐요. 승인 전에 바로 고칠 수 있어요.</li>
+          <li><b>승인해요.</b> 서로 다른 <b>운영진 2명</b>이 승인하면 자동으로 게시돼요. (운영진이 2명이 안 되면 관리자가 사유를 적고 혼자 승인할 수 있어요.)</li>
           <li><b>반려해요.</b> 자료실에 맞지 않으면 사유를 적고 반려해요. 사유는 제안한 사람에게 안내 메일로 전달돼요.</li>
         </Step>
         <Shot src="/guide-assets/03-requests.png" alt="자료 등록요청 목록 화면" caption="자료등록요청 — 대기 중인 제안을 검토·승인·반려" />
-        <Note>승인하거나 반려하면 제안한 사람에게 결과 메일이 자동으로 나가요(→ 13번). 승인된 자료는 곧바로 사이트에 반영되지만, 화면에 보이기까지 몇 분 걸릴 수 있어요.</Note>
-
-        <GroupHeading>운영진이 직접 자료를 올리고 싶을 때</GroupHeading>
+        <SubHeading>운영진이 직접 자료를 올리고 싶을 때</SubHeading>
         <p>
           예전엔 시트에 줄을 직접 추가했지만, 지금은 <b>따로 &lsquo;자료 추가&rsquo; 버튼이 없어요.</b>
-          운영진도 방문자와 똑같이 사이트 상단 <K>자료 등록</K> 폼에 URL을 넣으면 돼요. 그러면 위 <b>자료등록요청</b> 대기 목록에 들어오고,
-          거기서 승인하면 게시돼요. (혼자 올린 자료도 원칙은 다른 운영진 한 명의 승인이 더 필요하고, 급하면 관리자가 단독 승인할 수 있어요.)
+          운영진도 방문자와 똑같이 사이트 상단 <K>자료 등록</K> 폼에 URL을 넣으면 돼요. 그러면 위 대기 목록으로 들어오고, 거기서 승인하면 게시돼요.
         </p>
+        <Note>승인·반려하면 제안한 사람에게 결과 메일이 자동으로 나가요(→ 15번). 승인된 자료는 곧바로 반영되지만 화면에 보이기까지 몇 분 걸릴 수 있어요.</Note>
       </Section>
 
-      <Section n="4" title="자료 관리 — 고치고, 숨기고, 지우고, 되살리기">
+      <Section n="7" title="자료 관리">
         <p>
-          이미 올라간 자료를 손보는 곳이에요. 가장 안심되는 점은, <b>지워도 바로 사라지지 않는다</b>는 거예요.
-          삭제는 &lsquo;휴지통에 넣는&rsquo; 느낌이라 언제든 되살릴 수 있어요. 자료마다 상태가 셋 중 하나예요.
+          이미 올라간 자료를 손보는 곳이에요(상태 개념은 2번). 가장 안심되는 점은 <b>지워도 바로 사라지지 않는다</b>는 거예요 — &lsquo;휴지통&rsquo;처럼 언제든 되살릴 수 있어요.
         </p>
-        <Ul>
-          <li><b>공개</b> — 사이트에 정상적으로 보이는 상태예요.</li>
-          <li><b>숨김</b> — 잠깐 안 보이게 내려둔 상태예요. 검토가 필요하거나 잠시 비공개할 때 쓰고, 다시 공개로 쉽게 되돌려요.</li>
-          <li><b>삭제</b> — 목록에서 치우지만 데이터는 남아 있어요. &lsquo;삭제됨&rsquo; 탭에서 언제든 <b>복원</b>할 수 있어요.</li>
-        </Ul>
         <p>
-          화면 위쪽 탭(공개 · 숨김 · 삭제됨 · 거절됨 · 중복)으로 상태별로 골라볼 수 있고, 검색으로 특정 자료를 바로 찾을 수 있어요.
+          위쪽 탭(공개 · 숨김 · 삭제됨 · 거절됨 · 중복)으로 상태별로 골라보고, 검색으로 특정 자료를 바로 찾아요.
           자료를 여러 개 골라 한 번에 숨기거나 옮기는 것도 돼요. 제목·설명·링크·분류·태그는 <b>수정</b>으로 그 자리에서 고쳐요.
         </p>
         <Shot src="/guide-assets/07-archive.png" alt="자료 관리 화면" caption="자료 관리 — 상태별 탭, 검색, 자료별 수정·숨김·삭제" />
-        <Note>실수로 지웠더라도 걱정 마세요. <b>삭제됨 탭 → 복원</b>이면 그대로 돌아와요. 완전히 없애는 것(하드삭제)은 여기서 하는 삭제와 다르고, 함부로 하지 않아요.</Note>
+        <Note>실수로 지웠더라도 걱정 마세요. <b>삭제됨 탭 → 복원</b>이면 그대로 돌아와요.</Note>
       </Section>
 
-      <Section n="5" title="의견(VOC)에 답하기">
+      <Section n="8" title="의견(VOC) 답변">
         <p>
-          사이트 오른쪽 아래 <b>&lsquo;의견 보내기&rsquo;</b> 버튼으로 방문자가 남긴 의견·문의·버그·칭찬이 여기에 모여요.
-          카드를 눌러 상태(신규·처리중·보류·답변완료·종료)를 바꾸고 담당자를 지정할 수 있어요.
-          답이 필요한 의견은 남겨준 이메일로 회신하면 돼요.
+          사이트 오른쪽 아래 <b>&lsquo;의견 보내기&rsquo;</b> 버튼으로 방문자가 남긴 의견·문의·버그·칭찬이 여기 모여요.
+          카드를 눌러 상태(신규·처리중·보류·답변완료·종료)를 바꾸고 담당자를 지정할 수 있어요. 답이 필요한 의견은 남겨준 이메일로 회신하면 돼요.
         </p>
         <Shot src="/guide-assets/04-feedback.png" alt="VOC 의견 목록 화면" caption="VOC — 방문자 의견을 상태별로 관리" />
       </Section>
 
-      <Section n="6" title="백로그로 할 일 나누기">
+      <Section n="9" title="백로그">
         <p>
-          운영하다 보면 생기는 할 일·아이디어를 카드로 적어두고 함께 처리하는 보드예요.
-          &lsquo;할 일 → 진행중 → 완료&rsquo;로 옮기며 관리하고, 담당자와 우선순위를 정할 수 있어요.
-          &ldquo;머릿속에만 있던 일&rdquo;을 여기 적어두면 다른 운영진도 알 수 있어요.
+          운영하다 생기는 할 일·아이디어를 카드로 적어두고 함께 처리하는 보드예요.
+          &lsquo;할 일 → 진행중 → 완료&rsquo;로 옮기며 관리하고, 담당자와 우선순위를 정할 수 있어요. 머릿속에만 있던 일을 여기 적어두면 다른 운영진도 알 수 있어요.
         </p>
         <Shot src="/guide-assets/05-backlog.png" alt="백로그 보드 화면" caption="백로그 — 운영 할 일을 카드로 함께 관리" />
       </Section>
 
-      <GroupHeading>가끔 하는 일</GroupHeading>
+      {/* ─────────── 가끔 하는 일 ─────────── */}
+      <GroupTitle id="g-occasional">가끔 하는 일</GroupTitle>
 
-      <Section n="7" title="카테고리 손보기">
+      <Section n="10" title="카테고리">
         <p>
           자료를 분류하는 대분류·소분류를 추가하거나 이름을 바꾸는 곳이에요.
           <b>이름을 바꾸면 그 분류에 속한 모든 자료가 함께 바뀌어요</b> — 하나하나 고칠 필요 없어요.
@@ -282,28 +361,28 @@ export default async function GuidePage() {
         <Note>자료가 남아 있는 분류를 지우려 하면, 실수를 막기 위해 먼저 안내가 떠요.</Note>
       </Section>
 
-      <Section n="8" title="새 운영진 들이기">
+      <Section n="11" title="운영진 초대">
         <p>운영진을 새로 들일 때는 이렇게 해요. (권한을 &lsquo;주는&rsquo; 마지막 단계는 관리자만 할 수 있어요.)</p>
         <Step>
-          <li><b>초대해요.</b> 운영진 초대 화면에서 상대 이메일을 넣고 <b>초대 메일 보내기</b>를 누르면, 초대 링크가 담긴 메일을 보낼 수 있어요. 링크를 직접 복사해 전달해도 돼요.</li>
+          <li><b>초대해요.</b> 운영진 초대 화면에서 상대 이메일을 넣고 <b>초대 메일 보내기</b>를 누르면 초대 링크가 담긴 메일을 보낼 수 있어요. 링크를 직접 복사해 전달해도 돼요.</li>
           <li><b>상대가 신청해요.</b> 받은 사람이 링크로 들어와 구글 로그인 → 운영진 신청을 해요.</li>
           <li><b>승인해요.</b> 같은 화면 아래 <b>&lsquo;운영진 신청&rsquo; 목록</b>에 그 사람이 뜨면, 관리자가 승인해요. 그러면 바로 운영진으로 일할 수 있어요.</li>
         </Step>
         <Shot src="/guide-assets/09-invite.png" alt="운영진 초대 화면" caption="운영진 초대 — 이메일로 초대하고, 신청을 승인" />
-        <Note>보안을 위해, 자기 권한을 스스로 올리는 건 막혀 있어요. 권한을 바꾸는 건 관리자만 할 수 있어요.</Note>
+        <Note>보안을 위해 자기 권한을 스스로 올리는 건 막혀 있어요. 권한을 바꾸는 건 관리자만 할 수 있어요.</Note>
       </Section>
 
-      <Section n="9" title="대시보드 읽는 법">
-        <p>운영이 잘 되고 있는지 숫자로 보는 곳이에요. 특히 눈여겨보면 좋은 것:</p>
+      <Section n="12" title="대시보드 보는 법">
+        <p>운영이 잘 되고 있는지 숫자로 보는 곳이에요(예전 시트엔 없던 화면). 특히 눈여겨보면 좋은 것:</p>
         <Ul>
-          <li><b>인기 자료</b> — 사람들이 많이 찾는 자료. 비슷한 자료를 더 모으면 좋다는 신호예요.</li>
+          <li><b>인기 자료</b> — 많이 찾는 자료. 비슷한 자료를 더 모으면 좋다는 신호예요.</li>
           <li><b>검색어</b> — 방문자가 실제로 검색한 말. 그중 <b>결과가 0건인 검색어</b>는 &ldquo;찾는데 없는 자료&rdquo;라, 다음에 무엇을 채우면 좋을지 알려줘요.</li>
           <li><b>방문·유입</b> — 언제 얼마나 오는지, 어디서 들어오는지.</li>
         </Ul>
         <Shot src="/guide-assets/10-dashboard.png" alt="대시보드 화면" caption="대시보드 — 방문·인기 자료·검색어 지표" />
       </Section>
 
-      <Section n="10" title="업데이트 내역 남기기">
+      <Section n="13" title="업데이트 내역 남기기">
         <p>
           사이트가 어떻게 바뀌어 왔는지 최신순으로 모아둔 기록이에요.
           큰 변화를 만들었다면 여기에 한 줄 남겨두면, 다음 운영진이 &ldquo;언제 왜 이렇게 됐는지&rdquo;를 알 수 있어요.
@@ -311,32 +390,15 @@ export default async function GuidePage() {
         <Shot src="/guide-assets/08-changelog.png" alt="업데이트 내역 화면" caption="업데이트 내역 — 변경 이력을 최신순으로" />
       </Section>
 
-      <Section n="11" title="자료 하나가 게시되기까지 (전체 흐름)">
-        <p>방문자의 제안이 사이트에 오르기까지, 모든 과정이 <b>사이트 안에서</b> 끝나요. (예전엔 구글 시트를 거쳤지만 지금은 아니에요.)</p>
-        <pre className="text-[12px] leading-relaxed bg-[var(--card)] border border-[var(--border)] rounded-[var(--r-md)] p-3 overflow-x-auto">{`방문자가 [자료 등록] 폼으로 제안
-   │  (제출할 때 중복 자동 확인)
-   ▼
-대기 목록에 쌓임  ──▶ 운영진에게 "새 제안" 알림 메일
-   │  운영진이 확인하고 다듬음
-   ▼
-운영진 2명 승인  (2명이 안 되면 관리자 단독 승인)
-   ▼
-사이트에 게시  ──▶ 제안한 사람에게 "승인" 메일`}</pre>
-        <p>참고로, 방문자가 보는 공개 화면은 이렇게 생겼어요.</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Shot src="/guide-assets/11-home.png" alt="사이트 홈" caption="홈" />
-          <Shot src="/guide-assets/12-submit.png" alt="자료 제안 폼" caption="자료 등록(제안)" />
-          <Shot src="/guide-assets/13-faq.png" alt="실무 Q&A" caption="실무 Q&A" />
-        </div>
-      </Section>
+      {/* ─────────── 참고 자료 ─────────── */}
+      <GroupTitle id="g-reference">참고 자료</GroupTitle>
 
-      <Section n="12" title="좋은 자료로 다듬는 요령">
+      <Section n="14" title="콘텐츠 작성 규칙">
         <p>제안을 승인하기 전에 아래를 맞춰주면, 자료실 전체가 깔끔하고 검색도 잘 돼요.</p>
-
-        <GroupHeading>한 줄 설명</GroupHeading>
+        <SubHeading>한 줄 설명</SubHeading>
         <p>
           한 줄 설명은 완성된 문장이 아니라 &lsquo;이름표&rsquo;처럼 써요. <b>명사로 끝맺고 마침표는 붙이지 않아요.</b> 길이는 20~55자 정도.
-          홍보 문구나 페이지에 적힌 소개를 그대로 붙이지 말고, 실제 내용이 뭔지 한 줄로 요약해요.
+          홍보 문구나 페이지 소개를 그대로 붙이지 말고, 실제 내용이 뭔지 한 줄로 요약해요.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] border-collapse min-w-[420px]">
@@ -358,8 +420,7 @@ export default async function GuidePage() {
             </tbody>
           </table>
         </div>
-
-        <GroupHeading>태그 · 형식 · 링크</GroupHeading>
+        <SubHeading>태그 · 형식 · 링크</SubHeading>
         <Ul>
           <li><b>태그</b> — 5~6개 정도. 한글 위주로, 이미 쓰고 있는 태그가 있으면 새로 만들기보다 그걸 재사용해요.</li>
           <li><b>형식</b> — 아티클 · 가이드 · 템플릿 · 영상 · 홈페이지 · 강의 중에서 골라요. 템플릿·양식만 <K>양식·템플릿</K> 메뉴로 가고, 나머지는 <K>콘텐츠</K>로 가요.</li>
@@ -368,7 +429,7 @@ export default async function GuidePage() {
         </Ul>
       </Section>
 
-      <Section n="13" title="알림 메일은 언제 나가나">
+      <Section n="15" title="알림 메일">
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] border-collapse min-w-[360px]">
             <thead>
@@ -384,12 +445,10 @@ export default async function GuidePage() {
             </tbody>
           </table>
         </div>
-        <Note>메일이 안 왔다면 — 하루 발송 한도(100통)를 넘었거나 스팸함에 들어갔을 수 있어요. 메일이 안 나가도 제안 자체는 정상적으로 저장되니 안심하세요.</Note>
+        <Note>메일이 안 왔다면 — 하루 발송 한도(100통)를 넘었거나 스팸함에 들어갔을 수 있어요. 메일이 안 나가도 제안 자체는 정상 저장되니 안심하세요.</Note>
       </Section>
 
-      <GroupHeading>참고 자료</GroupHeading>
-
-      <Section n="14" title="지금 운영진">
+      <Section n="16" title="지금 운영진">
         <p>현재 이 자료실을 함께 운영하는 사람들이에요. (권한이 바뀌면 여기도 자동으로 갱신돼요.)</p>
         {operators.length > 0 ? (
           <div className="overflow-x-auto">
@@ -415,11 +474,11 @@ export default async function GuidePage() {
         )}
       </Section>
 
-      <Section n="15" title="담당 나눔">
+      <Section n="17" title="담당 나눔">
         <p>
-          누가 어떤 일을 주로 맡을지 정해두면, 빠뜨리는 일 없이 굴러가요.
-          아직 공식으로 나누진 않았어요 — <b>다음 운영 회의에서 정해서 아래 표를 채우기</b>로 해요.
-          (이 표를 바꾸려면 코드의 <K>guide/page.tsx</K> 15번 항목을 고치면 돼요.)
+          누가 어떤 일을 주로 맡을지 정해두면 빠뜨리는 일 없이 굴러가요.
+          아직 공식으로 나누진 않았어요 — <b>다음 운영 회의에서 정해 아래 표를 채우기</b>로 해요.
+          (이 표를 바꾸려면 코드의 <K>guide/page.tsx</K> 17번 항목을 고치면 돼요.)
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] border-collapse min-w-[360px]">
@@ -441,7 +500,7 @@ export default async function GuidePage() {
         </div>
       </Section>
 
-      <Section n="16" title="시스템·계정 구성">
+      <Section n="18" title="시스템·계정 구성">
         <p>
           <b>평소 운영에는 이 부분을 몰라도 전혀 지장 없어요.</b> 자료실이 어떤 서비스들 위에서 돌아가는지, 그리고
           문제가 생기거나 설정을 바꿔야 할 때 &ldquo;어디를 봐야 하는지&rdquo;를 알아두는 참고용이에요.
@@ -484,13 +543,16 @@ export default async function GuidePage() {
         </Note>
       </Section>
 
-      <Section n="17" title="자주 묻는 것">
+      {/* ─────────── 도움말 ─────────── */}
+      <GroupTitle id="g-help">도움말</GroupTitle>
+
+      <Section n="19" title="자주 묻는 것">
         <div className="flex flex-col gap-2.5">
           <div><b>Q. 승인했는데 사이트에 자료가 안 보여요</b><br/>몇 분 기다린 뒤 새로고침해보고, 자료 관리에서 그 자료 상태가 <K>공개</K>인지 확인해요.</div>
           <div><b>Q. 실수로 자료를 지웠어요</b><br/>괜찮아요. 자료 관리 <K>삭제됨</K> 탭에서 <b>복원</b>하면 그대로 돌아와요.</div>
-          <div><b>Q. 제안·승인 메일이 안 와요</b><br/>13번을 보세요 — 하루 100통 한도나 스팸함을 확인. 메일과 무관하게 자료 처리 자체는 정상이에요.</div>
+          <div><b>Q. 제안·승인 메일이 안 와요</b><br/>15번을 보세요 — 하루 100통 한도나 스팸함을 확인. 메일과 무관하게 자료 처리 자체는 정상이에요.</div>
           <div><b>Q. 검색 결과가 이상해요</b><br/>딱 맞는 자료가 없을 때만 &lsquo;비슷한 자료&rsquo;를 대신 보여주는 정상 동작이에요.</div>
-          <div><b>Q. 나 혼자 승인할 수 없나요?</b><br/>기본은 서로 다른 운영진 2명이 승인해야 해요. 운영진이 2명이 안 될 때만 관리자가 사유를 적고 단독 승인할 수 있어요.</div>
+          <div><b>Q. 나 혼자 승인할 수 없나요?</b><br/>기본은 서로 다른 운영진 2명이 승인해야 해요. 운영진이 2명이 안 될 때만 관리자가 사유를 적고 단독 승인할 수 있어요(원리는 3번).</div>
         </div>
       </Section>
 
