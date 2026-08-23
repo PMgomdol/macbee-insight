@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, useRef } from 'react';
 import {
   Sparkles, Upload, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle, ExternalLink,
 } from 'lucide-react';
@@ -63,6 +63,27 @@ export function SubmitForm({ categories }: Props) {
   // 점진적 노출 — URL 분석 성공·파일 업로드 완료·직접 입력 선택 시점부터 상세 필드 노출.
   // 분석이 실패해도 (브런치·페이월·JS 렌더 사이트) 직접 입력으로 등록할 수 있어야 함
   const showDetails = analyzed || manual || !!fileUrl;
+
+  // 성공 모달 키보드 접근성 — ESC 닫기 + 포커스 트랩(aria-modal 약속 이행) + 포커스 복원
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!submitDone) return;
+    const prev = document.activeElement as HTMLElement | null;
+    const focusables = () =>
+      Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button, a[href]') ?? []);
+    focusables()[0]?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.preventDefault(); resetForm(); return; }
+      if (e.key !== 'Tab') return;
+      const f = focusables();
+      if (f.length === 0) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('keydown', onKey); prev?.focus?.(); };
+  }, [submitDone]);
 
   function resetForm() {
     setUrl('');
@@ -579,6 +600,7 @@ export function SubmitForm({ categories }: Props) {
           onClick={resetForm}
         >
           <div
+            ref={dialogRef}
             className="bg-[var(--bg)] border border-[var(--border)] rounded-[var(--r-md)] shadow-[var(--shadow-3)] max-w-md w-full p-6 flex flex-col gap-4"
             onClick={(e) => e.stopPropagation()}
           >
