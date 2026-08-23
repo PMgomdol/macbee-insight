@@ -13,7 +13,6 @@ import { AnalyticsGate } from '@/components/AnalyticsGate';
 import { ConsentBanner } from '@/components/ConsentBanner';
 import { FeedbackWidgetLoader } from '@/components/FeedbackWidgetLoader';
 import { AtlaskitProvider } from '@/components/AtlaskitProvider';
-import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import './globals.css';
 import { SITE_URL } from '@/lib/site';
 
@@ -72,7 +71,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           본문 바로가기
         </a>
         <AtlaskitProvider>
-        <VercelAnalytics />
         <NavProgress />
         <CardClickTracker />
         <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)] z-50">
