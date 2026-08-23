@@ -144,17 +144,17 @@ export default async function GuidePage() {
           <span className="text-xs text-[var(--muted-2)]">{displayName ?? user?.email} · {role === 'admin' ? '관리자' : '운영진'}</span>
         </div>
         <p className="text-sm text-[var(--muted)]">
-          맥비 자료실을 함께 운영하는 분들을 위한 안내서예요. 운영진이 새로 오거나 바뀌어도 이 문서 하나로 같은 방식으로 일할 수 있게 정리했어요.
-          <b> 처음이라면 &lsquo;개요와 원리&rsquo;부터</b> 읽어 자료실이 어떻게 돌아가는지 감을 잡고, 그다음 &lsquo;시작하기&rsquo;로 넘어가세요. 익숙해지면 필요한 부분만 찾아봐도 돼요.
+          맥비 자료실을 함께 운영하는 분들을 위한 안내서예요. 운영진이 새로 오거나 바뀌어도 이 문서 하나로 같은 방식으로 일할 수 있게 정리했어요.{' '}
+          <b>처음이라면 &lsquo;개요와 원리&rsquo;부터</b> 읽어 자료실이 어떻게 돌아가는지 감을 잡고, 그다음 &lsquo;시작하기&rsquo;로 넘어가세요. 익숙해지면 필요한 부분만 찾아봐도 돼요.
         </p>
       </section>
 
       {/* 목차 — 6개 그룹 */}
       <nav className="rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--card)] p-4">
         <p className="text-[11px] font-semibold text-[var(--muted-2)] mb-2">목차</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3">
+        <div className="columns-1 sm:columns-2 gap-x-5">
           {TOC_GROUPS.map(({ group, gid, items }) => (
-            <div key={gid} className="flex flex-col gap-1">
+            <div key={gid} className="flex flex-col gap-1 break-inside-avoid mb-3 last:mb-0">
               <a href={`#${gid}`} className="text-[11px] font-bold uppercase tracking-wide text-[var(--accent)] hover:underline">{group}</a>
               <ol className="flex flex-col gap-0.5 text-[13px]">
                 {items.map(([n, t]) => (
