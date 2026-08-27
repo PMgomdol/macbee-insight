@@ -105,28 +105,31 @@ export function BacklogBoard({ items: initial, assignees }: { items: BacklogItem
   return (
     <div className="flex flex-col gap-3">
       {/* 추가 폼 */}
-      <div className="flex items-center gap-2 flex-wrap rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--card)] p-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--card)] p-2">
         <input
           value={nTitle}
           onChange={(e) => setNTitle(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') addItem(); }}
           placeholder="할 일 추가 (예: 게임기획 면접자료 카테고리 재분류)"
-          className="app-input flex-1 min-w-[180px] text-sm py-1.5 px-2 rounded-[var(--r-sm)]"
+          className="app-input w-full sm:flex-1 sm:min-w-[200px] text-sm py-1 px-2 rounded-[var(--r-sm)]"
         />
-        <select value={nCategory} onChange={(e) => setNCategory(e.target.value)} className="app-input text-xs py-1.5 rounded-[var(--r-sm)]" aria-label="분류">
-          <option value="">분류(선택)</option>
-          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <select value={nAssignee} onChange={(e) => setNAssignee(e.target.value)} className="app-input text-xs py-1.5 rounded-[var(--r-sm)]" aria-label="담당자">
-          <option value="">담당자(선택)</option>
-          {assignees.map((a) => <option key={a} value={a}>{a}</option>)}
-        </select>
-        <select value={nPriority} onChange={(e) => setNPriority(e.target.value as BacklogItem['priority'])} className="app-input text-xs py-1.5 rounded-[var(--r-sm)]" aria-label="우선순위">
-          {PRIORITY.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
-        </select>
-        <UIButton size="sm" onClick={addItem} disabled={adding || !nTitle.trim()}>
-          <Plus size={13} aria-hidden /> 추가
-        </UIButton>
+        {/* 모바일: 셀렉트 2열 그리드 · 데스크톱: sm:contents로 폼 한 줄에 인라인 */}
+        <div className="grid grid-cols-2 gap-2 w-full sm:contents">
+          <select value={nCategory} onChange={(e) => setNCategory(e.target.value)} className="app-input w-full sm:w-auto text-xs py-1 rounded-[var(--r-sm)]" aria-label="분류">
+            <option value="">분류(선택)</option>
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={nAssignee} onChange={(e) => setNAssignee(e.target.value)} className="app-input w-full sm:w-auto text-xs py-1 rounded-[var(--r-sm)]" aria-label="담당자">
+            <option value="">담당자(선택)</option>
+            {assignees.map((a) => <option key={a} value={a}>{a}</option>)}
+          </select>
+          <select value={nPriority} onChange={(e) => setNPriority(e.target.value as BacklogItem['priority'])} className="app-input w-full sm:w-auto text-xs py-1 rounded-[var(--r-sm)]" aria-label="우선순위">
+            {PRIORITY.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
+          </select>
+          <UIButton size="sm" onClick={addItem} disabled={adding || !nTitle.trim()} className="w-full sm:w-auto">
+            <Plus size={13} aria-hidden /> 추가
+          </UIButton>
+        </div>
       </div>
 
       {/* 필터 바 */}
