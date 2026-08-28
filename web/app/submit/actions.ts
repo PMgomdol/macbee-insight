@@ -549,7 +549,13 @@ export async function createUploadTicket(
     return { ok: false, error: '이 형식은 올릴 수 없어요. 문서·이미지 파일로 올려주세요.' };
   }
 
-  const safeName = name.replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ\.\-]/g, '_').slice(0, 80);
+  // Supabase Storage 키는 비ASCII(한글 등)를 거부("Invalid key") → 키에는 ASCII만.
+  // 원본 표시 이름은 DB(제목)에 남고, 키는 uuid로 유일성 확보되므로 한글은 버려도 됨.
+  const dot = name.lastIndexOf('.');
+  const ext = (dot > 0 ? name.slice(dot + 1) : '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8);
+  const base = (dot > 0 ? name.slice(0, dot) : name)
+    .replace(/[^\w.\-]+/g, '_').replace(/^_+|_+$/g, '').replace(/_+/g, '_').slice(0, 60);
+  const safeName = ext ? `${base || 'file'}.${ext}` : (base || 'file');
   const path = `${new Date().toISOString().slice(0, 10)}/${randomUUID()}-${safeName}`;
 
   const sb = createAdminClient();
