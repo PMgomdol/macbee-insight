@@ -99,3 +99,12 @@ export async function notifyFeedbackSubmitted(d: FeedbackPayload) {
   if (!admins.length) return; // 수신자 없음 — 발송 스킵
   return post('feedback_submitted', { ...d, admins });
 }
+
+type DriveFailPayload = { id: number; title: string; reason: string };
+
+/** 승인된 자료의 드라이브 전송 실패 → 운영진에게 알림 (파일은 Supabase 링크로 그대로 서비스됨) */
+export async function notifyDriveTransferFailed(d: DriveFailPayload) {
+  const admins = await reviewerEmails();
+  if (!admins.length) return;
+  return post('drive_transfer_failed', { ...d, admins });
+}

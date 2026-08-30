@@ -4,6 +4,7 @@ import { after } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath, updateTag } from 'next/cache';
 import { notifyProposalResult } from '@/lib/notify';
+import { transferArchiveFileToDrive } from '@/lib/drive-webapp';
 
 const MIN_APPROVALS = 2;
 
@@ -154,10 +155,10 @@ async function getRole(): Promise<string | null> {
   return data?.role ?? null;
 }
 
-async function migrateToArchive(row: any, approvers: string[], extraNote?: string) {
+async function migrateToArchive(row: any, approvers: string[], extraNote?: string): Promise<number> {
   const sb = await createClient();
   const note = '멤버 제안 — 운영진 ' + approvers.join(', ') + ' 승인' + (extraNote ? `. ${extraNote}` : '');
-  const { error: insErr } = await sb.from('archive_item').insert({
+  const { data: inserted, error: insErr } = await sb.from('archive_item').insert({
     main_category: row.main_category ?? '미분류',
     sub_category: row.sub_category,
     tags: row.tags ?? [],
@@ -173,8 +174,15 @@ async function migrateToArchive(row: any, approvers: string[], extraNote?: strin
     notes: note,
     // 자료 형식이 메뉴 배치 기준: 템플릿만 양식·템플릿, 나머지는 콘텐츠
     kind: row.format === '템플릿' ? 'files' : 'insights',
-  });
-  if (insErr) throw new Error('자료실로 옮기지 못했어요 — ' + insErr.message);
+  }).select('id').single();
+  if (insErr || !inserted) throw new Error('자료실로 옮기지 못했어요 — ' + (insErr?.message ?? 'no id'));
+  return inserted.id as number;
+}
+
+/** 승인된 자료의 업로드 파일을 맥비님 드라이브로 — 응답 반환 뒤 백그라운드. 실패해도 승인은 유지. */
+function scheduleDriveTransfer(archiveId: number, fileUrl: string | null) {
+  if (!fileUrl) return;
+  after(() => transferArchiveFileToDrive(archiveId));
 }
 
 export async function approveProposal(id: string) {
@@ -201,14 +209,16 @@ export async function approveProposal(id: string) {
   if (res.approved) {
     const { data: row } = await sb.from('staging_proposal').select('*').eq('id', id).single();
     if (!row) throw new Error('자료를 찾지 못했어요');
+    let archiveId: number;
     try {
-      await migrateToArchive(row, res.approvers ?? []);
+      archiveId = await migrateToArchive(row, res.approvers ?? []);
     } catch (e) {
       // 이관 실패 시 pending으로 되돌려 재시도 가능하게 (승인 기록은 유지)
       await sb.from('staging_proposal').update({ status: 'pending' }).eq('id', id);
       throw e;
     }
     updateTag('archive');
+    scheduleDriveTransfer(archiveId, row.file_url);
     // 제안자에게 승인 결과 메일 — 응답 반환 뒤 백그라운드 발송
     if (row.proposer_email) {
       after(() => notifyProposalResult({ to: row.proposer_email, title: row.title, approved: true }));
@@ -236,7 +246,7 @@ export async function forceApproveProposal(id: string, reason: string) {
   const approvers = new Set<string>(row.approvers ?? []);
   approvers.add(me.email);
 
-  await migrateToArchive(row, Array.from(approvers), `단독 승인 (admin ${me.email}). 사유: ${reason.trim()}`);
+  const archiveId = await migrateToArchive(row, Array.from(approvers), `단독 승인 (admin ${me.email}). 사유: ${reason.trim()}`);
   await sb.from('staging_proposal').update({
     status: 'approved',
     approvers: Array.from(approvers),
@@ -244,6 +254,7 @@ export async function forceApproveProposal(id: string, reason: string) {
     reviewed_at: new Date().toISOString(),
   }).eq('id', id);
   updateTag('archive');
+  scheduleDriveTransfer(archiveId, row.file_url);
   if (row.proposer_email) {
     after(() => notifyProposalResult({ to: row.proposer_email, title: row.title, approved: true }));
   }
@@ -267,4 +278,19 @@ export async function rejectProposal(id: string, note: string) {
     after(() => notifyProposalResult({ to: row.proposer_email, title: row.title, approved: false, note: note || null }));
   }
   revalidatePath('/admin-mb26/panel');
+}
+
+/** 자료 관리 — Supabase에 남아 있는 파일을 맥비님 드라이브로 (승인 시 실패했거나 예전 자료). */
+export async function moveArchiveFileToDrive(id: number): Promise<{ ok: boolean; message: string }> {
+  const role = await getRole();
+  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
+  const r = await transferArchiveFileToDrive(id);
+  if (r.ok) {
+    updateTag('archive');
+    revalidatePath('/admin-mb26/panel/archive');
+    return { ok: true, message: '드라이브로 옮겼어요' };
+  }
+  if (r.skipped === 'not configured') return { ok: false, message: '드라이브 연결이 아직 안 되어 있어요' };
+  if (r.skipped) return { ok: false, message: '옮길 파일이 아니에요 (이미 드라이브 링크이거나 외부 링크)' };
+  return { ok: false, message: '옮기지 못했어요 — ' + r.error };
 }

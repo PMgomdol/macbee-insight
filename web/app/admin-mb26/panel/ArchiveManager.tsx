@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, Pencil, ExternalLink, Eye, EyeOff, Trash2, RotateCcw, ArrowUpDown, Undo2, FolderInput } from 'lucide-react';
+import { Search, X, Pencil, ExternalLink, Eye, EyeOff, Trash2, RotateCcw, ArrowUpDown, Undo2, FolderInput, HardDriveUpload } from 'lucide-react';
 import { UIButton } from '@/components/ui/Button';
-import { updateArchiveItem, setArchiveStatus, bulkSetArchiveStatus, bulkSetCategory, reconsiderProposal } from './actions';
+import { updateArchiveItem, setArchiveStatus, bulkSetArchiveStatus, bulkSetCategory, reconsiderProposal, moveArchiveFileToDrive } from './actions';
 
 const FORMATS = ['아티클', '영상', '기획서', '가이드', '템플릿', '세미나'];
 
@@ -475,6 +475,19 @@ function ArchiveRow({
     } catch (e: any) { alert(e.message); } finally { setBusy(false); }
   }
 
+  // 아직 Supabase에 있는 업로드 파일 — 드라이브로 옮기는 버튼 노출
+  const onSupabase = !!item.file_url && item.file_url.includes('/storage/v1/object/public/archive-files/');
+
+  async function moveToDrive() {
+    if (!confirm('이 파일을 맥비님 드라이브로 옮길까요? 링크가 드라이브 주소로 바뀌어요.')) return;
+    setBusy(true);
+    try {
+      const r = await moveArchiveFileToDrive(item.id);
+      alert(r.message);
+      if (r.ok) router.refresh();
+    } catch (e: any) { alert(e.message); } finally { setBusy(false); }
+  }
+
   async function changeStatus(next: 'public' | 'hidden' | 'deleted') {
     if (next === 'deleted' && !confirm('이 자료를 삭제할까요? 목록의 "삭제됨"에서 되살릴 수 있어요.')) return;
     setBusy(true);
@@ -551,6 +564,11 @@ function ArchiveRow({
         <button onClick={() => setEditing(true)} disabled={busy} className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)] hover:text-[var(--accent)] transition">
           <Pencil size={12} aria-hidden /> 수정
         </button>
+        {onSupabase && (
+          <button onClick={moveToDrive} disabled={busy} className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)] hover:text-[var(--accent)] transition" title="파일이 아직 자료실 서버에 있어요. 맥비님 드라이브로 옮깁니다.">
+            <HardDriveUpload size={12} aria-hidden /> 드라이브로
+          </button>
+        )}
         {status === 'public' ? (
           <button onClick={() => changeStatus('hidden')} disabled={busy} className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)] hover:text-[var(--warning)] transition">
             <EyeOff size={12} aria-hidden /> 숨김

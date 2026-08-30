@@ -70,6 +70,7 @@ function doPost(e) {
     if (body.event === 'proposal_submitted') return mailJson_(sendProposalSubmitted_(data));
     if (body.event === 'proposal_result') return mailJson_(sendProposalResult_(data));
     if (body.event === 'feedback_submitted') return mailJson_(sendFeedbackSubmitted_(data));
+    if (body.event === 'drive_transfer_failed') return mailJson_(sendDriveTransferFailed_(data));
     return mailJson_({ ok: false, error: 'unknown event: ' + body.event });
   } catch (err) {
     return mailJson_({ ok: false, error: String(err) });
@@ -217,4 +218,29 @@ function testMailNotify() {
     name: MAIL_NOTIFY.SENDER_NAME,
   });
   Logger.log('테스트 메일 발송: ' + to + ' / 남은 일일 쿼터: ' + MailApp.getRemainingDailyQuota());
+}
+
+/** 승인된 자료의 드라이브 전송 실패 — 운영진에게. 파일은 Supabase 링크로 계속 서비스되므로 급하진 않음. */
+function sendDriveTransferFailed_(d) {
+  var recipients = resolveRecipients_(d.admins);
+  if (!recipients.length) return { ok: false, error: 'no recipients' };
+  var title = String(d.title || '(제목 없음)');
+  var lines = [
+    '승인된 자료의 파일을 맥비님 드라이브로 옮기지 못했어요.',
+    '',
+    '자료: ' + title + ' (#' + d.id + ')',
+    '원인: ' + String(d.reason || '알 수 없음'),
+    '',
+    '자료는 기존 링크로 정상 다운로드돼요. 원인을 확인한 뒤 자료 관리에서 다시 옮기면 됩니다.',
+    '자료 관리: ' + MAIL_NOTIFY.SITE_URL + '/admin-mb26/panel/archive',
+    '',
+    '— 맥비기획 자료실 자동 알림',
+  ];
+  MailApp.sendEmail({
+    to: recipients.join(','),
+    subject: '[맥비 자료실] 드라이브 전송 실패 — ' + title,
+    body: lines.join('\n'),
+    name: MAIL_NOTIFY.SENDER_NAME,
+  });
+  return { ok: true, sent: recipients.length };
 }
