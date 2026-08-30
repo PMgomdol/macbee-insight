@@ -211,6 +211,11 @@ export default async function GuidePage() {
           이 모든 자료는 시트가 아니라 <b>데이터베이스(Supabase)</b> 한 곳에 저장돼요. 예전에 시트 여기저기 흩어져 있던 걸 한군데로 모은 셈이에요.
           <b> 지금은 사이트(데이터베이스)가 진짜 기준(원본)</b>이고, 예전 구글 시트는 백업·대조용으로만 남아 있어요 — 시트를 직접 고치지 않아요.
         </p>
+        <p>
+          <b>업로드 파일</b>만 예외예요. 방문자가 파일을 올리면 검수 대기 중에는 사이트 저장소에 잠시 있다가, <b>승인되는 순간 맥비님 구글 드라이브</b>의
+          &lsquo;맥비기획 자료실 (자료실 업로드)&rsquo; 폴더로 옮겨지고 사이트의 다운로드 링크도 드라이브 주소로 바뀌어요. 파일 이름은 운영진이 정리한 제목으로 저장돼요.
+          반려된 파일은 드라이브에 들어가지 않아요. (드라이브 연결은 2026-08-30 진행 중 — 연결 전까진 사이트 저장소에 그대로 있어요.)
+        </p>
         <SubHeading>예전 시트에서 무엇이 어디로 옮겨졌나</SubHeading>
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] border-collapse min-w-[440px]">
@@ -309,7 +314,7 @@ export default async function GuidePage() {
         <Step>
           <li><b>내용을 확인해요.</b> 링크가 잘 열리는지, 이미 올라온 자료와 겹치지 않는지(제출할 때 자동으로 한 번 걸러지긴 해요), 자료실 성격에 맞는지 봐요.</li>
           <li><b>다듬어요.</b> 제목·한 줄 설명·분류·태그를 14번 규칙대로 손봐요. 승인 전에 바로 고칠 수 있어요.</li>
-          <li><b>승인해요.</b> 서로 다른 <b>운영진 2명</b>이 승인하면 자동으로 게시돼요. (운영진이 2명이 안 되면 관리자가 사유를 적고 혼자 승인할 수 있어요.)</li>
+          <li><b>승인해요.</b> 서로 다른 <b>운영진 2명</b>이 승인하면 자동으로 게시돼요. 파일이 붙은 자료는 이때 파일이 맥비님 드라이브로 자동으로 옮겨져요(2번). 관리자에게는 <K>단독 승인</K> 버튼이 항상 보이는데, 급한 자료나 운영진이 부족할 때만 사유를 적고 쓰는 예외예요 — 사유는 자료 기록에 남아요.</li>
           <li><b>반려해요.</b> 자료실에 맞지 않으면 사유를 적고 반려해요. 사유는 제안한 사람에게 안내 메일로 전달돼요.</li>
         </Step>
         <Shot src="/guide-assets/03-requests.png" alt="자료 등록요청 목록 화면" caption="자료등록요청 — 대기 중인 제안을 검토·승인·반려" />
@@ -330,6 +335,10 @@ export default async function GuidePage() {
           자료를 여러 개 골라 한 번에 숨기거나 옮기는 것도 돼요. 제목·설명·링크·분류·태그는 <b>수정</b>으로 그 자리에서 고쳐요.
         </p>
         <Shot src="/guide-assets/07-archive.png" alt="자료 관리 화면" caption="자료 관리 — 상태별 탭, 검색, 자료별 수정·숨김·삭제" />
+        <p>
+          파일이 아직 사이트 저장소에 남아 있는 자료(승인 때 드라이브로 못 옮겼거나, 드라이브 연결 전에 올라온 예전 자료)에는 <K>드라이브로</K> 버튼이 보여요.
+          누르면 파일을 맥비님 드라이브로 옮기고 링크를 바꿔줘요. 옮기지 못하면 운영진에게 메일이 와요(15번).
+        </p>
         <Note>실수로 지웠더라도 걱정 마세요. <b>삭제됨 탭 → 복원</b>이면 그대로 돌아와요.</Note>
       </Section>
 
@@ -441,7 +450,9 @@ export default async function GuidePage() {
             <tbody>
               <tr className="border-b border-[var(--border)]"><td className="py-1.5 pr-3">방문자가 자료를 제안하면</td><td className="py-1.5 pr-3">운영진</td></tr>
               <tr className="border-b border-[var(--border)]"><td className="py-1.5 pr-3">운영진이 승인하면</td><td className="py-1.5 pr-3">제안한 사람</td></tr>
-              <tr><td className="py-1.5 pr-3">운영진이 반려하면</td><td className="py-1.5 pr-3">제안한 사람 (사유 포함)</td></tr>
+              <tr className="border-b border-[var(--border)]"><td className="py-1.5 pr-3">운영진이 반려하면</td><td className="py-1.5 pr-3">제안한 사람 (사유 포함)</td></tr>
+              <tr className="border-b border-[var(--border)]"><td className="py-1.5 pr-3">방문자가 의견을 보내면</td><td className="py-1.5 pr-3">운영진</td></tr>
+              <tr><td className="py-1.5 pr-3">승인된 자료의 파일을 드라이브로 못 옮기면</td><td className="py-1.5 pr-3">운영진 (자료 관리에서 &lsquo;드라이브로&rsquo; 재시도, 7번)</td></tr>
             </tbody>
           </table>
         </div>
@@ -526,6 +537,8 @@ export default async function GuidePage() {
                 ['행동 분석', 'PostHog · 프로젝트 498450', 'asa067714 (개인)'],
                 ['AI 분석', 'Google Gemini API', 'asa067714 (개인)'],
                 ['알림 메일', 'Google Apps Script · MailApp', 'asa067714 (개인 구글)'],
+                ['파일 저장', 'Google Drive · 맥비님 드라이브 "맥비기획 자료실 (자료실 업로드)" 폴더', '맥비님 (개인 구글)'],
+                ['드라이브 연결', 'Google Apps Script · 맥비님 계정의 웹앱(배포) + asa067714 계정의 라이브러리(코드)', '맥비님 · asa067714'],
               ].map(([role_, svc, acct]) => (
                 <tr key={role_} className="border-b border-[var(--border)] last:border-0 align-top">
                   <td className="py-1.5 pr-3 font-medium whitespace-nowrap">{role_}</td>
