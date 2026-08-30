@@ -106,17 +106,17 @@ const TOC_GROUPS: { group: string; gid: string; items: [string, string][] }[] = 
     ['10', '카테고리'],
     ['11', '운영진 초대'],
     ['12', '대시보드 보는 법'],
-    ['13', '업데이트 내역 남기기'],
+    ['13', '업데이트 내역'],
   ] },
   { group: '참고 자료', gid: 'g-reference', items: [
     ['14', '콘텐츠 작성 규칙'],
     ['15', '알림 메일'],
-    ['16', '지금 운영진'],
-    ['17', '담당 나눔'],
+    ['16', '운영진 현황'],
+    ['17', '역할 분담 (R&R)'],
     ['18', '시스템·계정 구성'],
   ] },
   { group: '도움말', gid: 'g-help', items: [
-    ['19', '자주 묻는 것'],
+    ['19', 'FAQ'],
   ] },
 ];
 
@@ -500,11 +500,11 @@ export default async function GuidePage() {
         <Shot src="/guide-assets/10-dashboard.png" alt="대시보드 전체 화면" caption="대시보드 전체 — 상단 탭으로 콘텐츠 성과 · 유입 · 행동·전환 전환" />
       </Section>
 
-      <Section n="13" title="업데이트 내역 남기기">
+      <Section n="13" title="업데이트 내역">
         <p>
-          사이트가 어떻게 바뀌어 왔는지 최신순으로 모아둔 기록임.
-          기능이 바뀌거나 운영 방식이 달라지면 여기에 남겨두면, 다음 운영진이 &ldquo;언제 왜 이렇게 됐는지&rdquo;를 알 수 있음.
-          내용은 배포하는 사람이 코드에 적고, 운영진은 읽기만 하면 됨.
+          사이트가 어떻게 바뀌어 왔는지 최신순으로 모아둔 기록. 새 기능·개선·수정을 배포한 사람(관리자)이 배포할 때마다 적음.
+          운영진은 읽기만 하면 됨 — &ldquo;이 버튼이 언제 생겼지&rdquo;, &ldquo;왜 이렇게 바뀌었지&rdquo; 싶을 때 여기서 확인.
+          변경 항목 아래에 관련 화면 스크린샷이 붙어 있음.
         </p>
         <Shot src="/guide-assets/08-changelog.png" alt="업데이트 내역 화면" caption="업데이트 내역 — 변경 이력을 최신순으로" />
       </Section>
@@ -569,7 +569,7 @@ export default async function GuidePage() {
         <Note>메일이 안 왔다면 — 하루 발송 한도(100통)를 넘었거나 스팸함에 들어갔을 수 있음. 메일이 안 나가도 제안 자체는 정상 저장되니 안심할 것.</Note>
       </Section>
 
-      <Section n="16" title="지금 운영진">
+      <Section n="16" title="운영진 현황">
         <p>현재 이 자료실을 함께 운영하는 사람들임. 계정은 관리 화면에 로그인하는 구글 계정이고, 알림 메일도 이 주소로 감(<S n="15" />). 권한이 바뀌면 여기도 자동으로 갱신됨.</p>
         {operators.length > 0 ? (
           <div className="overflow-x-auto">
@@ -597,9 +597,9 @@ export default async function GuidePage() {
         )}
       </Section>
 
-      <Section n="17" title="담당 나눔">
+      <Section n="17" title="역할 분담 (R&amp;R)">
         <p>
-          누가 어떤 일을 주로 맡을지 정해두면 빠뜨리는 일 없이 굴러감.
+          누가 어떤 일을 주로 맡을지(R&amp;R) 정해두면 빠뜨리는 일 없이 굴러감.
           아직 공식으로 나누지 않음 — <b>운영 회의에서 정해 아래 표를 채우기</b>로 함.
           (표를 바꾸려면 코드의 <K>guide/page.tsx</K> 17번 항목을 고치면 됨.)
         </p>
@@ -678,7 +678,7 @@ export default async function GuidePage() {
       {/* ─────────── 도움말 ─────────── */}
       <GroupTitle id="g-help">도움말</GroupTitle>
 
-      <Section n="19" title="자주 묻는 것">
+      <Section n="19" title="FAQ">
         <div className="flex flex-col gap-2.5">
           <div><b>Q. 승인했는데 사이트에 자료가 안 보일 때</b><br/>몇 분 기다린 뒤 새로고침해보고, <S n="7" />에서 그 자료 상태가 <K>공개</K>인지 확인함.</div>
           <div><b>Q. 실수로 자료를 지웠을 때</b><br/>괜찮음. <S n="7" />의 <K>삭제됨</K> 탭에서 <b>복구</b>하면 그대로 돌아옴.</div>
