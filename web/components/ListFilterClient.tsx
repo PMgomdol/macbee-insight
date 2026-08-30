@@ -11,12 +11,13 @@ type Props = {
   title: string;
   desc: string;
   items: ArchiveItem[];
-  total: number;
+  /** 전체 건수 — 헤더에는 표시하지 않음(분류 칩의 숫자로 충분). 호환용으로 남김 */
+  total?: number;
 };
 
 const STEP = 24;
 
-export function ListFilterClient({ kind, title, desc, items, total }: Props) {
+export function ListFilterClient({ kind, title, desc, items }: Props) {
   const [main, setMain] = useState<string | null>(null);
   const [sub, setSub] = useState<string | null>(null);
   const [sort, setSort] = useState<'default' | 'popular'>('default');
@@ -103,9 +104,7 @@ export function ListFilterClient({ kind, title, desc, items, total }: Props) {
     <div className="flex flex-col gap-5">
       <section className="flex flex-col gap-1">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h1>
-        <p className="text-sm text-[var(--muted)]">
-          {desc} <span className="text-[var(--muted-2)]">· 총 {total.toLocaleString()}건</span>
-        </p>
+        <p className="text-sm text-[var(--muted)]">{desc}</p>
       </section>
 
       {/* 페이지 내 검색 — 높이는 h-11(44px) 고정. py-*로 만들면 모바일 input min-height:44px가
