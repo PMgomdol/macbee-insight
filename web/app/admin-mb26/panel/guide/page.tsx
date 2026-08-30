@@ -121,16 +121,25 @@ const TOC_GROUPS: { group: string; gid: string; items: [string, string][] }[] = 
 
 const SECTION_TITLE: Record<string, string> = Object.fromEntries(TOC_GROUPS.flatMap((g) => g.items));
 
-async function getOperators(): Promise<{ display_name: string | null; role: string | null }[]> {
+type Operator = { display_name: string | null; role: string | null; email: string | null };
+
+/** 운영진 명단 — profile(이름·권한) + auth.users(이메일). 이메일은 profile에 없어 관리자 API로 조인. */
+async function getOperators(): Promise<Operator[]> {
   try {
     const sb = createAdminClient();
     const { data } = await sb
       .from('profile')
-      .select('display_name, role')
+      .select('id, display_name, role')
       .in('role', ['admin', 'reviewer'])
       .order('role', { ascending: true })
       .order('display_name', { ascending: true });
-    return data ?? [];
+    const rows = data ?? [];
+    const emails = new Map<string, string>();
+    try {
+      const { data: list } = await sb.auth.admin.listUsers({ perPage: 1000 });
+      for (const u of list?.users ?? []) if (u.email) emails.set(u.id, u.email);
+    } catch { /* 이메일 조회 실패 시 이름만 표시 */ }
+    return rows.map((r) => ({ display_name: r.display_name, role: r.role, email: emails.get(r.id) ?? null }));
   } catch {
     return [];
   }
@@ -539,21 +548,23 @@ export default async function GuidePage() {
       </Section>
 
       <Section n="16" title="지금 운영진">
-        <p>현재 이 자료실을 함께 운영하는 사람들이에요. 권한이 바뀌면 여기도 자동으로 갱신돼요.</p>
+        <p>현재 이 자료실을 함께 운영하는 사람들이에요. 계정은 관리 화면에 로그인하는 구글 계정이고, 알림 메일도 이 주소로 가요(<S n="15" />). 권한이 바뀌면 여기도 자동으로 갱신돼요.</p>
         {operators.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-[13px] border-collapse min-w-[280px]">
+            <table className="w-full text-[13px] border-collapse min-w-[420px]">
               <thead>
                 <tr className="text-left text-[var(--muted-2)] border-b border-[var(--border)]">
                   <th className="py-1.5 pr-3 font-semibold">이름</th>
+                  <th className="py-1.5 pr-3 font-semibold">로그인 계정</th>
                   <th className="py-1.5 pr-3 font-semibold">권한</th>
                 </tr>
               </thead>
               <tbody>
                 {operators.map((o, i) => (
                   <tr key={i} className="border-b border-[var(--border)] last:border-0">
-                    <td className="py-1.5 pr-3">{o.display_name ?? '(이름 없음)'}</td>
-                    <td className="py-1.5 pr-3 text-[var(--muted)]">{o.role === 'admin' ? '관리자' : '운영진'}</td>
+                    <td className="py-1.5 pr-3 whitespace-nowrap">{o.display_name ?? '(이름 없음)'}</td>
+                    <td className="py-1.5 pr-3 text-[var(--muted)] break-all">{o.email ?? '—'}</td>
+                    <td className="py-1.5 pr-3 text-[var(--muted)] whitespace-nowrap">{o.role === 'admin' ? '관리자' : '운영진'}</td>
                   </tr>
                 ))}
               </tbody>
