@@ -240,28 +240,47 @@ export default async function GuidePage() {
         </Ul>
 
         <SubHeading>어디에 저장되나</SubHeading>
-        <p>
-          자료 정보(제목·설명·분류·태그·링크·상태)는 전부 사이트의 <b>데이터베이스</b> 한 곳에 있어요.
-          <b> 이 데이터베이스가 원본</b>이고, 운영진은 관리 화면에서만 고쳐요. 다른 곳(시트 등)을 고쳐도 사이트에는 반영되지 않아요.
-        </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-[13px] border-collapse min-w-[400px]">
-            <tbody>
-              {([
-                ['무엇', '데이터베이스 서비스 Supabase. 우리 컴퓨터가 아니라 Supabase 회사의 서버(서울)에 있고, 사이트가 여기에 읽고 써요.'],
-                ['누구 계정', <>asa067714@gmail.com(안재찬 개인 구글)으로 만든 프로젝트예요. 다른 서비스도 같은 계정으로 통일돼 있어요(<S n="18" />).</>],
-                ['백업', '매일 새벽 5시 운영 시트의 "자료 DB (Supabase 미러)" 탭으로 자동 복사돼요. 아래 히스토리 참고.'],
-                ['직접 볼 수 있나', '평소엔 관리 화면이 유일한 창구예요. 엑셀처럼 한눈에 훑고 싶으면 위 미러 탭을 열면 돼요(수정은 안 됨). 데이터베이스 관리 콘솔은 관리자만, 설정 변경이 필요할 때만 들어가요.'],
-                ['파일은', '자료 정보와 달리 파일 자체는 맥비님 구글 드라이브에 저장돼요(바로 아래).'],
-              ] as [string, React.ReactNode][]).map(([k, v]) => (
-                <tr key={k} className="border-b border-[var(--border)] last:border-0 align-top">
-                  <td className="py-1.5 pr-4 font-medium whitespace-nowrap">{k}</td>
-                  <td className="py-1.5 text-[var(--muted)]">{v}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <p>자료실 데이터는 세 곳에 나뉘어 있어요. 원본은 앞의 둘이고, 셋째는 읽기 전용 사본이에요.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {([
+            {
+              what: '자료 정보',
+              items: '제목 · 설명 · 분류 · 태그 · 링크 · 상태 · 조회수 · 회원·권한',
+              where: '데이터베이스 (Supabase, 서울)',
+              who: '안재찬 계정 (asa067714)',
+              see: '관리 화면에서 보고 고쳐요. 여기가 원본.',
+              tone: 'accent',
+            },
+            {
+              what: '업로드 파일',
+              items: 'PDF · PPT · 이미지 등 실제 파일',
+              where: '맥비님 구글 드라이브 폴더',
+              who: '맥비님 계정',
+              see: '승인되면 자동으로 들어가요. 사이트의 다운로드 링크가 여길 가리켜요.',
+              tone: 'accent',
+            },
+            {
+              what: '사본 (백업)',
+              items: '자료 정보 전체',
+              where: '운영 시트 "자료 DB (Supabase 미러)" 탭',
+              who: '안재찬 계정',
+              see: '매일 새벽 5시 자동 복사. 훑어보기용, 고쳐도 반영 안 됨.',
+              tone: 'muted',
+            },
+          ] as { what: string; items: string; where: string; who: string; see: string; tone: 'accent' | 'muted' }[]).map((c) => (
+            <div key={c.what} className={`rounded-[var(--r-md)] border p-3 flex flex-col gap-1.5 text-[13px] ${c.tone === 'accent' ? 'border-[var(--accent)] bg-[var(--accent-bg)]' : 'border-dashed border-[var(--border)] bg-[var(--card)]'}`}>
+              <div className="font-bold text-sm">{c.what}</div>
+              <div className="text-[var(--muted)]">{c.items}</div>
+              <div className="mt-1"><span className="text-[11px] text-[var(--muted-2)]">어디</span><br />{c.where}</div>
+              <div><span className="text-[11px] text-[var(--muted-2)]">누구 명의</span><br />{c.who}</div>
+              <div><span className="text-[11px] text-[var(--muted-2)]">운영진은</span><br />{c.see}</div>
+            </div>
+          ))}
         </div>
+        <Note>
+          &ldquo;데이터베이스&rdquo;는 Supabase라는 서비스 회사의 서버에 있는 저장소예요. 우리 컴퓨터가 아니라 인터넷 위에 있고, 사이트가 거기에 읽고 써요.
+          계정·콘솔 위치는 <S n="18" />에 있어요.
+        </Note>
 
         <SubHeading>업로드 파일은 이렇게 관리돼요</SubHeading>
         <p>링크가 아니라 파일(PDF·PPT·이미지 등, 10MB까지)을 올린 자료는 파일 자체가 따로 보관돼요. 흐름은 이래요.</p>
