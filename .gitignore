@@ -48,3 +48,4 @@ KakaoTalk_Chat_*.csv
 # 내부 회의록·설문 원본 (공개 레포 제외)
 meeting/
 *.xlsx
+docs/drive-webapp/library/.clasp.json
