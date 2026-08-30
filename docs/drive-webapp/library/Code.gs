@@ -9,7 +9,8 @@
  *
  * 설정(스크립트 속성):
  *   DRIVE_SECRET  자료실 서버와 맞출 시크릿 (필수, 24자 이상)
- *   FOLDER_NAME   저장 폴더 이름 (기본: 맥비기획 자료실 (자료실 업로드))
+ *   FOLDER_NAME   저장 폴더 이름 (기본: 맥비기획 자료실 (자료실 업로드)) — 처음 생성 때만 사용
+ *   FOLDER_ID     생성된 폴더 ID (자동 저장)
  *   MAX_BYTES     허용 용량 (기본 10485760 = 10MB)
  */
 
@@ -25,12 +26,24 @@ function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
-/** 저장 폴더 — 없으면 실행 주체(맥비님) 드라이브 루트에 만든다. */
+/**
+ * 저장 폴더 — drive.file 권한에서는 이름 검색(getFoldersByName)이 막혀 있으므로
+ * 처음 만들 때 폴더 ID를 스크립트 속성(FOLDER_ID)에 기억해두고, 이후엔 ID로 연다.
+ * 폴더가 지워졌으면 다시 만든다. 실행 주체(맥비님) 드라이브 루트에 생성.
+ */
 function folder_() {
-  var name = prop_('FOLDER_NAME') || DEFAULT_FOLDER_NAME;
-  var it = DriveApp.getFoldersByName(name);
-  if (it.hasNext()) return it.next();
-  return DriveApp.createFolder(name);
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty('FOLDER_ID');
+  if (id) {
+    try {
+      var f = DriveApp.getFolderById(id);
+      if (!f.isTrashed()) return f;
+    } catch (err) { /* 삭제됐거나 접근 불가 → 새로 생성 */ }
+  }
+  var name = props.getProperty('FOLDER_NAME') || DEFAULT_FOLDER_NAME;
+  var created = DriveApp.createFolder(name);
+  props.setProperty('FOLDER_ID', created.getId());
+  return created;
 }
 
 function doGet() {
@@ -76,7 +89,12 @@ function upload_(body) {
     if (BLOCKED_EXT.indexOf(ext) >= 0) return { ok: false, error: 'blocked extension' };
 
     var file = folder_().createFile(Utilities.newBlob(bytes, mime, name));
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    try {
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (shareErr) {
+      // 공유 실패 시 파일은 남기되 링크가 안 열리므로 실패로 보고 (원인 추적용)
+      return { ok: false, error: 'sharing failed: ' + String(shareErr), id: file.getId() };
+    }
 
     var id = file.getId();
     return {

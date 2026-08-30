@@ -49,3 +49,4 @@ KakaoTalk_Chat_*.csv
 meeting/
 *.xlsx
 docs/drive-webapp/library/.clasp.json
+docs/drive-webapp/shell/.clasp.json
