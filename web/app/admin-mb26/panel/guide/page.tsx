@@ -234,9 +234,27 @@ export default async function GuidePage() {
 
         <SubHeading>어디에 저장되나</SubHeading>
         <p>
-          자료 정보(제목·설명·분류·태그·링크·상태)는 전부 사이트의 <b>데이터베이스(Supabase)</b> 한 곳에 있어요.
+          자료 정보(제목·설명·분류·태그·링크·상태)는 전부 사이트의 <b>데이터베이스</b> 한 곳에 있어요.
           <b> 이 데이터베이스가 원본</b>이고, 운영진은 관리 화면에서만 고쳐요. 다른 곳(시트 등)을 고쳐도 사이트에는 반영되지 않아요.
         </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[13px] border-collapse min-w-[400px]">
+            <tbody>
+              {([
+                ['무엇', '데이터베이스 서비스 Supabase. 우리 컴퓨터가 아니라 Supabase 회사의 서버(서울)에 있고, 사이트가 여기에 읽고 써요.'],
+                ['누구 계정', <>asa067714@gmail.com(안재찬 개인 구글)으로 만든 프로젝트예요. 다른 서비스도 같은 계정으로 통일돼 있어요(<S n="18" />).</>],
+                ['백업', '매일 새벽 5시 운영 시트의 "자료 DB (Supabase 미러)" 탭으로 자동 복사돼요. 아래 히스토리 참고.'],
+                ['직접 볼 수 있나', '평소엔 관리 화면이 유일한 창구예요. 엑셀처럼 한눈에 훑고 싶으면 위 미러 탭을 열면 돼요(수정은 안 됨). 데이터베이스 관리 콘솔은 관리자만, 설정 변경이 필요할 때만 들어가요.'],
+                ['파일은', '자료 정보와 달리 파일 자체는 맥비님 구글 드라이브에 저장돼요(바로 아래).'],
+              ] as [string, React.ReactNode][]).map(([k, v]) => (
+                <tr key={k} className="border-b border-[var(--border)] last:border-0 align-top">
+                  <td className="py-1.5 pr-4 font-medium whitespace-nowrap">{k}</td>
+                  <td className="py-1.5 text-[var(--muted)]">{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         <SubHeading>업로드 파일은 이렇게 관리돼요</SubHeading>
         <p>링크가 아니라 파일(PDF·PPT·이미지 등, 10MB까지)을 올린 자료는 파일 자체가 따로 보관돼요. 흐름은 이래요.</p>
