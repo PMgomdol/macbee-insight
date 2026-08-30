@@ -105,7 +105,7 @@ export async function classify(
     const g = out.format;
     const format = (g && g !== '아티클') ? g : (hint && hint !== '아티클' ? hint : (g || '아티클'));
     return {
-      title: String(out.title_ko || meta.title).slice(0, 200),
+      title: cleanTitle(String(out.title_ko || meta.title)),
       summary: clampSummary(String(out.summary_ko || meta.description)),
       mainCategory: out.main_category || '미분류',
       subCategory: out.sub_category || '',
@@ -118,6 +118,27 @@ export async function classify(
     console.error('Gemini classify error:', err);
     return { ...heuristic(url, meta), aiUsed: false, error: err };
   }
+}
+
+/**
+ * 제목 정리 — 원문 제목에 붙은 장식·연재 표기를 걷어낸다.
+ * 앞: 이모지·기호, "#819." "819화" "[DailyPrompt]" "Vol.3" 같은 시리즈 번호  /  뒤: " | 블로그명" " - 회사명" 꼬리
+ * AI가 남긴 경우를 대비한 결정적 후처리. 자료실 제목엔 이모지를 쓰지 않는다.
+ */
+export function cleanTitle(raw: string): string {
+  let t = raw.normalize('NFC').trim();
+  // 앞쪽 이모지·기호·구분자 반복 제거
+  t = t.replace(/^(?:[\p{Extended_Pictographic}\p{So}\p{Sk}\uFE0F\u200D\s|·•\-–—:~]+)+/u, '');
+  // 시리즈 번호 접두: "#819." "#819" "819화." "[DailyPrompt] " "Vol.3 " "EP.12 " "1편." 등 (최대 2번 반복)
+  for (let i = 0; i < 2; i++) {
+    t = t.replace(/^(?:#\s*\d+[.:)\]]?|\d+\s*(?:화|편|회|탄)[.:)\]]?|\[[^\]]{1,30}\]|(?:vol|ep|episode|part|no)\.?\s*\d+[.:)]?)\s*/iu, '');
+  }
+  // 시리즈 번호 뒤에 남은 구분자 정리 ("Vol.3 - 제목" → "제목")
+  t = t.replace(/^[\s|·•\-–—:~]+/u, '');
+  // 사이트명 꼬리: " | 사이트" 만 제거 (대시는 부제로 쓰이는 일이 많아 보존)
+  t = t.replace(/\s+\|\s+[^|]{1,30}$/u, '');
+  t = t.replace(/\s{2,}/g, ' ').trim();
+  return (t || raw.trim()).slice(0, 200);
 }
 
 function buildVisionPrompt(url: string, meta: { title: string; description: string }) {
@@ -155,6 +176,7 @@ URL: ${url}
   "~합니다/~입니다/~한다" 같은 종결어미로 끝내지 말 것.
   ${meta.body ? '**본문 발췌를 기준으로 작성**. og 설명이 사이트 소개/광고문구면 무시하고 본문 내용 우선.' : '알 수 없으면 "확인 불가".'}
 - title_ko도 본문과 og 제목이 다르면 실제 글 내용에 맞는 쪽으로.
+- title_ko에서 **이모지·특수기호, 시리즈 번호(#819, 819화, [시리즈명], Vol.3 등), 사이트명 꼬리(" | 블로그명", " - 회사명")는 제거**하고 글 내용을 나타내는 제목만 남길 것.
 - main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
 - sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
 - tags: 3~6개. 한글 우선. 고유명사는 한글+영문 병기 가능. 너무 일반적인 단어(UI, 디자인) 단독 금지

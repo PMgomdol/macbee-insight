@@ -51,6 +51,7 @@ export const CHANGELOG: Release[] = [
       { type: 'improve', text: '[지표 대시보드](/admin-mb26/panel/dashboard) 추이 차트에 세로축 최대값과 가로축 시작·끝 날짜를 표시해요. 그래프 모양만이 아니라 실제 숫자를 읽을 수 있어요.',
         media: [{ type: 'image', src: '/changelog/dashboard-axes.jpg', caption: '축 수치가 붙은 조회수 추이 차트' }] },
       { type: 'fix', text: '[자료 등록](/submit)에서 파일 이름에 한글이 있으면 업로드가 실패하던 문제를 고쳤어요. (제목은 그대로 한글, 저장 경로만 영문으로)' },
+      { type: 'improve', text: '[자료 등록](/submit)의 AI 분석이 뽑는 제목에서 이모지, 연재 번호(#819, 12화, [시리즈명], Vol.3), 사이트명 꼬리(" | 블로그명")를 자동으로 걷어내요. 원문 제목 장식이 자료실 제목에 그대로 묻어오던 문제예요.' },
       { type: 'improve', text: '[콘텐츠](/insights)·[양식·템플릿](/files)·[실무 Q&A](/faq)의 페이지 내 검색창을 하나의 공용 부품으로 통일했어요. 페이지마다 돋보기 크기·포커스 색·글자 크기가 조금씩 달랐던 걸 맞췄고, 안내 문구의 "○○에서"도 뺐어요.' },
       { type: 'improve', text: '[콘텐츠](/insights)·[양식·템플릿](/files)·[실무 Q&A](/faq) 머리말의 "총 N건" 표시를 뺐어요. 분류 칩에 이미 건수가 있어 중복이었고, 분류를 좁혀도 숫자가 안 바뀌어 헷갈렸어요.' },
       { type: 'fix', text: '[백로그 보드](/admin-mb26/panel/backlog)의 모바일 추가 폼이 다른 화면보다 크게 보이던 문제를 정리했어요.' },
