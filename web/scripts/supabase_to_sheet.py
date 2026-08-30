@@ -98,15 +98,29 @@ def main():
         print('[--dry] 시트 미기록. 샘플:', values[2] if len(values) > 2 else None)
         return
 
-    import gspread
-    gc = gspread_client()
-    sh = gc.open_by_key(SHEET_ID)
-    try:
-        ws = sh.worksheet(MIRROR_TAB)
-    except gspread.WorksheetNotFound:
-        ws = sh.add_worksheet(title=MIRROR_TAB, rows=len(values) + 50, cols=len(HEADER))
-    ws.clear()
-    ws.update(range_name='A1', values=values, value_input_option='RAW')
+    def write_sheet():
+        import gspread
+        gc = gspread_client()
+        sh = gc.open_by_key(SHEET_ID)
+        try:
+            ws = sh.worksheet(MIRROR_TAB)
+        except gspread.WorksheetNotFound:
+            ws = sh.add_worksheet(title=MIRROR_TAB, rows=len(values) + 50, cols=len(HEADER))
+        ws.clear()
+        ws.update(range_name='A1', values=values, value_input_option='RAW')
+
+    # 구글 시트 API 일시 장애(503 등) 흡수 — 3회 재시도, 30초 간격.
+    # 3회 모두 실패하면 진짜 문제이므로 그대로 예외를 던져 워크플로 실패 메일이 가게 둔다.
+    import time
+    for attempt in range(1, 4):
+        try:
+            write_sheet()
+            break
+        except Exception as e:
+            if attempt == 3:
+                raise
+            print(f'시트 쓰기 실패 ({attempt}/3): {e} — 30초 후 재시도')
+            time.sleep(30)
     print(f'동기화 완료: {len(rows)}건 · {stamp}')
 
 
