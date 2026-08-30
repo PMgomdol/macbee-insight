@@ -13,10 +13,11 @@ function shotExists(src: string): boolean {
 }
 
 /* eslint-disable @next/next/no-img-element -- 관리자 내부 페이지, 이미지 최적화 불필요 */
-function Shot({ src, alt, caption }: { src: string; alt: string; caption?: string }) {
+// size: 'sm' = 카드 한 장 같은 부분 캡처(최대 440px), 기본 = 화면 전체 캡처(본문 폭)
+function Shot({ src, alt, caption, size }: { src: string; alt: string; caption?: string; size?: 'sm' }) {
   const ok = shotExists(src);
   return (
-    <figure className="flex flex-col gap-1.5 my-1">
+    <figure className={`flex flex-col gap-1.5 my-1 ${size === 'sm' ? 'max-w-[440px]' : ''}`}>
       {ok ? (
         <div className="overflow-hidden rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--card)]">
           <img src={src} alt={alt} className="w-full h-auto block" loading="lazy" />
@@ -489,13 +490,13 @@ export default async function GuidePage() {
         <p>운영이 잘 되고 있는지 숫자로 보는 곳임. 탭 세 개(콘텐츠 성과 · 유입 · 행동·전환) 중 특히 눈여겨볼 것 세 가지.</p>
         <SubHeading>인기 자료 — 콘텐츠 성과 탭</SubHeading>
         <p>30일 동안 많이 열어본 자료. 비슷한 자료를 더 모으면 좋다는 신호.</p>
-        <Shot src="/guide-assets/16-dash-popular.png" alt="대시보드 인기 자료 카드" caption="콘텐츠 성과 탭 → 인기 자료 (30일 조회)" />
+        <Shot src="/guide-assets/16-dash-popular.png" size="sm" alt="대시보드 인기 자료 카드" caption="콘텐츠 성과 탭 → 인기 자료 (30일 조회)" />
         <SubHeading>결과가 없던 검색어 — 행동·전환 탭</SubHeading>
         <p>방문자가 검색했지만 자료가 0건이었던 말. &ldquo;찾는데 없는 자료&rdquo;라 다음에 무엇을 채우면 좋을지 알려줌. 초성만 친 것(ㅍ 등)은 무시하고, 단어가 보이면 그 주제 자료를 찾아 등록할 것.</p>
-        <Shot src="/guide-assets/17-dash-zero-search.png" alt="대시보드 결과가 없던 검색어 카드" caption="행동·전환 탭 → 결과가 없던 검색어" />
+        <Shot src="/guide-assets/17-dash-zero-search.png" size="sm" alt="대시보드 결과가 없던 검색어 카드" caption="행동·전환 탭 → 결과가 없던 검색어" />
         <SubHeading>방문·유입 — 유입 탭</SubHeading>
         <p>언제 얼마나 오는지, 어디서 들어오는지. Direct = 주소 직접 입력·카톡 링크, Referral = 다른 사이트 링크, Organic Search = 검색엔진(오픈 전이라 거의 없음).</p>
-        <Shot src="/guide-assets/18-dash-traffic.png" alt="대시보드 유입 경로 카드" caption="유입 탭 → 유입 경로" />
+        <Shot src="/guide-assets/18-dash-traffic.png" size="sm" alt="대시보드 유입 경로 카드" caption="유입 탭 → 유입 경로" />
         <Shot src="/guide-assets/10-dashboard.png" alt="대시보드 전체 화면" caption="대시보드 전체 — 상단 탭으로 콘텐츠 성과 · 유입 · 행동·전환 전환" />
       </Section>
 
