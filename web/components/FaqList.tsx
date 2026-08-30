@@ -2,7 +2,8 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Search, X, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { SearchField } from '@/components/ui/SearchField';
 import type { FAQItem } from '@/types/db';
 import { track } from '@/lib/track';
 
@@ -133,27 +134,7 @@ export function FaqList({ faqs }: { faqs: FAQItem[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* 검색 박스 — 검색 페이지(page variant)와 동일 스타일 (focus 시 색만 변경, 두께·높이 고정) */}
-      <div className="flex items-center gap-2 px-4 h-11 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)]">
-        <Search size={18} className="text-[var(--muted)] shrink-0" aria-hidden />
-        <input
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="질문·답변·카테고리로 찾아보세요 (예: 면접, 피그마, 휴가)"
-          className="flex-1 min-w-0 bg-transparent outline-none text-base"
-          aria-label="실무 Q&A 검색"
-        />
-        {q && (
-          <button
-            onClick={() => setQ('')}
-            className="text-[var(--muted)] hover:text-[var(--fg)] shrink-0 p-2 -m-2"
-            aria-label="검색 지우기"
-          >
-            <X size={14} />
-          </button>
-        )}
-      </div>
+      <SearchField value={q} onChange={setQ} placeholder="질문·답변·카테고리로 찾아보세요 (예: 면접, 피그마, 휴가)" ariaLabel="실무 Q&A 검색" />
 
       {/* 카테고리 필터 칩 — ListFilterClient 대분류 칩과 동일 스타일·동작 (같은 모양 = 같은 역할) */}
       {allCats.length > 1 && (

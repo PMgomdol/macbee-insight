@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Search, X, LayoutGrid, LayoutList } from 'lucide-react';
+import { LayoutGrid, LayoutList } from 'lucide-react';
+import { SearchField } from '@/components/ui/SearchField';
 import { ItemCard, ItemRow } from './ItemCard';
 import type { ArchiveItem } from '@/types/db';
 import { track } from '@/lib/track';
@@ -107,24 +108,7 @@ export function ListFilterClient({ kind, title, desc, items }: Props) {
         <p className="text-sm text-[var(--muted)]">{desc}</p>
       </section>
 
-      {/* 페이지 내 검색 — 높이는 h-11(44px) 고정. py-*로 만들면 모바일 input min-height:44px가
-          패딩 위에 쌓여 pill이 커진다(FaqList·검색페이지와 동일 패턴). */}
-      <div className="flex items-center gap-2 px-4 h-11 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--accent)]">
-        <Search size={16} className="text-[var(--muted)] shrink-0" aria-hidden />
-        <input
-          type="search"
-          value={q}
-          onChange={(e) => changeQ(e.target.value)}
-          placeholder={`${title}에서 제목·설명·태그로 찾아보세요`}
-          className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-sm"
-          aria-label={`${title} 내 검색`}
-        />
-        {q && (
-          <button onClick={() => changeQ('')} className="text-[var(--muted)] hover:text-[var(--fg)] shrink-0 p-2 -m-2" aria-label="입력 지우기">
-            <X size={14} />
-          </button>
-        )}
-      </div>
+      <SearchField value={q} onChange={changeQ} placeholder="제목·설명·태그로 찾아보세요" ariaLabel={`${title} 내 검색`} />
 
       {q && (
         <p className="text-xs text-[var(--muted)]">

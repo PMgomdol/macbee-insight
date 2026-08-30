@@ -176,7 +176,7 @@ export default function DesignGuide() {
             <span className="text-[var(--muted)] text-sm">돋보기 아이콘 + 검색 인풋 (h-11, 1px strong)</span>
           </div>
         </div>
-        <Recipe code={`필 인풋: h-11 px-4 rounded-full border border-[var(--border-strong)] bg-[var(--bg)] text-sm focus:border-[var(--focus-ring)] (또는 focus-within)`} />
+        <Recipe code={`필 인풋 = components/ui/SearchField (목록·Q&A 공용): h-11 px-4 gap-2 rounded-full border-[var(--border-strong)] bg-[var(--bg)] focus-within:border-[var(--focus-ring)] · 돋보기 18 · 지우기 X 14 · input text-base. 자동완성 검색창(SearchAutocomplete page)도 같은 치수.`} />
       </Section>
 
       <Section title="카드" desc="app-card 클래스 (라운드 lg 12px, hover 시 그림자+테두리 강조).">
