@@ -110,7 +110,7 @@ export default async function RequestsPage() {
                 </div>
                 <div className="flex gap-1.5 flex-wrap">
                   <ApproveButton id={p.id} disabled={p.approvers?.includes(user.email ?? '')} />
-                  {reviewerCount < 2 && <ForceApproveButton id={p.id} isAdmin={isAdmin} />}
+                  <ForceApproveButton id={p.id} isAdmin={isAdmin} />
                   <RejectButton id={p.id} />
                 </div>
               </div>
