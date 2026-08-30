@@ -675,19 +675,19 @@ export default async function GuidePage() {
 
       <Section n="19" title="자주 묻는 것">
         <div className="flex flex-col gap-2.5">
-          <div><b>Q. 승인했는데 사이트에 자료가 안 보임</b><br/>몇 분 기다린 뒤 새로고침해보고, <S n="7" />에서 그 자료 상태가 <K>공개</K>인지 확인함.</div>
+          <div><b>Q. 승인했는데 사이트에 자료가 안 보일 때</b><br/>몇 분 기다린 뒤 새로고침해보고, <S n="7" />에서 그 자료 상태가 <K>공개</K>인지 확인함.</div>
           <div><b>Q. 실수로 자료를 지웠을 때</b><br/>괜찮음. <S n="7" />의 <K>삭제됨</K> 탭에서 <b>복구</b>하면 그대로 돌아옴.</div>
-          <div><b>Q. 제안·승인 메일이 안 옴</b><br/><S n="15" />를 볼 것 — 하루 100통 한도나 스팸함을 확인. 메일과 무관하게 자료 처리 자체는 정상임.</div>
-          <div><b>Q. 검색 결과가 이상함</b><br/>딱 맞는 자료가 없을 때만 비슷한 자료를 대신 보여주는 정상 동작임.</div>
-          <div><b>Q. 나 혼자 승인할 수 없나요?</b><br/>기본은 서로 다른 운영진 2명이 승인해야 함. 관리자는 사유를 적고 단독 승인할 수 있는데, 급한 자료나 운영진이 부족할 때만 쓰는 예외임(<S n="3" />).</div>
-          <div><b>Q. 올린 파일은 어디에 저장되나요?</b><br/>승인되면 맥비님 구글 드라이브 폴더로 감. 자세한 흐름은 <S n="2" />의 &lsquo;업로드 파일은 이렇게 관리돼요&rsquo;.</div>
-          <div><b>Q. 구글 시트를 고치면 반영되나요?</b><br/>반영되지 않음. 시트는 읽기 전용 사본임. 고칠 건 <S n="7" />에서 함(<S n="2" />의 &lsquo;기존 시트 변경 히스토리&rsquo;).</div>
+          <div><b>Q. 제안·승인 메일이 안 올 때</b><br/><S n="15" />를 볼 것 — 하루 100통 한도나 스팸함을 확인. 메일과 무관하게 자료 처리 자체는 정상임.</div>
+          <div><b>Q. 검색 결과가 이상할 때</b><br/>딱 맞는 자료가 없을 때만 비슷한 자료를 대신 보여주는 정상 동작임.</div>
+          <div><b>Q. 혼자 승인하고 싶을 때</b><br/>기본은 서로 다른 운영진 2명이 승인해야 함. 관리자는 사유를 적고 단독 승인할 수 있는데, 급한 자료나 운영진이 부족할 때만 쓰는 예외임(<S n="3" />).</div>
+          <div><b>Q. 올린 파일은 어디에 저장되나</b><br/>승인되면 맥비님 구글 드라이브 폴더로 감. 자세한 흐름은 <S n="2" />의 &lsquo;업로드 파일은 이렇게 관리됨&rsquo;.</div>
+          <div><b>Q. 구글 시트를 고치면 반영되나</b><br/>반영되지 않음. 시트는 읽기 전용 사본임. 고칠 건 <S n="7" />에서 함(<S n="2" />의 &lsquo;기존 시트 변경 히스토리&rsquo;).</div>
         </div>
       </Section>
 
       <p className="text-[12px] text-[var(--muted-2)] border-t border-[var(--border)] pt-3">
         이 가이드는 운영진 전용임. 안내가 실제와 달라졌거나 새 기능이 생겼으면, 코드의 <K>guide/page.tsx</K>를 고치고
-        <Link href="/admin-mb26/panel/changelog" className="text-[var(--accent)] hover:underline ml-1">업데이트 내역</Link>에도 한 줄 남겨바람.
+        <Link href="/admin-mb26/panel/changelog" className="text-[var(--accent)] hover:underline ml-1">업데이트 내역</Link>에도 한 줄 남길 것.
       </p>
     </div>
   );
