@@ -604,7 +604,10 @@ export default async function GuidePage() {
       <Section n="18" title="시스템·계정 구성">
         <p>
           <b>평소 운영에는 이 부분을 몰라도 지장 없어요.</b> 자료실이 어떤 서비스들 위에서 돌아가는지, 문제가 생기거나 설정을 바꿔야 할 때 어디를 봐야 하는지를 알아두는 참고용이에요.
-          비밀번호·키 값은 여기 적지 않아요.
+          비밀번호·키 값은 여기 적지 않아요. &lsquo;열기&rsquo; 링크는 그 계정으로 로그인해야 열려요.
+        </p>
+        <p>
+          표의 <K>asa067714</K>는 <b>안재찬(관리자)의 개인 구글 계정</b> <K>asa067714@gmail.com</K>이에요. 회사 계정을 쓰지 않고 이 계정 하나로 통일했어요.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] border-collapse min-w-[520px]">
@@ -616,23 +619,27 @@ export default async function GuidePage() {
               </tr>
             </thead>
             <tbody>
-              {[
-                ['사이트 주소', 'macbe-archive.com — Vercel에서 구입·관리', 'asa067714 (개인, pmgomdol Vercel)'],
-                ['코드 저장소', 'GitHub · PMgomdol/macbee-insight (main 자동 배포)', 'asa067714 (개인, 핸들 PMgomdol)'],
-                ['배포·호스팅', 'Vercel · pmgomdols-projects/macbe-archive (서울 리전)', 'asa067714 (개인)'],
-                ['데이터·로그인', 'Supabase · bmsoolrfostbxepzkesy (서울 리전)', 'asa067714 (개인)'],
-                ['구글 로그인', 'Google Cloud · OAuth "macbe-archive-web"', 'asa067714 (개인 구글)'],
-                ['방문 분석', 'Google Analytics 4 · G-LT2K006JPF (속성 549238948)', 'asa067714 (개인)'],
-                ['행동 분석', 'PostHog · 프로젝트 498450', 'asa067714 (개인)'],
-                ['AI 분석', 'Google Gemini API', 'asa067714 (개인)'],
-                ['알림 메일', 'Google Apps Script · MailApp', 'asa067714 (개인 구글)'],
-                ['파일 저장', 'Google Drive · 맥비님 드라이브 "맥비기획 자료실 (자료실 업로드)" 폴더', '맥비님 (개인 구글)'],
-                ['드라이브 연결', 'Google Apps Script · 맥비님 계정의 웹앱(배포) + asa067714 계정의 라이브러리(코드)', '맥비님 · asa067714'],
-                ['시트 미러', 'GitHub Actions · 매일 05:00 Supabase → 운영 시트 "자료 DB (Supabase 미러)" 탭', 'asa067714 (서비스 계정)'],
-              ].map(([role_, svc, acct]) => (
+              {([
+                ['사이트 주소', 'macbe-archive.com — Vercel에서 구입·관리', 'https://vercel.com/pmgomdols-projects/macbe-archive/settings/domains', '안재찬 (asa067714, pmgomdol Vercel)'],
+                ['코드 저장소', 'GitHub · PMgomdol/macbee-insight (main 자동 배포)', 'https://github.com/PMgomdol/macbee-insight', '안재찬 (GitHub 핸들 PMgomdol)'],
+                ['배포·호스팅', 'Vercel · pmgomdols-projects/macbe-archive (서울 리전)', 'https://vercel.com/pmgomdols-projects/macbe-archive', '안재찬 (asa067714)'],
+                ['데이터·로그인', 'Supabase · bmsoolrfostbxepzkesy (서울 리전)', 'https://supabase.com/dashboard/project/bmsoolrfostbxepzkesy', '안재찬 (asa067714)'],
+                ['구글 로그인', 'Google Cloud · OAuth 클라이언트 "macbe-archive-web"', 'https://console.cloud.google.com/apis/credentials', '안재찬 (asa067714 구글)'],
+                ['방문 분석', 'Google Analytics 4 · G-LT2K006JPF (속성 549238948)', 'https://analytics.google.com/analytics/web/#/p549238948', '안재찬 (asa067714 구글)'],
+                ['행동 분석', 'PostHog · 프로젝트 498450', 'https://app.posthog.com/project/498450', '안재찬 (asa067714)'],
+                ['AI 분석', 'Google Gemini API (AI Studio 키)', 'https://aistudio.google.com/apikey', '안재찬 (asa067714 구글)'],
+                ['알림 메일', 'Google Apps Script · MailApp', 'https://script.google.com/home', '안재찬 (asa067714 구글)'],
+                ['파일 저장', 'Google Drive · 맥비님 드라이브 "맥비기획 자료실 (자료실 업로드)" 폴더', null, '맥비 (개인 구글)'],
+                ['드라이브 연결', 'Apps Script · 맥비님 계정의 웹앱(배포) + asa067714 계정의 라이브러리(코드)', 'https://script.google.com/d/1bJq2z-iH2JyleL0WNhoSL2KgK0h88FQIw5zcurLQku3kL8-HdqO-U7Q1/edit', '맥비 · 안재찬'],
+                ['시트 미러', 'GitHub Actions · 매일 05:00 Supabase → 운영 시트 "자료 DB (Supabase 미러)" 탭', 'https://github.com/PMgomdol/macbee-insight/actions/workflows/mirror-sheet.yml', '안재찬 (서비스 계정)'],
+                ['운영 시트', '맥비기획_자료실_DB (읽기 전용 미러 탭 포함)', 'https://docs.google.com/spreadsheets/d/1vAn3ufrdf2qDjiRGf82S5096cZ7v1cIUnrTAkZBeqWM/edit', '안재찬 (asa067714 구글)'],
+              ] as [string, string, string | null, string][]).map(([role_, svc, href, acct]) => (
                 <tr key={role_} className="border-b border-[var(--border)] last:border-0 align-top">
                   <td className="py-1.5 pr-3 font-medium whitespace-nowrap">{role_}</td>
-                  <td className="py-1.5 pr-3 text-[var(--muted)]">{svc}</td>
+                  <td className="py-1.5 pr-3 text-[var(--muted)]">
+                    {svc}
+                    {href && <>{' '}<Ext href={href}>열기</Ext></>}
+                  </td>
                   <td className="py-1.5 pr-3 text-[var(--muted-2)] whitespace-nowrap">{acct}</td>
                 </tr>
               ))}
@@ -640,7 +647,7 @@ export default async function GuidePage() {
           </table>
         </div>
         <Note>
-          계정은 모두 <K>asa067714@gmail.com</K>(개인 계정)으로 통일하는 게 원칙이에요 — 회사 계정은 쓰지도 노출하지도 않아요.
+          담당이 바뀌면 이 표의 계정들을 넘겨받아야 해요. 지금은 대부분 한 사람 명의라, 장기적으로 어떻게 나눌지는 운영 회의에서 정해요.
           <br />Vercel은 <b>pmgomdols-projects</b>가 진짜 운영 프로젝트예요. 이름이 같은 빈 중복 프로젝트가 따로 있어서,
           환경변수(env)를 거기 넣으면 조용히 안 먹어요 — 설정은 반드시 <b>pmgomdol 계정 대시보드</b>에서 해요.
         </Note>
