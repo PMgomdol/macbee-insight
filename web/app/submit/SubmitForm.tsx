@@ -167,7 +167,7 @@ export function SubmitForm({ categories }: Props) {
     }
   }
 
-  const MAX_BYTES = 10 * 1024 * 1024;
+  const MAX_BYTES = 30 * 1024 * 1024;
   function fmtMB(b: number) { return (b / 1024 / 1024).toFixed(1) + 'MB'; }
 
   function switchMode(next: 'url' | 'file') {
@@ -216,7 +216,7 @@ export function SubmitForm({ categories }: Props) {
     if (f.size > MAX_BYTES) {
       setAnalyzeMsg({
         kind: 'error',
-        text: `${f.name} — ${fmtMB(f.size)}로 너무 커요. 10MB까지 올릴 수 있어요. PDF로 압축하거나 Google Drive 링크를 URL로 등록해보세요.`,
+        text: `${f.name} — ${fmtMB(f.size)}로 너무 커요. 30MB까지 올릴 수 있어요. PDF로 압축하거나 Google Drive 링크를 URL로 등록해보세요.`,
       });
       return;
     }
@@ -240,7 +240,7 @@ export function SubmitForm({ categories }: Props) {
         if (error) {
           setAnalyzeMsg({
             kind: 'error',
-            text: `파일을 못 올렸어요 — ${error.message}. 크기(10MB 이하)와 인터넷 연결을 확인하고 다시 시도해주세요.`,
+            text: `파일을 못 올렸어요 — ${error.message}. 크기(30MB 이하)와 인터넷 연결을 확인하고 다시 시도해주세요.`,
           });
           return;
         }
@@ -386,7 +386,7 @@ export function SubmitForm({ categories }: Props) {
                 ? '올리고 있어요...'
                 : dragOver
                   ? '여기에 놓으면 올라가요'
-                  : fileName ?? '파일을 끌어다 놓거나 눌러서 고르기 (10MB까지)'}
+                  : fileName ?? '파일을 끌어다 놓거나 눌러서 고르기 (30MB까지)'}
             </span>
           </label>
           {fileUrl && !uploading && (

@@ -13,7 +13,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { notifyDriveTransferFailed } from '@/lib/notify';
 
 export const ARCHIVE_BUCKET = 'archive-files';
-const MAX_BYTES = 10 * 1024 * 1024;
+const MAX_BYTES = 30 * 1024 * 1024;
 
 export type DriveUploadResult = {
   ok: true;
@@ -54,7 +54,7 @@ export function driveFileName(title: string, storagePath: string): string {
   return ext ? `${base}.${ext}` : base;
 }
 
-/** 웹앱 호출 — 바이트를 base64로 실어 보낸다 (10MB → 약 13.4MB, Apps Script POST 한도 50MB). */
+/** 웹앱 호출 — 바이트를 base64로 실어 보낸다 (30MB → 약 40MB, Apps Script POST 한도 50MB). */
 export async function uploadToDrive(args: { name: string; mimeType: string; bytes: Uint8Array }): Promise<DriveUploadResult> {
   const url = process.env.DRIVE_WEBAPP_URL;
   const secret = process.env.DRIVE_WEBAPP_SECRET;

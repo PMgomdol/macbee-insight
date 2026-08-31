@@ -43,6 +43,13 @@ export const TYPE_META: Record<ChangeType, { label: string; color: string }> = {
 
 export const CHANGELOG: Release[] = [
   {
+    date: '2026-08-31',
+    title: '파일 업로드 한도 30MB',
+    changes: [
+      { type: 'improve', text: '[자료 등록](/submit)의 파일 업로드 한도를 10MB에서 30MB로 늘렸어요. 파일 저장이 드라이브로 옮겨가 용량 여유가 생겼어요. (전송 방식의 기술 한계가 약 35MB라 여유를 두고 30MB로 정했어요)' },
+    ],
+  },
+  {
     date: '2026-08-30',
     title: '드라이브 저장 연결 준비 · 관리자 단독 승인 · 한글 파일명 업로드 수정',
     changes: [

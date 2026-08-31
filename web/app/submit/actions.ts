@@ -526,7 +526,7 @@ const MIME_FALLBACK: Record<string, string> = {
 };
 
 // 'use server' 파일은 async 함수만 export 가능 (Next 16) — 내부 상수는 export 금지
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB — 버킷 file_size_limit과 일치
+const MAX_UPLOAD_BYTES = 30 * 1024 * 1024; // 30MB — 버킷 file_size_limit과 일치 (하드캡: Apps Script POST 50MB ÷ base64 1.34 ≈ 35MB)
 
 /**
  * 업로드 허가증(signed upload URL) 발급.
@@ -541,7 +541,7 @@ export async function createUploadTicket(
   if (!name) return { ok: false, error: '파일 이름이 없어요' };
   if (!size || size <= 0) return { ok: false, error: '비어있는 파일이에요' };
   if (size > MAX_UPLOAD_BYTES) {
-    return { ok: false, error: `파일이 ${(size / 1024 / 1024).toFixed(1)}MB예요. 10MB까지 올릴 수 있어요. 더 큰 파일은 Google Drive 링크를 URL로 등록해주세요.` };
+    return { ok: false, error: `파일이 ${(size / 1024 / 1024).toFixed(1)}MB예요. 30MB까지 올릴 수 있어요. 더 큰 파일은 Google Drive 링크를 URL로 등록해주세요.` };
   }
   // 브라우저에서 스크립트로 해석될 수 있는 확장자 거부 — 공개 버킷 URL을 통한 XSS·피싱 방지
   const uploadExt = (name.split('.').pop() || '').toLowerCase();
