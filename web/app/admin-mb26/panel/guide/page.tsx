@@ -293,7 +293,7 @@ export default async function GuidePage() {
         </Step>
         <Note>
           드라이브 폴더는 맥비님 계정 소유임. 파일은 &ldquo;링크가 있는 사람은 보기&rdquo;로만 공유되고, 폴더 전체가 공개되진 않음.
-          연결 구성은 <S n="18" />에 있음. (2026-08-30 기준 연결 진행 중 — 완료 전까지는 사이트 저장소에 그대로 있음.)
+          연결 구성은 <S n="18" />에 있음. (2026-08-31 연결 완료)
         </Note>
         <Shot src="/guide-assets/15-drive-folder.png" alt="맥비님 드라이브의 자료실 업로드 폴더" caption="드라이브 폴더 — 승인된 파일이 정리된 제목으로 쌓임" />
 
