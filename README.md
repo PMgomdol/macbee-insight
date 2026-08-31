@@ -33,10 +33,10 @@ chan-macbee/
 │   └── supabase/      # schema.sql + 마이그레이션
 ├── apps_script/       # 레거시 Phase 1 (Google Apps Script). 현재 미사용, 히스토리 보존
 ├── scripts/           # 프로젝트 레벨 스크립트
-├── docs/              # 기획안·회의자료·가이드 (UX_Writing_가이드.md 등)
+├── docs/              # 기획안·가이드 (UX_Writing_가이드.md 등)
+│   └── meetings/      # 미팅 진행안·브리핑 (녹취·회의록 원본은 private/ — gitignore)
 ├── proposals/         # 운영 효율화 제안
-├── templates/ · prototype/ · macbee-document/   # 자료·시안·문서 원본
-└── meeting/           # 내부 회의록 (gitignore)
+└── templates/ · prototype/ · macbee-document/   # 자료·시안·문서 원본
 ```
 
 ## 개발
