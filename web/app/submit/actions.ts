@@ -92,9 +92,12 @@ async function findDuplicate(externalUrl: string, fileUrl: string): Promise<Dupl
 }
 
 function escapeIlike(s: string): string {
-  // PostgREST .or() ilike 값에 % _ , ( ) 들어가면 깨짐 — 보수적으로 제거 + 와일드카드 감싸기
-  const safe = s.replace(/[%_,()]/g, '');
-  return `%${safe}%`;
+  // PostgREST .or() ilike 값에 , ( ) 가 들어가면 문법이 깨지고 % 는 와일드카드다.
+  // 퍼센트 인코딩 URL(한글 경로 등)은 '%' 이후를 버리고 호스트+경로 접두부만 후보 조회에 쓴다 —
+  // 예전처럼 % 를 통째로 지우면 인코딩 URL이 영영 매칭 안 되던 미탐의 2차 원인.
+  // 정확 판정은 이후 normalizeUrl 전체 비교가 하므로 후보는 넓게 잡아도 된다.
+  const prefix = s.split('%')[0].replace(/[,()]/g, '');
+  return `%${prefix}%`;
 }
 
 /** 외부에서 사용 — 자료 등록 폼이 분석 직후 호출하여 미리 중복 알림 */
