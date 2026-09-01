@@ -25,6 +25,12 @@ export function SiteFooter() {
               </p>
             </div>
 
+            {/* 운영팀 — 2026-09 오픈 시 추가 (B안: 이름·닉네임만) */}
+            <div className="flex flex-col gap-2">
+              <h3 className="font-bold text-sm text-white/90">맥비기획 자료실 운영팀</h3>
+              <p className="text-xs">맥비 · 안재찬 · 서지연 · 임종헌 · 김소정</p>
+            </div>
+
           </div>
 
           {/* 맥비기획 채널 */}
