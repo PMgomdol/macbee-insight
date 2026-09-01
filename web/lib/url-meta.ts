@@ -325,9 +325,11 @@ export function normalizeUrl(raw: string): string {
       if (vid) return `https://youtube.com/watch?v=${vid}`;
     }
 
-    const trackingParams = /^(utm_|gclid|fbclid|mc_|igshid|_hsenc|_hsmi|ref|ref_|source)$/i;
+    // utm_/mc_/_hs 는 접두 매치 — 종전 정규식은 $ 앵커 때문에 utm_source 등이 매치되지 않아
+    // 트래킹 파라미터가 사실상 한 번도 제거되지 않았음 (2026-09-01 중복 미탐 원인).
+    const isTracking = (k: string) => /^(utm_|mc_|_hs)/i.test(k) || /^(gclid|fbclid|igshid|ref|ref_|source)$/i.test(k);
     const keep: [string, string][] = [];
-    u.searchParams.forEach((v, k) => { if (!trackingParams.test(k)) keep.push([k, v]); });
+    u.searchParams.forEach((v, k) => { if (!isTracking(k)) keep.push([k, v]); });
     keep.sort(([a], [b]) => a.localeCompare(b));
     u.search = '';
     keep.forEach(([k, v]) => u.searchParams.append(k, v));
