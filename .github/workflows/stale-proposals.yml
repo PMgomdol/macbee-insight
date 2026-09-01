@@ -1,0 +1,29 @@
+name: 등록요청 7일 미검수 리마인드
+
+# 매일 아침 검토 대기 7일 초과 건을 확인해 운영진에게 메일 리마인드 (2026-08-31 회의 결정).
+# 실제 판단·발송은 사이트의 /api/cron/stale-proposals가 수행. 여기는 매일 호출만 한다.
+
+on:
+  schedule:
+    - cron: '30 0 * * *' # 매일 09:30 KST
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stale-proposals
+  cancel-in-progress: true
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 미검수 리마인드 호출
+        run: |
+          code=$(curl -s -o /tmp/out.json -w "%{http_code}" --max-time 30 -X POST \
+            -H "Authorization: Bearer ${{ secrets.STALE_CRON_SECRET }}" \
+            "https://macbe-archive.com/api/cron/stale-proposals")
+          cat /tmp/out.json; echo
+          echo "status: $code"
+          test "$code" = "200"

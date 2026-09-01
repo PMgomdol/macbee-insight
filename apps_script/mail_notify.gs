@@ -5,6 +5,8 @@
  *   proposal_submitted → 운영진에게 "새 자료 제안" 알림
  *   proposal_result    → 제안자에게 승인/반려 결과 알림
  *   feedback_submitted → 운영진에게 "새 의견([의견 보내기])" 알림
+ *   drive_transfer_failed → 운영진에게 드라이브 전송 실패 알림
+ *   stale_proposals    → 운영진에게 7일 이상 미검수 등록 요청 리마인드
  *
  * 보안:
  *   Script Property MAIL_SECRET과 일치해야 발송.
@@ -71,6 +73,7 @@ function doPost(e) {
     if (body.event === 'proposal_result') return mailJson_(sendProposalResult_(data));
     if (body.event === 'feedback_submitted') return mailJson_(sendFeedbackSubmitted_(data));
     if (body.event === 'drive_transfer_failed') return mailJson_(sendDriveTransferFailed_(data));
+    if (body.event === 'stale_proposals') return mailJson_(sendStaleProposals_(data));
     return mailJson_({ ok: false, error: 'unknown event: ' + body.event });
   } catch (err) {
     return mailJson_({ ok: false, error: String(err) });
@@ -239,6 +242,32 @@ function sendDriveTransferFailed_(d) {
   MailApp.sendEmail({
     to: recipients.join(','),
     subject: '[맥비 자료실] 드라이브 전송 실패 — ' + title,
+    body: lines.join('\n'),
+    name: MAIL_NOTIFY.SENDER_NAME,
+  });
+  return { ok: true, sent: recipients.length };
+}
+
+/** 7일 이상 미검수 등록 요청 — 운영진에게 리마인드 (2026-08-31 회의 결정) */
+function sendStaleProposals_(d) {
+  var recipients = resolveRecipients_(d.admins);
+  if (!recipients.length) return { ok: false, error: 'no recipients' };
+  var items = d.items || [];
+  if (!items.length) return { ok: false, error: 'no items' };
+
+  var lines = ['검토를 기다린 지 7일이 넘은 등록 요청이 있어요.', ''];
+  items.forEach(function (it) {
+    var who = it.proposer ? String(it.proposer) : '익명';
+    lines.push('· ' + String(it.title || '(제목 없음)') + ' — ' + who + ' 제안, ' + it.days + '일 경과');
+  });
+  lines.push('');
+  lines.push('바로 검토하기: ' + MAIL_NOTIFY.SITE_URL + '/admin-mb26/panel/requests');
+  lines.push('');
+  lines.push('— 맥비기획 자료실 자동 알림');
+
+  MailApp.sendEmail({
+    to: recipients.join(','),
+    subject: '[맥비 자료실] 검토 대기 ' + items.length + '건 — 7일 경과 리마인드',
     body: lines.join('\n'),
     name: MAIL_NOTIFY.SENDER_NAME,
   });

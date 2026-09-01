@@ -108,3 +108,13 @@ export async function notifyDriveTransferFailed(d: DriveFailPayload) {
   if (!admins.length) return;
   return post('drive_transfer_failed', { ...d, admins });
 }
+
+export type StaleProposalItem = { id: string; title: string; proposer?: string | null; days: number };
+
+/** 7일 이상 미검수 등록 요청 → 운영진 리마인드 (api/cron/stale-proposals에서 호출) */
+export async function notifyStaleProposals(items: StaleProposalItem[]) {
+  if (!items.length) return;
+  const admins = await reviewerEmails();
+  if (!admins.length) return;
+  return post('stale_proposals', { items, admins });
+}
