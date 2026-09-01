@@ -117,6 +117,7 @@ export type AnalyzeResult = {
   subCategory?: string;
   tags?: string[];
   format?: string;
+  usage?: string;
   isFile?: boolean;
   publishedAt?: string | null;
   finalUrl?: string;
@@ -312,6 +313,7 @@ export async function analyzeFile(fileUrl: string, fileName: string): Promise<An
         subCategory: '',
         tags: [],
         format: fmtByExt[ext] ?? '',
+        usage: '',
         isFile: true,
         publishedAt: null,
         aiUsed: false,
@@ -322,7 +324,9 @@ export async function analyzeFile(fileUrl: string, fileName: string): Promise<An
     cls = await classify(fileUrl, { title: base, description: bodyText });
   }
 
-  const format = fmtByExt[ext] ?? cls.format;
+  // AI가 실제 내용(바이트·본문)을 읽고 판단했으면 AI 형식을 신뢰, 실패(휴리스틱 폴백) 시에만 확장자로 강제.
+  // xlsx→무조건 템플릿 강제가 '엑셀에 정리한 글'을 오분류하던 문제 보정 (2026-09-01, #931 사례)
+  const format = cls.aiUsed ? (cls.format || fmtByExt[ext] || '') : (fmtByExt[ext] ?? cls.format);
 
   return {
     ok: true,
@@ -332,6 +336,7 @@ export async function analyzeFile(fileUrl: string, fileName: string): Promise<An
     subCategory: cls.subCategory,
     tags: cls.tags,
     format,
+    usage: cls.usage,
     isFile: true,
     publishedAt: null,
     aiUsed: cls.aiUsed,
@@ -378,6 +383,7 @@ async function analyzeYouTube(url: string): Promise<AnalyzeResult> {
     subCategory: cls.subCategory,
     tags: cls.tags,
     format: '영상',
+    usage: '읽는것',
     isFile: false,
     publishedAt: meta.publishedAt,
     finalUrl: '',
@@ -417,6 +423,7 @@ export async function analyzeUrl(url: string): Promise<AnalyzeResult> {
     subCategory: cls.subCategory,
     tags: cls.tags,
     format: cls.format,
+    usage: cls.usage,
     isFile: isFileUrl(meta.finalUrl),
     publishedAt: meta.publishedAt,
     finalUrl: meta.finalUrl,
@@ -447,6 +454,8 @@ export async function submitProposal(formData: FormData): Promise<SubmitResult |
   const sub = String(formData.get('sub_category') ?? '').trim();
   const tags = String(formData.get('tags') ?? '').split(',').map((t) => t.trim()).filter(Boolean);
   const format = String(formData.get('format') ?? '').trim();
+  const usageRaw = String(formData.get('usage') ?? '').trim();
+  const usage = usageRaw === '쓰는것' || usageRaw === '읽는것' ? usageRaw : null;
   const publishedAt = String(formData.get('published_at') ?? '').trim();
   const proposer = String(formData.get('proposer') ?? '').trim();
   const proposer_email = String(formData.get('proposer_email') ?? '').trim();
@@ -471,6 +480,7 @@ export async function submitProposal(formData: FormData): Promise<SubmitResult |
     sub_category: sub || null,
     tags: tags.length ? tags : null,
     format: format || null,
+    usage,
     published_at: publishedAt && /^\d{4}-\d{2}-\d{2}$/.test(publishedAt) ? publishedAt : null,
     proposer: proposer || null,
     proposer_email: proposer_email || null,

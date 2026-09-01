@@ -42,7 +42,7 @@ export default async function RequestsPage() {
     sb.from('profile').select('id', { count: 'exact', head: true }).in('role', ['reviewer', 'admin']),
     sb
       .from('staging_proposal')
-      .select('id, title, summary, external_url, file_url, main_category, sub_category, tags, format, proposer, proposed_at, approvers')
+      .select('id, title, summary, external_url, file_url, main_category, sub_category, tags, format, usage, proposer, proposed_at, approvers')
       .eq('status', 'pending')
       .order('proposed_at', { ascending: true }),
     getCategories(),

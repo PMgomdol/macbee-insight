@@ -31,6 +31,7 @@ export function SubmitForm({ categories }: Props) {
   const [sub, setSub] = useState('');
   const [tags, setTags] = useState('');
   const [format, setFormat] = useState('');
+  const [usage, setUsage] = useState(''); // AI 용도 판정(쓰는것/읽는것) — 화면 비노출, 승인 시 메뉴 배치에 사용
   const [publishedAt, setPublishedAt] = useState('');
   const [proposer, setProposer] = useState('');
   const [proposerEmail, setProposerEmail] = useState('');
@@ -95,6 +96,7 @@ export function SubmitForm({ categories }: Props) {
     setSub('');
     setTags('');
     setFormat('');
+    setUsage('');
     setPublishedAt('');
     setFileName(null);
     setAnalyzeMsg(null);
@@ -132,6 +134,7 @@ export function SubmitForm({ categories }: Props) {
     if (r.subCategory) setSub(r.subCategory);
     if (r.tags) setTags(r.tags.join(', '));
     if (r.format) setFormat(r.format);
+    setUsage(r.usage ?? '');
     if (r.publishedAt) setPublishedAt(r.publishedAt);
     if (r.finalUrl && r.finalUrl !== url) setFinalUrl(r.finalUrl);
     else setFinalUrl('');
@@ -183,6 +186,7 @@ export function SubmitForm({ categories }: Props) {
     setSub('');
     setTags('');
     setFormat('');
+    setUsage('');
     setPublishedAt('');
     setFileName(null);
     setAnalyzeMsg(null);
@@ -280,6 +284,7 @@ export function SubmitForm({ categories }: Props) {
     fd.set('sub_category', sub);
     fd.set('tags', tags);
     fd.set('format', format);
+    fd.set('usage', usage);
     fd.set('published_at', publishedAt);
     fd.set('proposer', proposer);
     fd.set('proposer_email', proposerEmail);

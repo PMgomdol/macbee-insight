@@ -24,6 +24,8 @@ export type ClassifyResult = {
   subCategory: string;
   tags: string[];
   format: string;
+  /** 자료 용도 — 쓰는것(양식·템플릿행) / 읽는것(콘텐츠행) / ''(판정 불가) */
+  usage: '쓰는것' | '읽는것' | '';
   aiUsed: boolean;
   error?: string;
 };
@@ -70,8 +72,9 @@ export async function classify(
           sub_category: { type: 'string' },
           tags: { type: 'array', items: { type: 'string' } },
           format: { type: 'string', enum: FORMATS },
+          usage: { type: 'string', enum: ['쓰는것', '읽는것'] },
         },
-        required: ['title_ko', 'summary_ko', 'main_category', 'format', 'tags'],
+        required: ['title_ko', 'summary_ko', 'main_category', 'format', 'tags', 'usage'],
       },
       temperature: 0.2,
     },
@@ -111,6 +114,7 @@ export async function classify(
       subCategory: out.sub_category || '',
       tags: Array.isArray(out.tags) ? out.tags.slice(0, 6) : [],
       format,
+      usage: out.usage === '쓰는것' || out.usage === '읽는것' ? out.usage : '',
       aiUsed: true,
     };
   } catch (e: unknown) {
@@ -163,7 +167,11 @@ function buildVisionPrompt(url: string, meta: { title: string; description: stri
 - main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
 - sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
 - tags: 3~6개. 파일에서 본 핵심 키워드. 한글 우선. 너무 일반적인 단어(UI, 디자인) 단독 금지
-- format: ${FORMATS.join(' | ')} 중 1개. 이미지면 보통 '템플릿' 또는 '가이드'`;
+- format: ${FORMATS.join(' | ')} 중 1개. 이미지면 보통 '템플릿' 또는 '가이드'
+- usage: 자료의 용도. 딱 하나만 선택.
+  · 쓰는것 = 받아서 실무에 활용하는 실물 자료 — 빈 양식·템플릿, 실무 문서의 완성 샘플·예시(기획서·정의서·설계서·보고서·제안서), 체크리스트·계산 시트, 실무용 목록·데이터, 디자인 리소스/에셋. "참고 삼아 내 문서를 만든다"면 쓰는것.
+  · 읽는것 = 읽거나 보면서 지식·의견을 얻는 자료 — 칼럼·후기·Q&A 의견 모음·책·강의·개념 설명 위주 교육 자료.
+  · 경계: 실제 산출물 형태(문서 샘플)면 쓰는것, 산출물 없이 방법을 글로만 설명하면 읽는것.`;
 }
 
 function buildPrompt(url: string, meta: { title: string; description: string; body?: string }, hint?: string) {
@@ -191,7 +199,11 @@ URL: ${url}
   · 가이드 = 방법·절차·매뉴얼을 설명하는 문서
   · 기획서 = 실제 서비스/기능 기획 문서(PRD·화면설계 등)
   · 영상 / 세미나
-  · 아티클 = 위에 안 맞는 읽는 글(블로그·뉴스·칼럼). **템플릿/양식/샘플 성격이면 아티클로 두지 말 것**${hint ? `\n  · URL 기반 형식 힌트: ${hint} (특별한 이유 없으면 참고)` : ''}`;
+  · 아티클 = 위에 안 맞는 읽는 글(블로그·뉴스·칼럼). **템플릿/양식/샘플 성격이면 아티클로 두지 말 것**${hint ? `\n  · URL 기반 형식 힌트: ${hint} (특별한 이유 없으면 참고)` : ''}
+- usage: 자료의 용도. 딱 하나만 선택.
+  · 쓰는것 = 받아서 실무에 활용하는 실물 자료 — 빈 양식·템플릿, 실무 문서의 완성 샘플·예시(기획서·정의서·설계서·보고서·제안서), 체크리스트·계산 시트, 실무용 목록·데이터(단어·질문 리스트), 디자인 리소스/에셋. "참고 삼아 내 문서를 만든다"면 쓰는것.
+  · 읽는것 = 읽거나 보면서 지식·의견을 얻는 자료 — 칼럼·아티클·후기·Q&A 의견 모음·책·강의·개념 설명 위주 교육 자료.
+  · 경계: 실제 산출물 형태(문서 샘플)면 쓰는것, 산출물 없이 방법을 글로만 설명하면 읽는것.`;
 }
 
 function buildVideoPrompt(url: string, meta: { title: string; description: string }) {
@@ -210,7 +222,8 @@ function buildVideoPrompt(url: string, meta: { title: string; description: strin
 - main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
 - sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
 - tags: 3~6개. 영상 핵심 키워드. 한글 우선. 너무 일반적인 단어 단독 금지
-- format: '영상' 고정`;
+- format: '영상' 고정
+- usage: '읽는것' 고정`;
 }
 
 /** 키워드 사전 기반 태그 추출 — heuristic용. 본 사전은 자료실 실제 태그 빈도 기준 */
@@ -311,5 +324,6 @@ function heuristic(url: string, meta: { title: string; description: string }): O
     subCategory: sub,
     tags: extractTags(blob),
     format: guessFormat(url),
+    usage: '', // 휴리스틱으로는 용도 판정하지 않음 — 승인 시 그릇 기준 폴백
   };
 }

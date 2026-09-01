@@ -172,10 +172,13 @@ async function migrateToArchive(row: any, approvers: string[], extraNote?: strin
     status: 'public',
     exposure_grade: 'free',
     notes: note,
-    // 자료 형식이 메뉴 배치 기준: 템플릿만 양식·템플릿, 나머지는 콘텐츠
-    // 파일이 붙어 있으면 기본은 파일 자료(양식·템플릿 메뉴). 내용이 읽을거리인 파일(엑셀에 정리한 글 등)은
-    // 검수 단계에서 운영진이 콘텐츠로 바꿀 수 있음. (2026-08-31 회의 + 9/1 오분류 사례 반영)
-    kind: (row.file_url || row.format === '템플릿') ? 'files' : 'insights',
+    // 메뉴 배치 기준: "받아서 쓰는 자료면 양식·템플릿, 읽거나 보는 자료면 콘텐츠" (2026-09-01 확정)
+    // 등록 시 AI가 내용을 읽고 판정한 usage(쓰는것/읽는것)를 우선 적용.
+    // 판정 없음(내용 못 읽은 zip 등) → 그릇 기준 폴백: 파일이거나 형식=템플릿이면 양식·템플릿.
+    // 운영진은 승인 후 자료 관리에서 언제든 메뉴(kind) 변경 가능.
+    kind: row.usage === '읽는것' ? 'insights'
+      : row.usage === '쓰는것' ? 'files'
+      : (row.file_url || row.format === '템플릿') ? 'files' : 'insights',
   }).select('id').single();
   if (insErr || !inserted) throw new Error('자료실로 옮기지 못했어요 — ' + (insErr?.message ?? 'no id'));
   return inserted.id as number;

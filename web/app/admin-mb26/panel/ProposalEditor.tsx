@@ -16,6 +16,8 @@ type Proposal = {
   sub_category: string | null;
   tags: string[] | null;
   format: string | null;
+  file_url?: string | null;
+  usage?: string | null; // AI 용도 판정 — 쓰는것/읽는것/null(미판정)
 };
 
 type Cat = { main_category: string; sub_category: string | null };
@@ -38,6 +40,12 @@ export function ProposalEditor({ proposal, categories }: { proposal: Proposal; c
 
   const mains = Array.from(new Set(categories.map((c) => c.main_category)));
   const subs = categories.filter((c) => c.main_category === main && c.sub_category).map((c) => c.sub_category!);
+
+  // 승인 시 메뉴 배치 예상 — usage(AI 용도 판정) 우선, 없으면 그릇 기준 폴백 (panel/actions.ts와 동일 규칙)
+  const menuAuto = proposal.usage === '쓰는것' || proposal.usage === '읽는것';
+  const menuDest = proposal.usage === '읽는것' ? '콘텐츠'
+    : proposal.usage === '쓰는것' ? '양식·템플릿'
+    : (proposal.file_url || format === '템플릿') ? '양식·템플릿' : '콘텐츠';
 
   function cancel() {
     setTitle(proposal.title);
@@ -123,6 +131,14 @@ export function ProposalEditor({ proposal, categories }: { proposal: Proposal; c
           <span className="font-medium">{main || '미분류'}</span>
           {sub && <span>· {sub}</span>}
           {format && <span className="slds-badge">{format}</span>}
+          <span
+            className="slds-badge"
+            title={menuAuto
+              ? 'AI가 내용을 읽고 판정한 승인 시 배치 메뉴'
+              : '용도 미판정 — 파일 여부로만 배치. 내용이 읽을거리면 승인 후 자료 관리에서 콘텐츠로 변경'}
+          >
+            메뉴 {menuDest}{menuAuto ? '' : ' ?'}
+          </span>
         </div>
         <button
           type="button"
