@@ -300,6 +300,16 @@ export function isFileUrl(url: string): boolean {
 }
 
 /**
+ * 드라이브 "파일" 링크를 바로 다운로드되는 형태로 변환 (2026-09-01 결정 — 앞으로 등록분은 직다운).
+ * file/d/ID·open?id=ID 형태만 변환하고, 구글 문서(docs/sheets/slides 네이티브)·폴더는 그대로 둔다.
+ */
+export function toDriveDownloadUrl(url: string): string {
+  const m = url.match(/drive\.google\.com\/(?:file\/d\/([\w-]{20,})|open\?id=([\w-]{20,})|uc\?[^#]*\bid=([\w-]{20,}))/);
+  const id = m && (m[1] || m[2] || m[3]);
+  return id ? `https://drive.google.com/uc?export=download&id=${id}` : url;
+}
+
+/**
  * URL 정규화 — 중복 검사용 키. 동일 자료가 다른 변형으로 다시 등록되는 것 방지.
  * - 스킴 https로 통일, 호스트 lowercase, 'm.' / 'www.' 접두어 제거
  * - 트래킹 파라미터(utm_*, gclid, fbclid, ref, ref_) 제거

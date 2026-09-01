@@ -2,7 +2,7 @@
 
 import { after } from 'next/server';
 import { createClient, createAdminClient, createPublicClient } from '@/lib/supabase/server';
-import { fetchUrlMeta, isFileUrl, isYouTubeUrl, normalizeUrl } from '@/lib/url-meta';
+import { fetchUrlMeta, isFileUrl, isYouTubeUrl, normalizeUrl, toDriveDownloadUrl } from '@/lib/url-meta';
 import { safeFetch } from '@/lib/safe-fetch';
 import { tooMany } from '@/lib/rate-limit';
 import { classify, type InlineData } from '@/lib/ai-classify';
@@ -433,8 +433,14 @@ export type SubmitDuplicateResult = { ok: false; duplicate: DuplicateMatch };
 
 export async function submitProposal(formData: FormData): Promise<SubmitResult | SubmitDuplicateResult> {
   if (await tooMany('submit', 15)) return { ok: false, error: BUSY };
-  const url = String(formData.get('url') ?? '').trim();
-  const fileUrl = String(formData.get('file_url') ?? '').trim();
+  let url = String(formData.get('url') ?? '').trim();
+  let fileUrl = String(formData.get('file_url') ?? '').trim();
+  // 드라이브·구글문서 링크를 URL로 등록하면 파일 자료로 취급 (2026-08-31 회의 — 맥비님 등록 경로).
+  // 드라이브 "파일" 링크는 바로 다운로드되는 주소로 변환해 저장한다.
+  if (!fileUrl && url && isFileUrl(url)) {
+    fileUrl = toDriveDownloadUrl(url);
+    url = '';
+  }
   const title = String(formData.get('title') ?? '').trim();
   const summary = String(formData.get('summary') ?? '').trim();
   const main = String(formData.get('main_category') ?? '').trim();

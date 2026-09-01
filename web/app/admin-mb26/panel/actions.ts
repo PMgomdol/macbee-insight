@@ -173,7 +173,9 @@ async function migrateToArchive(row: any, approvers: string[], extraNote?: strin
     exposure_grade: 'free',
     notes: note,
     // 자료 형식이 메뉴 배치 기준: 템플릿만 양식·템플릿, 나머지는 콘텐츠
-    kind: row.format === '템플릿' ? 'files' : 'insights',
+    // 파일이 붙어 있으면 기본은 파일 자료(양식·템플릿 메뉴). 내용이 읽을거리인 파일(엑셀에 정리한 글 등)은
+    // 검수 단계에서 운영진이 콘텐츠로 바꿀 수 있음. (2026-08-31 회의 + 9/1 오분류 사례 반영)
+    kind: (row.file_url || row.format === '템플릿') ? 'files' : 'insights',
   }).select('id').single();
   if (insErr || !inserted) throw new Error('자료실로 옮기지 못했어요 — ' + (insErr?.message ?? 'no id'));
   return inserted.id as number;
