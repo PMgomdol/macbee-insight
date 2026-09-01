@@ -32,17 +32,28 @@ async function findDuplicate(externalUrl: string, fileUrl: string): Promise<Dupl
   const targetFile = fileUrl ? normalizeUrl(fileUrl) : '';
   if (!targetExt && !targetFile) return null;
 
+  // DB 후보 조회는 쿼리스트링·스킴을 뗀 "핵심 URL"로 넓게 잡는다.
+  // 제출본에만 utm 등이 붙어 있으면 원본 그대로의 ilike로는 후보가 안 잡혀
+  // 정규화 비교까지 가지 못하던 미탐(2026-08-31 회의 지적) 방지.
+  const coreOf = (normalized: string) => {
+    const yt = normalized.match(/youtube\.com\/watch\?v=([\w-]+)/); // 유튜브는 영상 ID로 (youtu.be 변형까지 매칭)
+    if (yt) return yt[1];
+    return normalized.replace(/^https:\/\//, '').split('?')[0];
+  };
+  const coreExt = targetExt ? coreOf(targetExt) : '';
+  const coreFile = targetFile ? coreOf(targetFile) : '';
+
   // 1) archive_item — public 게시본
   const arch = await sb
     .from('archive_item')
     .select('id, title, status, kind, external_url, file_url')
     .or(
       [
-        targetExt ? `external_url.ilike.${escapeIlike(externalUrl)}` : '',
-        targetFile ? `file_url.ilike.${escapeIlike(fileUrl)}` : '',
+        coreExt ? `external_url.ilike.${escapeIlike(coreExt)}` : '',
+        coreFile ? `file_url.ilike.${escapeIlike(coreFile)}` : '',
       ].filter(Boolean).join(',')
     )
-    .limit(20);
+    .limit(50);
   for (const r of arch.data ?? []) {
     const ext = (r as any).external_url as string | null;
     const fp = (r as any).file_url as string | null;
@@ -61,11 +72,11 @@ async function findDuplicate(externalUrl: string, fileUrl: string): Promise<Dupl
     .in('status', ['pending', 'approved', 'rejected'])
     .or(
       [
-        targetExt ? `external_url.ilike.${escapeIlike(externalUrl)}` : '',
-        targetFile ? `file_url.ilike.${escapeIlike(fileUrl)}` : '',
+        coreExt ? `external_url.ilike.${escapeIlike(coreExt)}` : '',
+        coreFile ? `file_url.ilike.${escapeIlike(coreFile)}` : '',
       ].filter(Boolean).join(',')
     )
-    .limit(20);
+    .limit(50);
   for (const r of st.data ?? []) {
     const ext = (r as any).external_url as string | null;
     const fp = (r as any).file_url as string | null;

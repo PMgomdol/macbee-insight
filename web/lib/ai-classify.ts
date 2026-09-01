@@ -127,6 +127,9 @@ export async function classify(
  */
 export function cleanTitle(raw: string): string {
   let t = raw.normalize('NFC').trim();
+  // "[EN] " 접두(영어 자료 표기 — 2026-08-31 회의 규칙)는 장식이 아니므로 떼어뒀다가 마지막에 되붙인다
+  const enPrefix = /^\[EN\]\s*/i.test(t);
+  if (enPrefix) t = t.replace(/^\[EN\]\s*/i, '');
   // 앞쪽 이모지·기호·구분자 반복 제거
   t = t.replace(/^(?:[\p{Extended_Pictographic}\p{So}\p{Sk}\uFE0F\u200D\s|·•\-–—:~]+)+/u, '');
   // 시리즈 번호 접두: "#819." "#819" "819화." "[DailyPrompt] " "Vol.3 " "EP.12 " "1편." 등 (최대 2번 반복)
@@ -138,7 +141,8 @@ export function cleanTitle(raw: string): string {
   // 사이트명 꼬리: " | 사이트" 만 제거 (대시는 부제로 쓰이는 일이 많아 보존)
   t = t.replace(/\s+\|\s+[^|]{1,30}$/u, '');
   t = t.replace(/\s{2,}/g, ' ').trim();
-  return (t || raw.trim()).slice(0, 200);
+  const core = (t || raw.replace(/^\[EN\]\s*/i, '').trim()).slice(0, 195);
+  return enPrefix ? `[EN] ${core}` : core.slice(0, 200);
 }
 
 function buildVisionPrompt(url: string, meta: { title: string; description: string }) {
@@ -151,6 +155,7 @@ function buildVisionPrompt(url: string, meta: { title: string; description: stri
 
 규칙:
 - title_ko, summary_ko는 한글. 파일에 영문이 보이면 번역해서 한글 제목/요약 작성.
+- 파일 내용이 영어 자료면 title_ko 맨 앞에 "[EN] "을 붙일 것. 한국어 자료에는 붙이지 않음.
 - summary_ko는 1문장. 파일에 보이는 실제 내용("어떤 자료이고 무슨 주제를 다루는지")을 구체적으로.
   파일명만 가지고 추측하지 말 것 — 본문/이미지에서 본 것만 기술.
   **명사구로 마무리** — "~을 정리한 자료", "~용 템플릿", "~을 담은 가이드" 형태. "~합니다/~입니다" 종결어미 금지.
@@ -177,6 +182,7 @@ URL: ${url}
   ${meta.body ? '**본문 발췌를 기준으로 작성**. og 설명이 사이트 소개/광고문구면 무시하고 본문 내용 우선.' : '알 수 없으면 "확인 불가".'}
 - title_ko도 본문과 og 제목이 다르면 실제 글 내용에 맞는 쪽으로.
 - title_ko에서 **이모지·특수기호, 시리즈 번호(#819, 819화, [시리즈명], Vol.3 등), 사이트명 꼬리(" | 블로그명", " - 회사명")는 제거**하고 글 내용을 나타내는 제목만 남길 것.
+- **원문이 영어로 된 사이트/글이면 title_ko 맨 앞에 "[EN] "을 붙일 것** (그 뒤는 한글 번역 제목). 한국어 자료에는 붙이지 않음.
 - main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
 - sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
 - tags: 3~6개. 한글 우선. 고유명사는 한글+영문 병기 가능. 너무 일반적인 단어(UI, 디자인) 단독 금지
