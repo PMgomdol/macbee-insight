@@ -76,7 +76,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AtlaskitProvider>
         <NavProgress />
         <CardClickTracker />
-        <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)] z-50">
+        {/* pointer-events-auto: 모바일 메뉴(Vaul)가 열리면 body에 pointer-events:none가 걸리는데,
+            헤더는 계속 살아있어야(로고 홈이동·햄버거→X 닫기) 하므로 subtree로 복원한다. */}
+        <header className="border-b border-[var(--border)] sticky top-0 bg-[var(--bg)] z-50 pointer-events-auto">
           <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3">
             <Link
               href="/"
