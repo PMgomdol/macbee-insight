@@ -62,14 +62,14 @@ export default async function Home() {
   const topTags = await getTopTags(5);
 
   return (
-    <div className="flex flex-col items-center gap-10 sm:gap-16 pt-8 sm:pt-20 pb-10">
+    <div className="flex flex-col items-center gap-10 sm:gap-16 pt-9 sm:pt-20 pb-10">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSONLD) }}
       />
       {/* 중앙 검색 영역 */}
       <section
-        className="w-full max-w-2xl flex flex-col items-center gap-5 sm:gap-6"
+        className="w-full max-w-2xl flex flex-col items-center gap-5 sm:gap-6 pb-1"
         aria-label="자료 검색"
       >
         <div className="flex flex-col items-center gap-2 text-center px-2">
