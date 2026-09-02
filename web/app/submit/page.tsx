@@ -17,7 +17,9 @@ export default async function SubmitPage() {
       <section className="flex flex-col gap-1">
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">자료 등록</h1>
         <p className="text-sm text-[var(--muted)]">
-          URL만 붙여넣으면 자동으로 정리돼요. 운영진 검토를 거쳐 자료실에 올라가요.
+          기획자의 성장에 도움이 되는 자료가 있다면 무엇이든 등록해 주세요.
+          <br />
+          운영진 검수 후 자료실에 등록돼요.
         </p>
       </section>
 
