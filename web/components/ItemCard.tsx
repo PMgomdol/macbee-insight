@@ -1,5 +1,5 @@
 import type { ArchiveItem } from '@/types/db';
-import { ExternalLink, Download, PlayCircle, Eye } from 'lucide-react';
+import { ExternalLink, Download, PlayCircle } from 'lucide-react';
 
 // 카드 배지 라벨 — 메뉴(kind)와 무관하게 실제 매체 기준.
 // 콘텐츠 메뉴 안의 PDF 가이드도 '파일' 배지를 달아야 다운로드 여부를 즉시 알 수 있음.
@@ -29,11 +29,11 @@ function isDownload(item: ArchiveItem): boolean {
   return /\.(pdf|zip|docx?|pptx?|xlsx?|hwpx?|csv|key|odt|ods|odp)($|[?#])/.test(u);
 }
 
-/** 오른쪽 아래 액션 표시 — 무엇을 클릭하는지 명확히. */
+/** 오른쪽 아래 액션 표시 — 무엇을 클릭하는지 명확히.
+ *  드라이브 파일도 실질은 '다운로드'로 표기(클릭하면 뷰어가 열리고 거기서 받음) — '미리보기'는 낯설다는 피드백. */
 function cardAction(item: ArchiveItem) {
   if (isVideo(item)) return { Icon: PlayCircle, label: '재생', type: 'video' as const };
-  if (isDrivePreview(item)) return { Icon: Eye, label: '미리보기', type: 'preview' as const };
-  if (isDownload(item)) return { Icon: Download, label: '다운로드', type: 'download' as const };
+  if (isDrivePreview(item) || isDownload(item)) return { Icon: Download, label: '다운로드', type: 'download' as const };
   return { Icon: ExternalLink, label: '바로가기', type: 'external' as const };
 }
 

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { track } from '@/lib/track';
+import { isInAppBrowser } from '@/lib/in-app-browser';
 
 /**
  * 카드 클릭(좌/중클릭) 시:
@@ -40,6 +41,22 @@ export function CardClickTracker() {
         from: window.location.pathname,
         action: (target.dataset.cardAction as 'download' | 'external' | 'video' | 'preview') ?? 'external',
       });
+
+      // 카톡 등 인앱 브라우저: target=_blank가 새 탭을 못 열고 같은 웹뷰를 교체해
+      // 뒤로가기 시 목록이 아니라 앱(채팅)으로 빠져나간다. 같은 탭으로 이동시켜
+      // 웹뷰 히스토리에 목록→상세를 쌓아 뒤로가기가 카드 페이지로 복귀하게 한다.
+      // (평범한 좌클릭만; 미들클릭/보조클릭·데스크톱 새 탭은 그대로 둔다)
+      if (
+        e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey &&
+        target instanceof HTMLAnchorElement && target.target === '_blank' &&
+        isInAppBrowser(navigator.userAgent)
+      ) {
+        const href = target.href;
+        if (href && !href.endsWith('#')) {
+          e.preventDefault();
+          window.location.assign(href);
+        }
+      }
     }
     document.addEventListener('click', handler);
     document.addEventListener('auxclick', handler as EventListener);
