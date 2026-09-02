@@ -9,7 +9,7 @@ export type TrackEvent =
   | { name: 'search_submit'; props: { query: string; source: 'hero' | 'header' | 'page' } }
   | { name: 'search_results'; props: { query: string; count: number; fallback: 'chosung' | 'fuzzy' | 'none' } }
   | { name: 'search_result_click'; props: { query: string; position: number; kind: 'archive' | 'faq' } }
-  | { name: 'card_click'; props: { id: number; kind: 'files' | 'insights'; category: string; from: string; action?: 'download' | 'external' | 'video' } }
+  | { name: 'card_click'; props: { id: number; kind: 'files' | 'insights'; category: string; from: string; action?: 'download' | 'external' | 'video' | 'preview' } }
   | { name: 'filter_change'; props: { type: 'category' | 'sub_category' | 'kind' | 'sort' | 'view'; value: string; page: string } }
   | { name: 'submit_start'; props: { mode: 'url' | 'file' } }
   | { name: 'submit_analyzed'; props: { mode: 'url' | 'file'; ai_used: boolean } }

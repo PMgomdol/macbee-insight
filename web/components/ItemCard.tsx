@@ -1,5 +1,5 @@
 import type { ArchiveItem } from '@/types/db';
-import { ExternalLink, Download, PlayCircle } from 'lucide-react';
+import { ExternalLink, Download, PlayCircle, Eye } from 'lucide-react';
 
 // 카드 배지 라벨 — 메뉴(kind)와 무관하게 실제 매체 기준.
 // 콘텐츠 메뉴 안의 PDF 가이드도 '파일' 배지를 달아야 다운로드 여부를 즉시 알 수 있음.
@@ -15,18 +15,24 @@ function isVideo(item: ArchiveItem): boolean {
   return /youtube\.com|youtu\.be|vimeo\.com|tv\.naver\.com/.test(url);
 }
 
-/** 클릭 시 실제로 파일이 내려받아지는가. 구글 문서·드라이브는 뷰어로 열리므로 '바로가기'로 취급. */
+/** 클릭 대상이 구글 드라이브·문서 뷰어인가 — 바로 다운로드 대신 미리보기로 먼저 열린다. */
+function isDrivePreview(item: ArchiveItem): boolean {
+  const u = unwrapRedirect(item.file_url || item.external_url || '').toLowerCase();
+  return /docs\.google\.com|drive\.google\.com/.test(u);
+}
+
+/** 클릭 시 실제로 파일이 곧장 내려받아지는가. 구글 문서·드라이브는 뷰어로 열리므로 제외. */
 function isDownload(item: ArchiveItem): boolean {
-  if (isVideo(item)) return false;
-  if (item.file_url) return true; // 호스팅된 파일 = 다운로드
+  if (isVideo(item) || isDrivePreview(item)) return false;
+  if (item.file_url) return true; // 버킷 호스팅 파일 = 직접 다운로드
   const u = unwrapRedirect(item.external_url || '').toLowerCase();
-  if (/docs\.google\.com|drive\.google\.com/.test(u)) return false;
   return /\.(pdf|zip|docx?|pptx?|xlsx?|hwpx?|csv|key|odt|ods|odp)($|[?#])/.test(u);
 }
 
 /** 오른쪽 아래 액션 표시 — 무엇을 클릭하는지 명확히. */
 function cardAction(item: ArchiveItem) {
   if (isVideo(item)) return { Icon: PlayCircle, label: '재생', type: 'video' as const };
+  if (isDrivePreview(item)) return { Icon: Eye, label: '미리보기', type: 'preview' as const };
   if (isDownload(item)) return { Icon: Download, label: '다운로드', type: 'download' as const };
   return { Icon: ExternalLink, label: '바로가기', type: 'external' as const };
 }

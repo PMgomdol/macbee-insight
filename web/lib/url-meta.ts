@@ -300,13 +300,14 @@ export function isFileUrl(url: string): boolean {
 }
 
 /**
- * 드라이브 "파일" 링크를 바로 다운로드되는 형태로 변환 (2026-09-01 결정 — 앞으로 등록분은 직다운).
- * file/d/ID·open?id=ID 형태만 변환하고, 구글 문서(docs/sheets/slides 네이티브)·폴더는 그대로 둔다.
+ * 드라이브 "파일" 링크를 미리보기(뷰어)로 여는 형태로 변환 (2026-09-02 결정 — 바로 다운로드 대신 미리보기 먼저).
+ * 모바일에서 클릭하자마자 다운로드되면 부담·스팸 우려가 있어, 드라이브 뷰어로 먼저 열고 거기서 받도록 한다.
+ * file/d/ID·open?id=ID·uc?…id=ID 형태를 /file/d/ID/view 로 통일. 구글 문서(docs/sheets/slides 네이티브)·폴더는 그대로.
  */
-export function toDriveDownloadUrl(url: string): string {
+export function toDrivePreviewUrl(url: string): string {
   const m = url.match(/drive\.google\.com\/(?:file\/d\/([\w-]{20,})|open\?id=([\w-]{20,})|uc\?[^#]*\bid=([\w-]{20,}))/);
   const id = m && (m[1] || m[2] || m[3]);
-  return id ? `https://drive.google.com/uc?export=download&id=${id}` : url;
+  return id ? `https://drive.google.com/file/d/${id}/view` : url;
 }
 
 /**

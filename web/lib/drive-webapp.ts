@@ -131,14 +131,15 @@ export async function transferArchiveFileToDrive(archiveId: number): Promise<{ o
     const up = await uploadToDrive({ name, mimeType, bytes });
     if (!up.ok) return fail('드라이브 웹앱 응답 — ' + up.error);
 
-    const { error: upErr } = await sb.from('archive_item').update({ file_url: up.downloadUrl }).eq('id', archiveId);
+    // 미리보기(뷰어) URL로 저장 — 클릭 시 바로 다운로드 대신 드라이브 뷰어로 먼저 열림 (2026-09-02).
+    const { error: upErr } = await sb.from('archive_item').update({ file_url: up.viewUrl }).eq('id', archiveId);
     if (upErr) return fail('링크 교체 실패 — ' + upErr.message + ' (드라이브 파일 id ' + up.id + ')');
 
     // 링크가 바뀐 뒤에만 임시 파일 삭제. 삭제 실패는 치명적이지 않으니 로그만.
     const { error: rmErr } = await sb.storage.from(ARCHIVE_BUCKET).remove([path]);
     if (rmErr) console.error(`drive transfer: temp delete failed (#${archiveId}, ${path}): ${rmErr.message}`);
 
-    return { ok: true, url: up.downloadUrl };
+    return { ok: true, url: up.viewUrl };
   } catch (e) {
     return fail(e instanceof Error ? e.message : String(e));
   }
