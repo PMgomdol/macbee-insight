@@ -10,6 +10,7 @@ import { CardClickTracker } from '@/components/CardClickTracker';
 import { NavProgress } from '@/components/NavProgress';
 import { SiteFooter } from '@/components/SiteFooter';
 import { AnalyticsGate } from '@/components/AnalyticsGate';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import { ConsentBanner } from '@/components/ConsentBanner';
 import { FeedbackWidgetLoader } from '@/components/FeedbackWidgetLoader';
 import { AtlaskitProvider } from '@/components/AtlaskitProvider';
@@ -60,7 +61,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <style dangerouslySetInnerHTML={{ __html: EARLY_STYLE }} />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--fg)]">
-        {/* GA4·PostHog는 쿠키 동의 후에만 로드 (AnalyticsGate). 동의 배너는 ConsentBanner. */}
+        {/* Vercel Web Analytics — 쿠키리스·비식별 익명 집계라 동의 게이트 밖에서 상시 로드.
+            거부한 방문자도 방문수·인기 페이지가 잡힌다. (대시보드에서 Web Analytics 활성 필요 — 2026-09-02 켬) */}
+        <VercelAnalytics />
+        {/* GA4·PostHog(쿠키 사용)는 쿠키 동의 후에만 로드 (AnalyticsGate). 동의 배너는 ConsentBanner. */}
         <Suspense fallback={null}><AnalyticsGate /></Suspense>
         <ConsentBanner />
         <a
