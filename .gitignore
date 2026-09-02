@@ -45,6 +45,9 @@ macbee-document/~$*
 # 카톡 로그 (개인 대화 · 대용량)
 KakaoTalk_Chat_*.csv
 
+# QA 아티팩트 (카톡 공유 스샷·영상 등 — 공개 레포 제외, 로컬 보존)
+web/QA/
+
 # 내부 회의록·설문 원본 (공개 레포 제외 — 진행안·브리핑은 docs/meetings/에 추적)
 docs/meetings/private/
 *.xlsx
