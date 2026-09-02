@@ -235,6 +235,16 @@ input[type="search"]::-webkit-search-results-decoration {
   to { width: 100%; }
 }
 
+/* 모바일 GNB 메뉴 — 헤더 아래에서 "제자리 페이드 인"(토스식). Radix Dialog data-state 기반.
+   Radix Presence가 animationend까지 기다렸다 언마운트하므로 닫힘 페이드도 끝까지 재생된다. */
+@keyframes menu-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes menu-fade-out { from { opacity: 1; } to { opacity: 0; } }
+.mobile-menu-panel[data-state='open'] { animation: menu-fade-in 160ms ease both; }
+.mobile-menu-panel[data-state='closed'] { animation: menu-fade-out 130ms ease both; }
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu-panel[data-state] { animation-duration: 1ms; }
+}
+
 
 /* 모바일 iOS Safari: 입력 포커스 시 자동 확대(zoom) 방지 — 폼 컨트롤 최소 16px.
    .app-input(16px)이 Tailwind utilities 레이어의 text-xs에 밀리는 문제 + Atlaskit
