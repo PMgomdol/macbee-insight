@@ -105,7 +105,13 @@ export function MobileNavClient({
         >
           {/* 자체 상단바 — 오버레이가 사이트 헤더까지 덮으므로 닫기 버튼을 내부에 둔다 */}
           <div className="flex items-center justify-between h-14 px-3 border-b border-[var(--border)] shrink-0">
-            <span className="font-bold tracking-tight">맥비 자료실</span>
+            <Link
+              href="/"
+              onClick={() => setOpen(false)}
+              className="font-bold tracking-tight rounded-[var(--r-sm)] -mx-1 px-1 hover:text-[var(--accent)] transition-colors"
+            >
+              맥비 자료실
+            </Link>
             <button
               onClick={() => { setOpen(false); toggleRef.current?.focus(); }}
               className="p-2 rounded-[var(--r-sm)] hover:bg-[var(--card)] text-[var(--fg)]"
