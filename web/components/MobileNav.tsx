@@ -15,10 +15,10 @@ export function MobileNavClient({
   accountLabel?: string | null;
 }) {
   const [open, setOpen] = useState(false);
-  // 슬라이드 인/아웃: 닫는 애니메이션이 보이도록 DOM을 잠깐 유지(render)하고,
-  // 마운트 다음 프레임에 entered=true로 열림 위치(translate-x-0)로 민다.
+  // 슬라이드 인/아웃: 닫는 애니메이션이 보이도록 DOM을 잠깐 유지(render)한다.
+  // 방향은 CSS 키프레임(.drawer-in/out)이 담당 — rAF 클래스 토글은 iOS Safari에서
+  // 첫 페인트 레이스로 "왼쪽에 반짝 뒤 오른쪽 슬라이드" 깜빡임이 생겨 배제.
   const [render, setRender] = useState(false);
-  const [entered, setEntered] = useState(false);
   const [q, setQ] = useState('');
   const pathname = usePathname();
   const router = useRouter();
@@ -28,15 +28,13 @@ export function MobileNavClient({
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
-  // open ↔ render/entered 조율: 열면 즉시 마운트 후 다음 프레임에 슬라이드 인,
-  // 닫으면 슬라이드 아웃(0.3s) 뒤 언마운트.
+  // open ↔ render 조율: 열면 즉시 마운트(키프레임이 슬라이드 인),
+  // 닫으면 슬라이드 아웃 애니메이션(0.28s) 뒤 언마운트.
   useEffect(() => {
     if (open) {
       setRender(true);
-      const r = requestAnimationFrame(() => setEntered(true));
-      return () => cancelAnimationFrame(r);
+      return;
     }
-    setEntered(false);
     const t = setTimeout(() => setRender(false), 300);
     return () => clearTimeout(t);
   }, [open]);
@@ -118,7 +116,7 @@ export function MobileNavClient({
           <div
             ref={panelRef}
             tabIndex={-1}
-            className={`absolute inset-0 bg-[var(--bg)] flex flex-col outline-none pointer-events-auto transition-transform duration-300 ease-out motion-reduce:transition-none ${entered ? 'translate-x-0' : 'translate-x-full'}`}
+            className={`absolute inset-0 bg-[var(--bg)] flex flex-col outline-none pointer-events-auto ${open ? 'drawer-in' : 'drawer-out'}`}
             role="dialog"
             aria-modal="true"
             aria-hidden={!open}
@@ -129,8 +127,13 @@ export function MobileNavClient({
               <Link
                 href="/"
                 onClick={() => setOpen(false)}
-                className="font-bold tracking-tight rounded-[var(--r-sm)] -mx-1 px-1 hover:text-[var(--accent)] transition-colors"
+                className="flex items-center gap-1 font-bold tracking-tight rounded-[var(--r-sm)] -mx-1 px-1 hover:text-[var(--accent)] transition-colors"
               >
+                {/* 데스크톱 헤더와 동일한 선반 M 심볼 — currentColor로 테마 자동 대응 */}
+                <svg viewBox="0 0 64 64" className="w-[22px] h-[22px] shrink-0" aria-hidden fill="currentColor">
+                  <path d="M10 44V10h13l9 17 9-17h13v34H42V28l-7 13h-6l-7-13v16z" />
+                  <rect x="10" y="50" width="44" height="6" rx="2" />
+                </svg>
                 맥비 자료실
               </Link>
               <button
