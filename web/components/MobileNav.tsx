@@ -109,17 +109,19 @@ export function MobileNavClient({
         className={`sm:hidden fixed inset-0 z-[60] overflow-hidden ${open ? '' : 'pointer-events-none'}`}
         aria-hidden={!open}
       >
-        {/* 검정 딤 배경 — 탭하면 닫힘. opacity 트랜지션. */}
+        {/* 검정 딤 배경 — 탭하면 닫힘. 패널과 동일 타이밍(Vaul 방식). */}
         <div
           onClick={close}
-          className={`absolute inset-0 bg-black transition-opacity duration-300 ease-out motion-reduce:transition-none ${open ? 'opacity-40' : 'opacity-0 pointer-events-none'}`}
+          style={{ transition: 'opacity 0.5s cubic-bezier(0.32, 0.72, 0, 1)' }}
+          className={`absolute inset-0 bg-black motion-reduce:transition-none ${open ? 'opacity-40' : 'opacity-0 pointer-events-none'}`}
         />
         {/* 오른쪽 드로어 패널 — 항상 DOM에 있고 translate로 토글(마운트 레이스 없음). */}
         <div
           ref={panelRef}
           tabIndex={-1}
           inert={!open}
-          className={`absolute inset-y-0 right-0 w-[85%] max-w-[360px] bg-[var(--bg)] flex flex-col outline-none shadow-2xl transition-transform duration-300 ease-out motion-reduce:transition-none ${open ? 'translate-x-0' : 'translate-x-full'}`}
+          style={{ transition: 'translate 0.5s cubic-bezier(0.32, 0.72, 0, 1)' }}
+          className={`absolute inset-y-0 right-0 w-[85%] max-w-[360px] bg-[var(--bg)] flex flex-col outline-none shadow-2xl motion-reduce:transition-none ${open ? 'translate-x-0' : 'translate-x-full'}`}
           role="dialog"
           aria-modal="true"
           aria-label="모바일 메뉴"
