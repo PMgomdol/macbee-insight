@@ -29,25 +29,25 @@ export function ConsentBanner() {
     >
       <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center gap-3 app-card p-4 shadow-lg">
         <p className="text-[13px] text-[var(--muted)] leading-relaxed flex-1">
-          방문 분석(구글 애널리틱스·PostHog)을 위해 쿠키를 사용해요. 동의하시면 서비스 개선에 도움이 돼요.{' '}
+          더 나은 자료실을 만들기 위해 방문 분석에 쿠키를 사용해요. 동의해주시면 어떤 자료가 도움이 되는지 파악해 서비스를 개선하는 데 큰 힘이 돼요.{' '}
           <Link href="/privacy" className="underline text-[var(--fg)] hover:text-[var(--accent)]">
-            개인정보처리방침
+            자세히
           </Link>
         </p>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           <button
             type="button"
             onClick={() => setConsent('denied')}
-            className="px-3 py-2 text-[13px] rounded-[var(--r-sm)] border border-[var(--border)] text-[var(--fg)] hover:bg-[var(--card)] transition"
+            className="text-[13px] text-[var(--muted)] hover:text-[var(--fg)] underline underline-offset-2 transition"
           >
             거부
           </button>
           <button
             type="button"
             onClick={() => setConsent('granted')}
-            className="px-4 py-2 text-[13px] font-medium rounded-[var(--r-sm)] bg-[var(--accent)] text-white hover:opacity-90 transition"
+            className="px-5 py-2 text-[13px] font-semibold rounded-[var(--r-sm)] bg-[var(--accent)] text-white hover:opacity-90 transition"
           >
-            동의
+            동의하고 개선 돕기
           </button>
         </div>
       </div>
