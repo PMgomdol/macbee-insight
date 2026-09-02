@@ -35,7 +35,8 @@ export function MobileNavClient({
       setRender(true);
       return;
     }
-    const t = setTimeout(() => setRender(false), 300);
+    // 슬라이드 아웃(0.7s) 완료 후 언마운트
+    const t = setTimeout(() => setRender(false), 720);
     return () => clearTimeout(t);
   }, [open]);
 
@@ -111,12 +112,18 @@ export function MobileNavClient({
 
       {render && (
         // 뷰포트 고정 클리핑 래퍼 — 화면 밖으로 밀린 패널이 가로 스크롤을 만들지 않게 overflow-hidden.
-        // pointer-events는 안쪽 패널에서만 활성.
-        <div className="sm:hidden fixed inset-0 z-[60] overflow-hidden pointer-events-none">
+        <div className="sm:hidden fixed inset-0 z-[60] overflow-hidden">
+          {/* 검정 딤 배경 — 탭하면 닫힘 (레퍼런스 스펙: opacity 0→0.4, 600ms) */}
+          <div
+            className={`absolute inset-0 bg-black ${open ? 'dim-in' : 'dim-out'}`}
+            onClick={() => { setOpen(false); toggleRef.current?.focus(); }}
+            aria-hidden
+          />
+          {/* 오른쪽 드로어 패널 — 85% 폭(최대 360px), 700ms cubic-bezier 슬라이드 */}
           <div
             ref={panelRef}
             tabIndex={-1}
-            className={`absolute inset-0 bg-[var(--bg)] flex flex-col outline-none pointer-events-auto ${open ? 'drawer-in' : 'drawer-out'}`}
+            className={`absolute inset-y-0 right-0 w-[85%] max-w-[360px] bg-[var(--bg)] flex flex-col outline-none shadow-2xl ${open ? 'drawer-in' : 'drawer-out'}`}
             role="dialog"
             aria-modal="true"
             aria-hidden={!open}

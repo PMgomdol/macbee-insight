@@ -235,8 +235,9 @@ input[type="search"]::-webkit-search-results-decoration {
   to { width: 100%; }
 }
 
-/* 모바일 메뉴 오른쪽 슬라이드 — rAF 클래스 토글은 iOS Safari에서 첫 페인트 레이스로
-   깜빡임이 생겨, 첫 프레임부터 정확히 시작하는 키프레임으로 처리한다. */
+/* 모바일 메뉴 오른쪽 슬라이드 드로어 — rAF 클래스 토글은 iOS Safari에서 첫 페인트
+   레이스로 깜빡임이 생겨, 첫 프레임부터 정확히 시작하는 키프레임으로 처리한다.
+   이징·시간은 레퍼런스 스펙(700ms cubic-bezier(0.8,0,0.33,1)) 반영. */
 @keyframes drawer-in {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
@@ -245,10 +246,20 @@ input[type="search"]::-webkit-search-results-decoration {
   from { transform: translateX(0); }
   to { transform: translateX(100%); }
 }
-.drawer-in { animation: drawer-in 0.28s ease-out both; }
-.drawer-out { animation: drawer-out 0.28s ease-in both; }
+@keyframes dim-in {
+  from { opacity: 0; }
+  to { opacity: 0.4; }
+}
+@keyframes dim-out {
+  from { opacity: 0.4; }
+  to { opacity: 0; }
+}
+.drawer-in { animation: drawer-in 0.7s cubic-bezier(0.8, 0, 0.33, 1) both; }
+.drawer-out { animation: drawer-out 0.7s cubic-bezier(0.8, 0, 0.33, 1) both; }
+.dim-in { animation: dim-in 0.6s ease both; }
+.dim-out { animation: dim-out 0.6s ease both; }
 @media (prefers-reduced-motion: reduce) {
-  .drawer-in, .drawer-out { animation-duration: 0.001s; }
+  .drawer-in, .drawer-out, .dim-in, .dim-out { animation-duration: 0.001s; }
 }
 
 /* 모바일 iOS Safari: 입력 포커스 시 자동 확대(zoom) 방지 — 폼 컨트롤 최소 16px.
