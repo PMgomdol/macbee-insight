@@ -21,6 +21,7 @@ export function MobileNavClient({
   const items = visibleNav(isReviewer);
   const panelRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
@@ -30,7 +31,8 @@ export function MobileNavClient({
   useEffect(() => {
     if (!open) return;
     const panel = panelRef.current;
-    panel?.focus();
+    // 컨테이너 대신 닫기 버튼에 포커스 — 패널 전체를 감싸는 큰 파란 outline(포커스 링) 방지 + a11y 유지
+    closeRef.current?.focus();
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         setOpen(false);
@@ -137,6 +139,7 @@ export function MobileNavClient({
               맥비 자료실
             </Link>
             <button
+              ref={closeRef}
               onClick={close}
               className="p-2 rounded-[var(--r-sm)] hover:bg-[var(--card)] text-[var(--fg)]"
               aria-label="메뉴 닫기"
