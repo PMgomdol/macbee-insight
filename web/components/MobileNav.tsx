@@ -52,9 +52,9 @@ export function MobileNavClient({
         <Drawer.Overlay className="sm:hidden fixed inset-0 z-[60] bg-black/40" />
         {/* 오른쪽 패널 — Vaul이 슬라이드·스크롤락·포커스트랩·Esc를 처리 */}
         <Drawer.Content
-          // --initial-transform:100% → 여백 없이 화면 밖 오른쪽에서 flush 슬라이드
+          // --initial-transform:100% → 화면 밖 오른쪽에서 flush 슬라이드. w-full = 전체화면 takeover(스크림 없이 100% 덮음).
           style={{ '--initial-transform': '100%' } as React.CSSProperties}
-          className="sm:hidden fixed inset-y-0 right-0 z-[60] w-[85%] max-w-[360px] bg-[var(--bg)] flex flex-col outline-none shadow-2xl"
+          className="sm:hidden fixed inset-0 z-[60] w-full bg-[var(--bg)] flex flex-col outline-none"
         >
           {/* a11y — 라디오스 다이얼로그 접근성 라벨(시각적으로 숨김) */}
           <Drawer.Title className="sr-only">모바일 메뉴</Drawer.Title>
