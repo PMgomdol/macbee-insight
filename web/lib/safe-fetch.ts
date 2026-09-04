@@ -98,7 +98,9 @@ async function assertPublicHost(hostname: string): Promise<void> {
 /**
  * 반환된 Response의 `.url`은 최종(리다이렉트 다 따라간) URL이다 — 호출부에서 finalUrl로 쓸 수 있다.
  */
-export async function safeFetch(rawUrl: string, init: RequestInit = {}, maxRedirects = 4): Promise<Response> {
+// maxRedirects=8: http→https→www→로케일→트레일링슬래시 등 정상 사이트가 4를 흔히 초과.
+// 매 홉 host를 재검사하므로 상향해도 SSRF 안전성은 유지된다. (브런치식 무한루프는 폴백 UA로 해결)
+export async function safeFetch(rawUrl: string, init: RequestInit = {}, maxRedirects = 8): Promise<Response> {
   let url = rawUrl;
   for (let hop = 0; hop <= maxRedirects; hop++) {
     const u = new URL(url);

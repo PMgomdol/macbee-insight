@@ -201,8 +201,11 @@ export async function fetchUrlMeta(url: string): Promise<UrlMeta> {
   };
 
   // 1차: Chrome UA. 2차: 봇 차단·로그인 강제 사이트(브런치·Medium·노션 등)는 Googlebot UA fallback
+  // 브런치 등은 쿠키리스 Chrome 요청을 302 무한루프로 막아 safeFetch가 'too many redirects'를 던진다.
+  // → 'redirect'로 매칭해야 폴백이 실제 작동(과거 native fetch 'redirect count' 문구 잔재로 안 걸리던 버그 수정).
+  // Googlebot UA엔 루프 없이 200 응답. 401/403(로그인)·429(레이트리밋 봇차단)도 재시도.
   let r = await tryFetch(url, UA_CHROME);
-  if (!r.ok && (r.error?.includes('redirect count') || r.status === 401 || r.status === 403)) {
+  if (!r.ok && (r.error?.includes('redirect') || r.status === 401 || r.status === 403 || r.status === 429)) {
     r = await tryFetch(url, UA_GOOGLEBOT);
   }
   result.status = r.status;
