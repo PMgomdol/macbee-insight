@@ -126,6 +126,7 @@ export function SubmitForm({ categories }: Props) {
   function applyAnalysis(r: AnalyzeResult) {
     if (!r.ok) {
       setAnalyzeMsg({ kind: 'error', text: r.error ?? '분석하지 못했어요' });
+      track('submit_error', { mode, stage: 'analyze', reason: (r.error ?? 'unknown').slice(0, 80), host: hostOf(url) });
       return;
     }
     if (r.title) setTitle(r.title);
@@ -262,6 +263,7 @@ export function SubmitForm({ categories }: Props) {
             setTitle(f.name.replace(/\.[^.]+$/, ''));
             setAnalyzed(true);
             setAnalyzeMsg({ kind: 'ok', text: '파일은 올라갔어요. 자동 분석은 실패해서 제목·설명을 직접 확인·입력해주세요.' });
+            track('submit_error', { mode: 'file', stage: 'analyze', reason: 'file_analyze_threw' });
           }
         });
       } catch (e) {
@@ -300,9 +302,12 @@ export function SubmitForm({ categories }: Props) {
       if ('duplicate' in r && r.duplicate) {
         setDuplicate(r.duplicate);
         setSubmitError('이미 등록된 자료예요. 아래 안내를 확인해주세요.');
+        track('submit_error', { mode, stage: 'submit', reason: 'duplicate' });
         return;
       }
-      setSubmitError((r as { error: string }).error);
+      const err = (r as { error: string }).error;
+      setSubmitError(err);
+      track('submit_error', { mode, stage: 'submit', reason: (err ?? 'unknown').slice(0, 80) });
     });
   }
 
@@ -636,6 +641,11 @@ export function SubmitForm({ categories }: Props) {
       )}
     </form>
   );
+}
+
+// 분석 실패 계측용 — 어떤 도메인이 자동분석을 막는지 집계. 파싱 실패 시 빈 문자열.
+function hostOf(u: string): string {
+  try { return new URL(u).hostname; } catch { return ''; }
 }
 
 function dupStatusLabel(status: string | null): string {

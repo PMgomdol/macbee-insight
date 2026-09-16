@@ -14,6 +14,9 @@ export type TrackEvent =
   | { name: 'submit_start'; props: { mode: 'url' | 'file' } }
   | { name: 'submit_analyzed'; props: { mode: 'url' | 'file'; ai_used: boolean } }
   | { name: 'submit_manual_fallback'; props: { mode: 'url' | 'file' } }
+  // 분석/제출 실패를 계측 — 지금은 실패가 데이터에 안 남아 start→성공 사이가 블랙박스.
+  // stage로 어느 단계(자동분석 vs 최종제출)에서 깨졌는지, host로 어떤 도메인이 분석을 막는지 본다.
+  | { name: 'submit_error'; props: { mode: 'url' | 'file'; stage: 'analyze' | 'submit'; reason: string; host?: string } }
   | { name: 'submit_success'; props: { mode: 'url' | 'file'; category: string } }
   | { name: 'feedback_open'; props: Record<string, never> }
   | { name: 'feedback_submit'; props: { kind: string } };
