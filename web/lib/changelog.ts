@@ -43,6 +43,16 @@ export const TYPE_META: Record<ChangeType, { label: string; color: string }> = {
 
 export const CHANGELOG: Release[] = [
   {
+    date: '2026-09-03',
+    title: '정식 오픈 · 모바일 메뉴 개편 · 등록/카드 안정화',
+    changes: [
+      { type: 'feature', text: '🎉 맥비 자료실 정식 오픈 — 카카오톡방에 공개하고 검색엔진 색인을 시작했어요.' },
+      { type: 'improve', text: '모바일 햄버거 메뉴를 개편했어요 — 상단 로고는 그대로 두고 메뉴가 그 아래로 부드럽게 나타나요(토스식). iOS Safari에서 메뉴가 왼쪽에서 어긋나 보이던 문제와 로고가 두 번 겹쳐 보이던 문제를 해결했어요.' },
+      { type: 'fix', text: '[자료 등록](/submit)에서 브런치처럼 리다이렉트가 많은 사이트의 URL을 자동분석하지 못하던 문제를 고쳤어요(Googlebot 방식으로 다시 시도).' },
+      { type: 'fix', text: '카드 액션 라벨을 다시 "다운로드"로 되돌리고, 카카오톡 인앱 브라우저에서 자료를 열고 뒤로가기하면 채팅으로 빠져나가던 문제를 고쳤어요.' },
+    ],
+  },
+  {
     date: '2026-09-02',
     title: '정식 오픈 준비 · 자료 용도 자동 분류 · 미검수 리마인드',
     changes: [
