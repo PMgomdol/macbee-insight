@@ -25,8 +25,9 @@ function badge(it: FeaturedRow): string {
   return '아티클';
 }
 
-export function RecommendManager({ initial }: { initial: FeaturedRow[] }) {
+export function RecommendManager({ initial, browse }: { initial: FeaturedRow[]; browse: FeaturedRow[] }) {
   const [list, setList] = useState<FeaturedRow[]>(initial);
+  const [browseList, setBrowseList] = useState<FeaturedRow[]>(browse);
   const [q, setQ] = useState('');
   const [results, setResults] = useState<FeaturedRow[]>([]);
   const [searching, setSearching] = useState(false);
@@ -70,23 +71,28 @@ export function RecommendManager({ initial }: { initial: FeaturedRow[] }) {
         await addFeatured(it.id);
         setList((prev) => [it, ...prev.filter((x) => x.id !== it.id)]);
         setResults((prev) => prev.filter((x) => x.id !== it.id));
+        setBrowseList((prev) => prev.filter((x) => x.id !== it.id));
       } catch (e) {
         setErr(e instanceof Error ? e.message : '추가에 실패했어요');
       }
     });
   }
 
-  function remove(id: number) {
+  function remove(it: FeaturedRow) {
     setErr(null);
     startTransition(async () => {
       try {
-        await removeFeatured(id);
-        setList((prev) => prev.filter((x) => x.id !== id));
+        await removeFeatured(it.id);
+        setList((prev) => prev.filter((x) => x.id !== it.id));
+        // 뺀 자료는 다시 고를 수 있게 둘러보기 맨 앞에
+        setBrowseList((prev) => (prev.some((x) => x.id === it.id) ? prev : [it, ...prev]));
       } catch (e) {
         setErr(e instanceof Error ? e.message : '빼기에 실패했어요');
       }
     });
   }
+
+  const shown = q.trim() ? results : browseList;
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl py-2">
@@ -131,7 +137,7 @@ export function RecommendManager({ initial }: { initial: FeaturedRow[] }) {
                 </div>
                 <button
                   type="button"
-                  onClick={() => remove(it.id)}
+                  onClick={() => remove(it)}
                   disabled={pending}
                   aria-label="추천에서 빼기"
                   title="추천에서 빼기"
@@ -161,34 +167,38 @@ export function RecommendManager({ initial }: { initial: FeaturedRow[] }) {
             className="flex-1 bg-transparent outline-none text-sm text-[var(--fg)] placeholder:text-[var(--muted-2)]"
           />
         </div>
-        {q.trim() && (
-          <div className="border border-[var(--border)] rounded-[var(--r-sm)] overflow-hidden divide-y divide-[var(--border)]">
-            {searching ? (
-              <div className="px-3 py-3 text-sm text-[var(--muted-2)]">검색 중…</div>
-            ) : results.length === 0 ? (
-              <div className="px-3 py-3 text-sm text-[var(--muted-2)]">일치하는 공개 자료가 없어요 (이미 추천된 자료는 제외).</div>
-            ) : (
-              results.map((it) => (
-                <div key={it.id} className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-[var(--card)] transition">
-                  <div className="min-w-0 flex items-center gap-2">
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] bg-[var(--accent-bg)] text-[var(--accent)] shrink-0">
-                      {badge(it)}
-                    </span>
-                    <span className="text-sm truncate">{it.title}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => add(it)}
-                    disabled={pending || list.length >= MAX}
-                    className="shrink-0 text-xs font-semibold text-[var(--accent)] bg-[var(--accent-bg)] rounded-[var(--r-sm)] px-2.5 py-1 hover:brightness-95 transition disabled:opacity-50"
-                  >
-                    + 추가
-                  </button>
+        <p className="text-[11.5px] text-[var(--muted-2)]">
+          {q.trim() ? '검색 결과' : '최근 등록 자료 — 검색으로 더 찾을 수 있어요'}
+        </p>
+        <div className="border border-[var(--border)] rounded-[var(--r-sm)] overflow-hidden divide-y divide-[var(--border)]">
+          {q.trim() && searching ? (
+            <div className="px-3 py-3 text-sm text-[var(--muted-2)]">검색 중…</div>
+          ) : shown.length === 0 ? (
+            <div className="px-3 py-3 text-sm text-[var(--muted-2)]">
+              {q.trim() ? '일치하는 공개 자료가 없어요 (이미 추천된 자료는 제외).' : '추가할 수 있는 자료가 없어요.'}
+            </div>
+          ) : (
+            shown.map((it) => (
+              <div key={it.id} className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-[var(--card)] transition">
+                <div className="min-w-0 flex items-center gap-2">
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] bg-[var(--accent-bg)] text-[var(--accent)] shrink-0">
+                    {badge(it)}
+                  </span>
+                  <span className="text-sm truncate">{it.title}</span>
+                  <span className="text-[11px] text-[var(--muted-2)] shrink-0 hidden sm:inline">{it.main_category}</span>
                 </div>
-              ))
-            )}
-          </div>
-        )}
+                <button
+                  type="button"
+                  onClick={() => add(it)}
+                  disabled={pending || list.length >= MAX}
+                  className="shrink-0 text-xs font-semibold text-[var(--accent)] bg-[var(--accent-bg)] rounded-[var(--r-sm)] px-2.5 py-1 hover:brightness-95 transition disabled:opacity-50"
+                >
+                  + 추가
+                </button>
+              </div>
+            ))
+          )}
+        </div>
       </section>
     </div>
   );

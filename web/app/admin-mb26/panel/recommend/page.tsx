@@ -19,11 +19,26 @@ export default async function RecommendPage() {
   }
 
   const sb = createAdminClient();
-  const { data } = await sb
-    .from('archive_item')
-    .select('id, title, main_category, format, file_ext, external_url, file_url, featured_at')
-    .not('featured_at', 'is', null)
-    .order('featured_at', { ascending: false });
+  const [featuredRes, browseRes] = await Promise.all([
+    sb
+      .from('archive_item')
+      .select('id, title, main_category, format, file_ext, external_url, file_url, featured_at')
+      .not('featured_at', 'is', null)
+      .order('featured_at', { ascending: false }),
+    // 검색 안 해도 바로 고를 수 있게 — 최근 등록 공개자료(추천 안 된 것) 30개
+    sb
+      .from('archive_item')
+      .select('id, title, main_category, format, file_ext, external_url, file_url')
+      .eq('status', 'public')
+      .is('featured_at', null)
+      .order('registered_at', { ascending: false })
+      .limit(30),
+  ]);
 
-  return <RecommendManager initial={(data ?? []) as FeaturedRow[]} />;
+  return (
+    <RecommendManager
+      initial={(featuredRes.data ?? []) as FeaturedRow[]}
+      browse={(browseRes.data ?? []) as FeaturedRow[]}
+    />
+  );
 }
