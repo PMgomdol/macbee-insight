@@ -4,7 +4,7 @@ import { ItemCard } from '@/components/ItemCard';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
 import { SearchAutocomplete } from '@/components/SearchAutocomplete';
 import { HomeBanner } from '@/components/HomeBanner';
-import { getMonthlyPopularItems, getTopTags } from '@/lib/queries';
+import { getMonthlyPopularItems, getRecommendedItems, getTopTags } from '@/lib/queries';
 import { SITE_URL } from '@/lib/site';
 
 // 구글 sitelinks 검색창 리치결과용 — /search?q= 실검색이 있어 실효 있음.
@@ -59,7 +59,7 @@ async function PopularCarousel() {
 }
 
 export default async function Home() {
-  const topTags = await getTopTags(5);
+  const [topTags, recommended] = await Promise.all([getTopTags(5), getRecommendedItems(6)]);
 
   return (
     <div className="flex flex-col items-center gap-10 sm:gap-16 pt-9 sm:pt-20 pb-10">
@@ -105,6 +105,24 @@ export default async function Home() {
       <Suspense fallback={null}>
         <PopularCarousel />
       </Suspense>
+
+      {/* 추천 자료 — 운영진 큐레이션. 없으면 섹션 자체를 렌더 안 함 */}
+      {recommended.length > 0 && (
+        <section className="w-full flex flex-col gap-3" aria-label="운영진 추천 자료">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-sm sm:text-base font-semibold tracking-tight text-[var(--muted)]">
+              운영진이 추천하는 자료에요
+            </h2>
+          </div>
+          <HorizontalScroll label="추천 자료 가로 스크롤">
+            {recommended.map((it) => (
+              <div key={it.id} data-card className="shrink-0 w-[220px] sm:w-[260px]">
+                <ItemCard item={it} />
+              </div>
+            ))}
+          </HorizontalScroll>
+        </section>
+      )}
 
       {/* 하단 슬라이드 배너 — 위 캐러셀과 간격 확보 */}
       <div className="w-full mt-6 sm:mt-12">

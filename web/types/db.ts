@@ -20,6 +20,7 @@ export type ArchiveItem = {
   views: number;
   downloads: number;
   kind: 'files' | 'insights';
+  featured_at: string | null;
 };
 
 export type FAQItem = {

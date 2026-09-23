@@ -299,3 +299,58 @@ export async function moveArchiveFileToDrive(id: number): Promise<{ ok: boolean;
   if (r.skipped) return { ok: false, message: '옮길 파일이 아니에요 (이미 드라이브 링크이거나 외부 링크)' };
   return { ok: false, message: '옮기지 못했어요 — ' + r.error };
 }
+
+const MAX_FEATURED = 6;
+
+async function assertReviewer() {
+  const role = await getRole();
+  if (role !== 'reviewer' && role !== 'admin') throw new Error('운영진만 할 수 있어요');
+}
+
+/** 추천 자료 추가 — featured_at 을 now() 로 채워 홈 추천 섹션에 노출. 최대 6개. */
+export async function addFeatured(id: number) {
+  await assertReviewer();
+  const sb = createAdminClient();
+  const { count } = await sb
+    .from('archive_item')
+    .select('id', { count: 'exact', head: true })
+    .not('featured_at', 'is', null);
+  if ((count ?? 0) >= MAX_FEATURED) throw new Error(`추천은 최대 ${MAX_FEATURED}개까지예요 — 하나 빼고 추가해주세요`);
+  const { error } = await sb.from('archive_item').update({ featured_at: new Date().toISOString() }).eq('id', id);
+  if (error) throw new Error('추가에 실패했어요 — ' + error.message);
+  updateTag('archive');
+  revalidatePath('/');
+  revalidatePath('/admin-mb26/panel/recommend');
+}
+
+/** 추천 자료 빼기 — featured_at 을 null 로. */
+export async function removeFeatured(id: number) {
+  await assertReviewer();
+  const sb = createAdminClient();
+  const { error } = await sb.from('archive_item').update({ featured_at: null }).eq('id', id);
+  if (error) throw new Error('빼기에 실패했어요 — ' + error.message);
+  updateTag('archive');
+  revalidatePath('/');
+  revalidatePath('/admin-mb26/panel/recommend');
+}
+
+/** 추천 추가용 자료 검색 — 제목/요약 부분일치, 공개 자료만, 이미 추천된 건 제외. */
+export async function searchArchiveForFeatured(
+  q: string
+): Promise<{ id: number; title: string; main_category: string; format: string | null; file_ext: string | null; external_url: string | null; file_url: string | null }[]> {
+  await assertReviewer();
+  const term = q.trim();
+  if (!term) return [];
+  const sb = createAdminClient();
+  const safe = term.replace(/[%_,()]/g, '');
+  const like = `%${safe}%`;
+  const { data } = await sb
+    .from('archive_item')
+    .select('id, title, main_category, format, file_ext, external_url, file_url')
+    .eq('status', 'public')
+    .is('featured_at', null)
+    .or(`title.ilike.${like},summary.ilike.${like}`)
+    .order('views', { ascending: false })
+    .limit(8);
+  return data ?? [];
+}

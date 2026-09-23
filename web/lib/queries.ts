@@ -69,6 +69,23 @@ export const getMonthlyPopularItems = unstable_cache(
 // 호환 alias — 검색 결과 정렬 등에서 누적 views 기준 필요 시
 export const getPopularItems = getMonthlyPopularItems;
 
+/** 추천 자료 — 운영진이 골라 featured_at 을 채운 자료. 최근 추천순, 최대 6개. */
+export const getRecommendedItems = unstable_cache(
+  async (limit = 6): Promise<ArchiveItem[]> => {
+    const sb = createPublicClient();
+    const { data } = await sb
+      .from('archive_item')
+      .select(ARCHIVE_CARD_COLS)
+      .eq('status', 'public')
+      .not('featured_at', 'is', null)
+      .order('featured_at', { ascending: false })
+      .limit(limit);
+    return (data ?? []) as ArchiveItem[];
+  },
+  ['recommended-items-v1'],
+  { revalidate: HOUR, tags: ['archive'] }
+);
+
 export const getRecentItems = unstable_cache(
   async (limit = 8): Promise<ArchiveItem[]> => {
     const sb = createPublicClient();
