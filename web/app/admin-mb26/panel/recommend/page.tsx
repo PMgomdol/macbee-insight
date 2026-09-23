@@ -19,26 +19,26 @@ export default async function RecommendPage() {
   }
 
   const sb = createAdminClient();
-  const [featuredRes, browseRes] = await Promise.all([
+  const [featuredRes, poolRes] = await Promise.all([
     sb
       .from('archive_item')
       .select('id, title, main_category, format, file_ext, external_url, file_url, featured_at')
       .not('featured_at', 'is', null)
       .order('featured_at', { ascending: false }),
-    // 검색 안 해도 바로 고를 수 있게 — 최근 등록 공개자료(추천 안 된 것) 30개
+    // 전체 공개자료(추천 안 된 것) — 자료 관리처럼 전부 불러와 클라에서 즉시 필터
     sb
       .from('archive_item')
       .select('id, title, main_category, format, file_ext, external_url, file_url')
       .eq('status', 'public')
       .is('featured_at', null)
       .order('registered_at', { ascending: false })
-      .limit(30),
+      .limit(5000),
   ]);
 
   return (
     <RecommendManager
       initial={(featuredRes.data ?? []) as FeaturedRow[]}
-      browse={(browseRes.data ?? []) as FeaturedRow[]}
+      pool={(poolRes.data ?? []) as FeaturedRow[]}
     />
   );
 }

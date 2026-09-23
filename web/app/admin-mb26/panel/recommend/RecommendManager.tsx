@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { Search, X } from 'lucide-react';
-import { addFeatured, removeFeatured, searchArchiveForFeatured } from '../actions';
+import { addFeatured, removeFeatured } from '../actions';
 
 export type FeaturedRow = {
   id: number;
@@ -15,6 +15,7 @@ export type FeaturedRow = {
 };
 
 const MAX = 6;
+const STEP = 24;
 
 /** 배지 라벨 — file_ext 우선, 없으면 영상/사이트/아티클. (홈 카드와 대략 맞춤, 관리용이라 단순화) */
 function badge(it: FeaturedRow): string {
@@ -25,40 +26,24 @@ function badge(it: FeaturedRow): string {
   return '아티클';
 }
 
-export function RecommendManager({ initial, browse }: { initial: FeaturedRow[]; browse: FeaturedRow[] }) {
+export function RecommendManager({ initial, pool }: { initial: FeaturedRow[]; pool: FeaturedRow[] }) {
   const [list, setList] = useState<FeaturedRow[]>(initial);
-  const [browseList, setBrowseList] = useState<FeaturedRow[]>(browse);
+  const [available, setAvailable] = useState<FeaturedRow[]>(pool);
   const [q, setQ] = useState('');
-  const [results, setResults] = useState<FeaturedRow[]>([]);
-  const [searching, setSearching] = useState(false);
+  const [showCount, setShowCount] = useState(STEP);
   const [err, setErr] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 검색 — 300ms 디바운스
-  useEffect(() => {
-    if (timer.current) clearTimeout(timer.current);
-    const term = q.trim();
-    if (!term) {
-      setResults([]);
-      setSearching(false);
-      return;
-    }
-    setSearching(true);
-    timer.current = setTimeout(async () => {
-      try {
-        const r = await searchArchiveForFeatured(term);
-        setResults(r);
-      } catch {
-        setResults([]);
-      } finally {
-        setSearching(false);
-      }
-    }, 300);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, [q]);
+  // 전체 목록을 클라에서 즉시 필터 (자료 관리와 동일 방식) — 제목·분류 부분일치
+  const filtered = useMemo(() => {
+    const kws = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!kws.length) return available;
+    return available.filter((it) => {
+      const hay = (it.title + ' ' + it.main_category).toLowerCase();
+      return kws.every((k) => hay.includes(k));
+    });
+  }, [available, q]);
+  const visible = filtered.slice(0, showCount);
 
   function add(it: FeaturedRow) {
     setErr(null);
@@ -70,8 +55,7 @@ export function RecommendManager({ initial, browse }: { initial: FeaturedRow[]; 
       try {
         await addFeatured(it.id);
         setList((prev) => [it, ...prev.filter((x) => x.id !== it.id)]);
-        setResults((prev) => prev.filter((x) => x.id !== it.id));
-        setBrowseList((prev) => prev.filter((x) => x.id !== it.id));
+        setAvailable((prev) => prev.filter((x) => x.id !== it.id));
       } catch (e) {
         setErr(e instanceof Error ? e.message : '추가에 실패했어요');
       }
@@ -84,15 +68,13 @@ export function RecommendManager({ initial, browse }: { initial: FeaturedRow[]; 
       try {
         await removeFeatured(it.id);
         setList((prev) => prev.filter((x) => x.id !== it.id));
-        // 뺀 자료는 다시 고를 수 있게 둘러보기 맨 앞에
-        setBrowseList((prev) => (prev.some((x) => x.id === it.id) ? prev : [it, ...prev]));
+        // 뺀 자료는 다시 고를 수 있게 목록 맨 앞으로
+        setAvailable((prev) => (prev.some((x) => x.id === it.id) ? prev : [it, ...prev]));
       } catch (e) {
         setErr(e instanceof Error ? e.message : '빼기에 실패했어요');
       }
     });
   }
-
-  const shown = q.trim() ? results : browseList;
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl py-2">
@@ -119,7 +101,7 @@ export function RecommendManager({ initial, browse }: { initial: FeaturedRow[]; 
         </div>
         {list.length === 0 ? (
           <p className="text-sm text-[var(--muted-2)] py-3">
-            아직 추천 자료가 없어요. 아래에서 검색해 추가하면 홈에 나타나요.
+            아직 추천 자료가 없어요. 아래 목록에서 추가하면 홈에 나타나요.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
@@ -154,31 +136,34 @@ export function RecommendManager({ initial, browse }: { initial: FeaturedRow[]; 
         </p>
       </section>
 
-      {/* 자료 추가 */}
+      {/* 자료 추가 — 전체 목록 상시 노출, 타이핑하면 즉시 필터 */}
       <section className="flex flex-col gap-2 border-t border-dashed border-[var(--border)] pt-5">
         <div className="text-sm font-medium text-[var(--muted)]">자료 추가</div>
         <div className="flex items-center gap-2 border-2 border-[var(--border)] focus-within:border-[var(--accent)] rounded-[var(--r-sm)] px-3 py-2 bg-[var(--bg)] transition">
           <Search size={16} className="text-[var(--muted-2)] shrink-0" aria-hidden />
           <input
             value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="추천할 자료를 제목·내용으로 검색"
+            onChange={(e) => {
+              setQ(e.target.value);
+              setShowCount(STEP);
+            }}
+            placeholder="제목·분류로 걸러보기 (안 쳐도 전체 목록이 아래에 있어요)"
             aria-label="자료 검색"
             className="flex-1 bg-transparent outline-none text-sm text-[var(--fg)] placeholder:text-[var(--muted-2)]"
           />
         </div>
+
         <p className="text-[11.5px] text-[var(--muted-2)]">
-          {q.trim() ? '검색 결과' : '최근 등록 자료 — 검색으로 더 찾을 수 있어요'}
+          {q.trim() ? `검색 결과 ${filtered.length}건` : `전체 ${available.length}건`}
         </p>
-        <div className="border border-[var(--border)] rounded-[var(--r-sm)] overflow-hidden divide-y divide-[var(--border)]">
-          {q.trim() && searching ? (
-            <div className="px-3 py-3 text-sm text-[var(--muted-2)]">검색 중…</div>
-          ) : shown.length === 0 ? (
-            <div className="px-3 py-3 text-sm text-[var(--muted-2)]">
-              {q.trim() ? '일치하는 공개 자료가 없어요 (이미 추천된 자료는 제외).' : '추가할 수 있는 자료가 없어요.'}
-            </div>
-          ) : (
-            shown.map((it) => (
+
+        {visible.length === 0 ? (
+          <div className="border border-[var(--border)] rounded-[var(--r-sm)] px-3 py-6 text-center text-sm text-[var(--muted-2)]">
+            조건에 맞는 공개 자료가 없어요.
+          </div>
+        ) : (
+          <div className="border border-[var(--border)] rounded-[var(--r-sm)] overflow-hidden divide-y divide-[var(--border)]">
+            {visible.map((it) => (
               <div key={it.id} className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-[var(--card)] transition">
                 <div className="min-w-0 flex items-center gap-2">
                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] bg-[var(--accent-bg)] text-[var(--accent)] shrink-0">
@@ -196,9 +181,19 @@ export function RecommendManager({ initial, browse }: { initial: FeaturedRow[]; 
                   + 추가
                 </button>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {filtered.length > showCount && (
+          <button
+            type="button"
+            onClick={() => setShowCount((c) => c + STEP)}
+            className="self-center mt-1 px-5 py-2.5 rounded-[var(--r-sm)] border border-[var(--border-strong)] hover:bg-[var(--card)] text-sm font-medium"
+          >
+            더 보기 ({filtered.length - showCount}건)
+          </button>
+        )}
       </section>
     </div>
   );

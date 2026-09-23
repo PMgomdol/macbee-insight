@@ -333,24 +333,3 @@ export async function removeFeatured(id: number) {
   revalidatePath('/');
   revalidatePath('/admin-mb26/panel/recommend');
 }
-
-/** 추천 추가용 자료 검색 — 제목/요약 부분일치, 공개 자료만, 이미 추천된 건 제외. */
-export async function searchArchiveForFeatured(
-  q: string
-): Promise<{ id: number; title: string; main_category: string; format: string | null; file_ext: string | null; external_url: string | null; file_url: string | null }[]> {
-  await assertReviewer();
-  const term = q.trim();
-  if (!term) return [];
-  const sb = createAdminClient();
-  const safe = term.replace(/[%_,()]/g, '');
-  const like = `%${safe}%`;
-  const { data } = await sb
-    .from('archive_item')
-    .select('id, title, main_category, format, file_ext, external_url, file_url')
-    .eq('status', 'public')
-    .is('featured_at', null)
-    .or(`title.ilike.${like},summary.ilike.${like}`)
-    .order('views', { ascending: false })
-    .limit(8);
-  return data ?? [];
-}
