@@ -5,6 +5,7 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { revalidatePath, updateTag } from 'next/cache';
 import { notifyProposalResult } from '@/lib/notify';
 import { transferArchiveFileToDrive } from '@/lib/drive-webapp';
+import { fileExtFromUrl } from '@/lib/file-ext';
 
 const MIN_APPROVALS = 2;
 
@@ -33,6 +34,23 @@ export async function updateArchiveItem(
   // URL은 넘어온 경우에만 patch (실수로 링크 지워지는 것 방지). 빈 문자열이면 null로 비움.
   if (fields.external_url !== undefined) patch.external_url = fields.external_url.trim() || null;
   if (fields.file_url !== undefined) patch.file_url = fields.file_url.trim() || null;
+
+  // 파일/URL이 실제로 바뀌면 형식 태그(file_ext)도 새 URL 기준으로 다시 계산.
+  // (배지는 file_ext를 최우선으로 보므로, 안 바꾸면 예전 형식이 그대로 남는다.)
+  // 배지 우선순위(file_url || external_url)와 동일하게 판별. URL 안 바뀐 편집은 건드리지 않음(임포트 시 잡은 정확한 mimeType 보존).
+  if (patch.external_url !== undefined || patch.file_url !== undefined) {
+    const { data: cur } = await sb
+      .from('archive_item')
+      .select('external_url, file_url')
+      .eq('id', id)
+      .single();
+    const oldRaw = cur?.file_url || cur?.external_url || '';
+    const newFile = (patch.file_url ?? cur?.file_url) as string | null;
+    const newExt = (patch.external_url ?? cur?.external_url) as string | null;
+    const newRaw = newFile || newExt || '';
+    if (newRaw !== oldRaw) patch.file_ext = fileExtFromUrl(newRaw);
+  }
+
   const { error } = await sb
     .from('archive_item')
     .update(patch)

@@ -1,5 +1,6 @@
 import type { ArchiveItem } from '@/types/db';
 import { ExternalLink, Download, PlayCircle } from 'lucide-react';
+import { unwrapRedirect, normalizeExt, fileExtFromUrl } from '@/lib/file-ext';
 
 // 카드 배지 라벨 — 메뉴(kind)와 무관하게 실제 매체 기준.
 // 콘텐츠 메뉴 안의 PDF 가이드도 '파일' 배지를 달아야 다운로드 여부를 즉시 알 수 있음.
@@ -37,53 +38,12 @@ function cardAction(item: ArchiveItem) {
   return { Icon: ExternalLink, label: '바로가기', type: 'external' as const };
 }
 
-// 구글 리다이렉트 URL(www.google.com/url?q=...) → 실제 URL로 풀기.
-// 카톡 공유 시 자주 감싸져 오는 형태라 URL 그대로면 substring 검사가 오탐남.
-function unwrapRedirect(u: string): string {
-  try {
-    const p = new URL(u);
-    if (p.hostname === 'www.google.com' && p.pathname === '/url') {
-      const q = p.searchParams.get('q');
-      if (q) return q;
-    }
-  } catch {}
-  return u;
-}
-
-/** 파일 형식 배지 라벨 — 영문/표준 약어로 통일 (구글 문서→Google Docs, 한글→hwp).
- *  DB의 file_ext가 한글로 저장된 과거 값도 여기서 영문으로 정규화. */
-const EXT_LABEL: Record<string, string> = {
-  '구글 문서': 'Google Docs',
-  '구글 시트': 'Google Sheets',
-  '구글 슬라이드': 'Google Slides',
-  '구글 드라이브': 'Google Drive',
-  '워드': 'Word',
-  '엑셀': 'Excel',
-  '한글': 'hwp',
-};
-function normalizeExt(v: string): string {
-  return EXT_LABEL[v] ?? v;
-}
-
 /** 파일 확장자 배지 — DB의 file_ext 우선, 없으면 URL 패턴 fallback */
 function fileExtBadge(item: ArchiveItem): string | null {
   // 1) DB에 미리 판별된 값 있으면 정규화해서 (Drive 파일 실제 mimeType 반영)
   if (item.file_ext) return normalizeExt(item.file_ext);
   // 2) URL 패턴 fallback (리다이렉트 URL은 실제 URL로 풀어서 검사)
-  const raw = item.file_url || item.external_url || '';
-  if (!raw) return null;
-  const u = unwrapRedirect(raw).toLowerCase();
-  if (/docs\.google\.com\/document/.test(u)) return 'Google Docs';
-  if (/docs\.google\.com\/spreadsheets/.test(u)) return 'Google Sheets';
-  if (/docs\.google\.com\/presentation/.test(u)) return 'Google Slides';
-  if (/drive\.google\.com/.test(u)) return 'Google Drive';
-  if (/\.pdf($|[?#])/.test(u)) return 'PDF';
-  if (/\.(docx?|odt)($|[?#])/.test(u)) return 'Word';
-  if (/\.(pptx?|key|odp)($|[?#])/.test(u)) return 'PPT';
-  if (/\.(xlsx?|csv|ods)($|[?#])/.test(u)) return 'Excel';
-  if (/\.hwpx?($|[?#])/.test(u)) return 'hwp';
-  if (/\.zip($|[?#])/.test(u)) return 'ZIP';
-  return null;
+  return fileExtFromUrl(item.file_url || item.external_url || '');
 }
 
 /** 상단 형식 배지 — 라벨과 색을 한 기준으로 함께 정한다.

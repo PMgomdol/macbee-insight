@@ -58,6 +58,7 @@ export async function createCategory(f: CategoryFields) {
   });
   if (error) throw new Error('추가에 실패했어요 — ' + error.message);
   updateTag('archive');
+  updateTag('category');
   revalidatePath('/admin-mb26/panel/categories');
 }
 
@@ -96,6 +97,7 @@ export async function updateCategory(id: number, old: CatKey, f: CategoryFields)
   if (e2) throw new Error('수정에 실패했어요 — ' + e2.message);
 
   updateTag('archive');
+  updateTag('category');
   revalidatePath('/admin-mb26/panel/categories');
 }
 
@@ -126,5 +128,6 @@ export async function deleteCategory(id: number, key: CatKey, moveToFallback: bo
   const { error } = await sb.from('category').delete().eq('id', id);
   if (error) throw new Error('삭제에 실패했어요 — ' + error.message);
   updateTag('archive');
+  updateTag('category');
   revalidatePath('/admin-mb26/panel/categories');
 }
