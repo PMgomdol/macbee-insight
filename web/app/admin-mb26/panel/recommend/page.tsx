@@ -30,7 +30,7 @@ export default async function RecommendPage() {
     // 전체 공개자료(추천 안 된 것) — 클라 필터/정렬용 경량 컬럼
     sb
       .from('archive_item')
-      .select('id, title, main_category, kind, format, file_ext, external_url, file_url, views, registered_at')
+      .select('id, title, summary, main_category, kind, format, file_ext, external_url, file_url, views, registered_at')
       .eq('status', 'public')
       .is('featured_at', null)
       .order('registered_at', { ascending: false })

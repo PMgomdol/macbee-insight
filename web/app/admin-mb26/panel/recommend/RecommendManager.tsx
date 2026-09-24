@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { Search, X, GripVertical } from 'lucide-react';
+import { Search, X, GripVertical, ExternalLink } from 'lucide-react';
 import type { ArchiveItem } from '@/types/db';
 import { ItemCard } from '@/components/ItemCard';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
@@ -10,6 +10,7 @@ import { addFeatured, removeFeatured, reorderFeatured } from '../actions';
 export type PoolRow = {
   id: number;
   title: string;
+  summary: string | null;
   main_category: string;
   kind: 'files' | 'insights';
   format: string | null;
@@ -42,7 +43,6 @@ function toCard(it: PoolRow): ArchiveItem {
   return {
     ...it,
     sub_category: null,
-    summary: null,
     published_at: null,
     tags: [],
     featured_at: new Date().toISOString(),
@@ -53,6 +53,7 @@ function toPool(it: ArchiveItem): PoolRow {
   return {
     id: it.id,
     title: it.title,
+    summary: it.summary,
     main_category: it.main_category,
     kind: it.kind,
     format: it.format,
@@ -97,7 +98,7 @@ export function RecommendManager({ initial, pool }: { initial: ArchiveItem[]; po
     const kws = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
     if (kws.length) {
       arr = arr.filter((it) => {
-        const hay = (it.title + ' ' + it.main_category).toLowerCase();
+        const hay = (it.title + ' ' + it.main_category + ' ' + (it.summary || '')).toLowerCase();
         return kws.every((k) => hay.includes(k));
       });
     }
@@ -203,7 +204,21 @@ export function RecommendManager({ initial, pool }: { initial: ArchiveItem[]; po
                   {badge(it)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium truncate">{it.title}</div>
+                  {it.external_url || it.file_url ? (
+                    <a
+                      href={it.external_url || it.file_url || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-flex items-center gap-1 text-sm font-medium text-[var(--fg)] hover:text-[var(--accent)] transition"
+                      title="새 탭에서 원문 열기"
+                    >
+                      <span className="truncate">{it.title}</span>
+                      <ExternalLink size={12} className="shrink-0 opacity-0 group-hover:opacity-70" aria-hidden />
+                    </a>
+                  ) : (
+                    <div className="text-sm font-medium truncate">{it.title}</div>
+                  )}
+                  {it.summary && <p className="text-[12px] text-[var(--muted)] line-clamp-1 mt-0.5">{it.summary}</p>}
                   <div className="text-[11px] text-[var(--muted-2)] mt-0.5">
                     {it.main_category} · 조회 {(it.views || 0).toLocaleString()}
                   </div>
@@ -305,29 +320,48 @@ export function RecommendManager({ initial, pool }: { initial: ArchiveItem[]; po
           </div>
         ) : (
           <div className="border border-[var(--border)] rounded-[var(--r-sm)] overflow-hidden divide-y divide-[var(--border)]">
-            {visible.map((it) => (
-              <div key={it.id} className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-[var(--card)] transition">
-                <div className="min-w-0 flex items-center gap-2">
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] bg-[var(--accent-bg)] text-[var(--accent)] shrink-0">
-                    {badge(it)}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="text-sm truncate">{it.title}</div>
-                    <div className="text-[11px] text-[var(--muted-2)]">
-                      {it.main_category} · 조회 {(it.views || 0).toLocaleString()} · {fmtDate(it.registered_at)}
+            {visible.map((it) => {
+              const url = it.external_url || it.file_url || '';
+              return (
+                <div key={it.id} className="flex items-start justify-between gap-3 px-3 py-3 hover:bg-[var(--card)] transition">
+                  <div className="min-w-0 flex items-start gap-2">
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] bg-[var(--accent-bg)] text-[var(--accent)] shrink-0 mt-0.5">
+                      {badge(it)}
+                    </span>
+                    <div className="min-w-0">
+                      {url ? (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group inline-flex items-center gap-1 text-sm font-medium text-[var(--fg)] hover:text-[var(--accent)] transition"
+                          title="새 탭에서 원문 열기"
+                        >
+                          <span className="truncate">{it.title}</span>
+                          <ExternalLink size={12} className="shrink-0 opacity-0 group-hover:opacity-70" aria-hidden />
+                        </a>
+                      ) : (
+                        <div className="text-sm font-medium truncate">{it.title}</div>
+                      )}
+                      {it.summary && (
+                        <p className="text-[12px] text-[var(--muted)] line-clamp-1 mt-0.5">{it.summary}</p>
+                      )}
+                      <div className="text-[11px] text-[var(--muted-2)] mt-0.5">
+                        {it.main_category} · 조회 {(it.views || 0).toLocaleString()} · {fmtDate(it.registered_at)}
+                      </div>
                     </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => add(it)}
+                    disabled={pending || featured.length >= MAX}
+                    className="shrink-0 mt-0.5 text-xs font-semibold text-[var(--accent)] bg-[var(--accent-bg)] rounded-[var(--r-sm)] px-2.5 py-1 hover:brightness-95 transition disabled:opacity-50"
+                  >
+                    + 추가
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => add(it)}
-                  disabled={pending || featured.length >= MAX}
-                  className="shrink-0 text-xs font-semibold text-[var(--accent)] bg-[var(--accent-bg)] rounded-[var(--r-sm)] px-2.5 py-1 hover:brightness-95 transition disabled:opacity-50"
-                >
-                  + 추가
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
