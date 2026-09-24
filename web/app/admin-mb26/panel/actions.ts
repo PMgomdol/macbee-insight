@@ -333,3 +333,20 @@ export async function removeFeatured(id: number) {
   revalidatePath('/');
   revalidatePath('/admin-mb26/panel/recommend');
 }
+
+/** 추천 순서 변경 — 앞에 올 자료일수록 featured_at 을 크게(최근) 재기록. 정렬키(featured_at desc)를 그대로 재활용. */
+export async function reorderFeatured(orderedIds: number[]) {
+  await assertReviewer();
+  const sb = createAdminClient();
+  const base = Date.now();
+  for (let i = 0; i < orderedIds.length; i++) {
+    const { error } = await sb
+      .from('archive_item')
+      .update({ featured_at: new Date(base - i * 1000).toISOString() })
+      .eq('id', orderedIds[i]);
+    if (error) throw new Error('순서 변경에 실패했어요 — ' + error.message);
+  }
+  updateTag('archive');
+  revalidatePath('/');
+  revalidatePath('/admin-mb26/panel/recommend');
+}

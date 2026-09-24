@@ -1,7 +1,8 @@
 import { getAuthState } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/server';
 import { UILinkButton } from '@/components/ui/Button';
-import { RecommendManager, type FeaturedRow } from './RecommendManager';
+import type { ArchiveItem } from '@/types/db';
+import { RecommendManager, type PoolRow } from './RecommendManager';
 
 export const metadata = { title: '추천 자료 · 운영/관리' };
 
@@ -20,15 +21,16 @@ export default async function RecommendPage() {
 
   const sb = createAdminClient();
   const [featuredRes, poolRes] = await Promise.all([
+    // 추천 목록 — 홈 미리보기(ItemCard)까지 쓰므로 카드 전체 컬럼
     sb
       .from('archive_item')
-      .select('id, title, main_category, format, file_ext, external_url, file_url, featured_at')
+      .select('id, kind, format, file_ext, external_url, file_url, main_category, sub_category, title, summary, published_at, registered_at, views, tags, featured_at')
       .not('featured_at', 'is', null)
       .order('featured_at', { ascending: false }),
-    // 전체 공개자료(추천 안 된 것) — 자료 관리처럼 전부 불러와 클라에서 즉시 필터
+    // 전체 공개자료(추천 안 된 것) — 클라 필터/정렬용 경량 컬럼
     sb
       .from('archive_item')
-      .select('id, title, main_category, format, file_ext, external_url, file_url')
+      .select('id, title, main_category, kind, format, file_ext, external_url, file_url, views, registered_at')
       .eq('status', 'public')
       .is('featured_at', null)
       .order('registered_at', { ascending: false })
@@ -37,8 +39,8 @@ export default async function RecommendPage() {
 
   return (
     <RecommendManager
-      initial={(featuredRes.data ?? []) as FeaturedRow[]}
-      pool={(poolRes.data ?? []) as FeaturedRow[]}
+      initial={(featuredRes.data ?? []) as ArchiveItem[]}
+      pool={(poolRes.data ?? []) as PoolRow[]}
     />
   );
 }
