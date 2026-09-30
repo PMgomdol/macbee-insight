@@ -23,7 +23,7 @@ function rowTotal(r: EventRow): number {
   return r.base + (r.rarity ? 1 : 0) + (r.practical ? 2 : 0);
 }
 
-export function EventDashboard({ rows: initial }: { rows: EventRow[] }) {
+export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[]; windowLabel?: string }) {
   const [rows, setRows] = useState<EventRow[]>(initial);
   const [q, setQ] = useState('');
   const [err, setErr] = useState<string | null>(null);
@@ -81,6 +81,7 @@ export function EventDashboard({ rows: initial }: { rows: EventRow[] }) {
       <div>
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">등록이벤트 대시보드</h1>
         <p className="text-sm text-[var(--muted)] mt-1">
+          {windowLabel && <span className="text-[var(--muted-2)]">[{windowLabel}] </span>}
           기간 승인 자료 {totalItems}건 (문서 {totalDocs} · 링크 {totalItems - totalDocs}) · 참가자 {board.length}명 · 최소 {MIN}개 기준
         </p>
         <p className="text-[11.5px] text-[var(--muted-2)] mt-1">

@@ -6,9 +6,12 @@ import { EventDashboard, type EventRow } from './EventDashboard';
 
 export const metadata = { title: '등록이벤트 · 운영/관리' };
 
-// 이벤트 기간 (KST). 10/1 00:00 ~ 11/1 00:00.
-const START = '2026-09-30T15:00:00Z'; // 2026-10-01 00:00 KST
-const END = '2026-10-31T15:00:00Z';   // 2026-11-01 00:00 KST
+// 집계 기간 (KST). 기본 시작 = 오늘(테스트 위해), 종료 = 11/1. URL ?from=YYYY-MM-DD&to=YYYY-MM-DD 로 조정 가능.
+// 정식 운영은 from=2026-10-01 로 좁히면 됨.
+const DEFAULT_FROM = '2026-09-30'; // 오늘부터 집계 (테스트)
+const DEFAULT_TO = '2026-11-01';   // 상한(미포함)
+const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+const kst = (d: string) => `${d}T00:00:00+09:00`;
 
 function isDoc(it: { file_url: string | null; file_ext: string | null; external_url: string | null }): boolean {
   if (it.file_url || it.file_ext) return true;
@@ -29,7 +32,16 @@ function normUrl(raw: string): string {
   }
 }
 
-export default async function EventPage() {
+export default async function EventPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}) {
+  const sp = await searchParams;
+  const fromD = sp.from && dateRe.test(sp.from) ? sp.from : DEFAULT_FROM;
+  const toD = sp.to && dateRe.test(sp.to) ? sp.to : DEFAULT_TO;
+  const START = kst(fromD);
+  const END = kst(toD);
   const { user, isReviewer } = await getAuthState();
   if (!user || !isReviewer) {
     return (
@@ -82,5 +94,5 @@ export default async function EventPage() {
     };
   });
 
-  return <EventDashboard rows={rows} />;
+  return <EventDashboard rows={rows} windowLabel={`${fromD} ~ ${toD}`} />;
 }
