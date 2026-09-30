@@ -43,10 +43,11 @@ async function findDuplicate(externalUrl: string, fileUrl: string): Promise<Dupl
   const coreExt = targetExt ? coreOf(targetExt) : '';
   const coreFile = targetFile ? coreOf(targetFile) : '';
 
-  // 1) archive_item — public 게시본
+  // 1) archive_item — 게시본(public/hidden). 삭제(deleted)는 의도적으로 뺀 자료라 재등록 허용 → 제외.
   const arch = await sb
     .from('archive_item')
     .select('id, title, status, kind, external_url, file_url')
+    .neq('status', 'deleted')
     .or(
       [
         coreExt ? `external_url.ilike.${escapeIlike(coreExt)}` : '',
@@ -65,11 +66,12 @@ async function findDuplicate(externalUrl: string, fileUrl: string): Promise<Dupl
     }
   }
 
-  // 2) staging_proposal — pending / approved / rejected 모두 포함
+  // 2) staging_proposal — 검토 대기(pending)·반려(rejected)만. approved는 archive_item으로 넘어가 위 1)에서 잡히고,
+  //    그 archive_item이 삭제된 경우엔 재등록을 허용해야 하므로 여기서 approved는 제외.
   const st = await sb
     .from('staging_proposal')
     .select('id, title, status, external_url, file_url')
-    .in('status', ['pending', 'approved', 'rejected'])
+    .in('status', ['pending', 'rejected'])
     .or(
       [
         coreExt ? `external_url.ilike.${escapeIlike(coreExt)}` : '',
