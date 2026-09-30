@@ -133,10 +133,8 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">등록이벤트 대시보드</h1>
         <p className="text-sm text-[var(--muted)] mt-1">
           {windowLabel && <span className="text-[var(--muted-2)]">[{windowLabel}] </span>}
-          승인 {totalItems}건 (문서 {totalDocs} · 링크 {totalItems - totalDocs}) · 참가자 {board.length}명 · 검수 {reviewedCount}/{totalItems}
-        </p>
-        <p className="text-[11.5px] text-[var(--muted-2)] mt-1">
-          기본점수(링크1·문서2) 자동. <b>희소(+1)·실무(+2)</b> 체크 시 자동 검수완료, 가산 없는 자료는 <b>검수</b>만 체크. 최소 {MIN}개 기준.
+          승인 {totalItems}건 (문서 {totalDocs} · 링크 {totalItems - totalDocs}) · 참가자 {board.length}명
+          {' · '}<b className={totalItems - reviewedCount > 0 ? 'text-[var(--accent)]' : 'text-[var(--muted)]'}>미검수 {totalItems - reviewedCount}건</b>
         </p>
       </div>
 
@@ -194,6 +192,10 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
       {/* 자료 채점 */}
       <section className="flex flex-col gap-3 border-t border-dashed border-[var(--border)] pt-5">
         <div className="text-sm font-medium text-[var(--muted)]">자료 채점 ({filtered.length}건)</div>
+        <p className="text-[12px] text-[var(--muted-2)] leading-relaxed -mt-1">
+          각 줄 왼쪽 상태를 눌러 <b className="text-[var(--fg)]">검수완료</b>로 바꿔요. 가산점(희소·실무)을 체크하면 자동으로 검수완료 처리돼요.
+          기본점수는 링크 1점·문서 2점 자동. (최소 {MIN}개 기준)
+        </p>
 
         <div className="flex items-center gap-2 border-2 border-[var(--border)] focus-within:border-[var(--accent)] rounded-[var(--r-sm)] px-3 py-2 bg-[var(--bg)] transition max-w-md">
           <Search size={16} className="text-[var(--muted-2)] shrink-0" aria-hidden />
@@ -223,7 +225,22 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
         ) : (
           <div className="border border-[var(--border)] rounded-[var(--r-sm)] overflow-hidden divide-y divide-[var(--border)]">
             {filtered.map((r) => (
-              <div key={r.id} className={`flex items-center justify-between gap-3 px-3 py-2.5 transition ${r.reviewed ? 'bg-[color-mix(in_srgb,var(--accent)_5%,var(--bg))]' : 'hover:bg-[var(--card)]'}`}>
+              <div key={r.id} className={`flex items-center gap-3 px-3 py-2.5 transition border-l-[3px] ${r.reviewed ? 'bg-[color-mix(in_srgb,var(--accent)_6%,var(--bg))] border-[var(--accent)]' : 'border-transparent hover:bg-[var(--card)]'}`}>
+                {/* 왼쪽 검수 상태 토글 — 한눈에 미검수/검수완료 구분 */}
+                <button
+                  type="button"
+                  onClick={() => toggleReviewed(r.id)}
+                  disabled={pending}
+                  title={r.reviewed ? '검수완료 — 클릭하면 미검수로 되돌려요' : '클릭하면 검수완료로 표시돼요'}
+                  className={`shrink-0 inline-flex items-center gap-1 w-[74px] justify-center px-2 py-1.5 rounded-full text-[11px] font-semibold border transition ${
+                    r.reviewed
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'bg-[var(--bg)] text-[var(--muted-2)] border-[var(--border-strong)] hover:text-[var(--fg)]'
+                  }`}
+                >
+                  {r.reviewed ? <><Check size={12} aria-hidden />검수완료</> : '미검수'}
+                </button>
+
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] shrink-0 ${r.type === '문서' ? 'bg-[var(--accent-bg)] text-[var(--accent)]' : 'bg-[var(--card)] text-[var(--muted)]'}`}>
@@ -244,7 +261,10 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
                     {' · '}{r.date} · 총 {rowTotal(r)}점
                   </div>
                 </div>
+
+                {/* 오른쪽 가산점 그룹 */}
                 <div className="flex items-center gap-2.5 shrink-0 text-xs">
+                  <span className="text-[10px] text-[var(--muted-2)] hidden sm:inline">가산</span>
                   <label className="inline-flex items-center gap-1 cursor-pointer select-none" title="희소성 +1">
                     <input type="checkbox" checked={r.rarity} disabled={pending} onChange={() => toggleBonus(r.id, 'rarity')} className="accent-[var(--accent)] w-3.5 h-3.5" />
                     <span className="text-[var(--muted)]">희소<span className="text-[var(--muted-2)]">+1</span></span>
@@ -253,19 +273,6 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
                     <input type="checkbox" checked={r.practical} disabled={pending} onChange={() => toggleBonus(r.id, 'practical')} className="accent-[var(--accent)] w-3.5 h-3.5" />
                     <span className="text-[var(--muted)]">실무<span className="text-[var(--muted-2)]">+2</span></span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => toggleReviewed(r.id)}
-                    disabled={pending}
-                    title={r.reviewed ? '검수완료 (클릭하면 취소)' : '검수완료로 표시'}
-                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-[var(--r-sm)] border transition ${
-                      r.reviewed
-                        ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                        : 'border-[var(--border-strong)] text-[var(--muted)] hover:bg-[var(--card)]'
-                    }`}
-                  >
-                    <Check size={12} aria-hidden />{r.reviewed ? '검수완료' : '검수'}
-                  </button>
                 </div>
               </div>
             ))}
