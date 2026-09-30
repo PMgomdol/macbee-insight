@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BarChart3, Inbox, MessageSquare, UserPlus, KanbanSquare, ScrollText, Library, FolderTree, BookOpen, Star } from 'lucide-react';
+import { Home, BarChart3, Inbox, MessageSquare, UserPlus, KanbanSquare, ScrollText, Library, FolderTree, BookOpen, Star, Trophy } from 'lucide-react';
 
 type NavItem = { href: string; label: string; icon: typeof Home; exact?: boolean };
 
@@ -15,6 +15,7 @@ const ITEMS: NavItem[] = [
   { href: '/admin-mb26/panel/categories', label: '카테고리', icon: FolderTree },
   { href: '/admin-mb26/panel/feedback', label: 'VOC', icon: MessageSquare },
   { href: '/admin-mb26/panel/backlog', label: '백로그', icon: KanbanSquare },
+  { href: '/admin-mb26/panel/event', label: '등록이벤트', icon: Trophy },
   { href: '/admin-mb26/panel/invite', label: '운영진 초대', icon: UserPlus },
   { href: '/admin-mb26/panel/changelog', label: '업데이트 내역', icon: ScrollText },
   { href: '/admin-mb26/panel/guide', label: '운영 가이드', icon: BookOpen },

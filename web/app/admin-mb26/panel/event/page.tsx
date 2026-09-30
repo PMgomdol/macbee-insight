@@ -1,0 +1,86 @@
+import { getAuthState } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase/server';
+import { UILinkButton } from '@/components/ui/Button';
+import { fileExtFromUrl } from '@/lib/file-ext';
+import { EventDashboard, type EventRow } from './EventDashboard';
+
+export const metadata = { title: '등록이벤트 · 운영/관리' };
+
+// 이벤트 기간 (KST). 10/1 00:00 ~ 11/1 00:00.
+const START = '2026-09-30T15:00:00Z'; // 2026-10-01 00:00 KST
+const END = '2026-10-31T15:00:00Z';   // 2026-11-01 00:00 KST
+
+function isDoc(it: { file_url: string | null; file_ext: string | null; external_url: string | null }): boolean {
+  if (it.file_url || it.file_ext) return true;
+  return fileExtFromUrl(it.external_url || '') !== null;
+}
+
+function normUrl(raw: string): string {
+  if (!raw) return '';
+  try {
+    const u = new URL(raw.trim().toLowerCase());
+    const keep = new URLSearchParams();
+    for (const [k, v] of u.searchParams) {
+      if (!k.startsWith('utm_') && !['fbclid', 'gclid', 'igshid', 'spm', 'ref'].includes(k)) keep.append(k, v);
+    }
+    return `${u.protocol}//${u.host}${u.pathname.replace(/\/$/, '')}${keep.toString() ? '?' + keep : ''}`;
+  } catch {
+    return raw.trim().toLowerCase().replace(/\/$/, '');
+  }
+}
+
+export default async function EventPage() {
+  const { user, isReviewer } = await getAuthState();
+  if (!user || !isReviewer) {
+    return (
+      <div className="flex flex-col gap-3 max-w-md py-8">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">등록이벤트</h1>
+        <p className="text-sm text-[var(--muted)]">운영진만 볼 수 있어요.</p>
+        <UILinkButton href="/admin-mb26" className="w-fit">로그인</UILinkButton>
+      </div>
+    );
+  }
+
+  const sb = createAdminClient();
+  const [itemsRes, bonusRes] = await Promise.all([
+    sb
+      .from('archive_item')
+      .select('id, title, proposer, external_url, file_url, file_ext, registered_at')
+      .eq('status', 'public')
+      .gte('registered_at', START)
+      .lt('registered_at', END)
+      .order('registered_at', { ascending: false }),
+    sb.from('event_bonus').select('item_id, rarity, practical'),
+  ]);
+
+  const bonusById = new Map<number, { rarity: boolean; practical: boolean }>();
+  for (const b of bonusRes.data ?? []) bonusById.set((b as any).item_id, { rarity: (b as any).rarity, practical: (b as any).practical });
+
+  // 중복의심 — 정규화 URL 카운트
+  const items = itemsRes.data ?? [];
+  const normCount = new Map<string, number>();
+  for (const it of items) {
+    const n = normUrl((it as any).file_url || (it as any).external_url || '');
+    if (n) normCount.set(n, (normCount.get(n) ?? 0) + 1);
+  }
+
+  const rows: EventRow[] = items.map((it: any) => {
+    const doc = isDoc(it);
+    const b = bonusById.get(it.id) ?? { rarity: false, practical: false };
+    const n = normUrl(it.file_url || it.external_url || '');
+    return {
+      id: it.id,
+      title: it.title,
+      proposer: (it.proposer || '').trim() || '(미기재)',
+      url: it.file_url || it.external_url || '',
+      date: (it.registered_at || '').slice(0, 10),
+      type: doc ? '문서' : '링크',
+      base: doc ? 2 : 1,
+      rarity: b.rarity,
+      practical: b.practical,
+      dup: (normCount.get(n) ?? 0) > 1,
+    };
+  });
+
+  return <EventDashboard rows={rows} />;
+}

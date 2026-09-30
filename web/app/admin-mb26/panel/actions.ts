@@ -368,3 +368,16 @@ export async function reorderFeatured(orderedIds: number[]) {
   revalidatePath('/');
   revalidatePath('/admin-mb26/panel/recommend');
 }
+
+/** 등록이벤트 가산점 저장 — 자료별 희소성(+1)·실무형(+2). 운영진만. */
+export async function setEventBonus(itemId: number, rarity: boolean, practical: boolean) {
+  await assertReviewer();
+  const me = await getCurrentUser();
+  const sb = createAdminClient();
+  const { error } = await sb.from('event_bonus').upsert(
+    { item_id: itemId, rarity, practical, updated_by: me?.email ?? null, updated_at: new Date().toISOString() },
+    { onConflict: 'item_id' }
+  );
+  if (error) throw new Error('가산점 저장에 실패했어요 — ' + error.message);
+  revalidatePath('/admin-mb26/panel/event');
+}
