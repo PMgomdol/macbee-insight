@@ -15,8 +15,12 @@ export type EventRow = {
   rarity: boolean;
   practical: boolean;
   reviewed: boolean;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
   dup: boolean;
 };
+
+const todayStr = () => new Date().toISOString().slice(0, 10);
 
 const MIN = 15; // 최소 등록 기준(2일 1개)
 
@@ -31,7 +35,7 @@ const chip = (active: boolean) =>
       : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
   }`;
 
-export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[]; windowLabel?: string }) {
+export function EventDashboard({ rows: initial, windowLabel, me }: { rows: EventRow[]; windowLabel?: string; me?: string | null }) {
   const [rows, setRows] = useState<EventRow[]>(initial);
   const [q, setQ] = useState('');
   const [typeF, setTypeF] = useState<'' | '문서' | '링크'>('');
@@ -86,7 +90,7 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
     if (!cur) return;
     const nextR = field === 'rarity' ? !cur.rarity : cur.rarity;
     const nextP = field === 'practical' ? !cur.practical : cur.practical;
-    patch(id, { rarity: nextR, practical: nextP, reviewed: true }); // 낙관적 (가산 = 자동 검수완료)
+    patch(id, { rarity: nextR, practical: nextP, reviewed: true, reviewedBy: me ?? cur.reviewedBy, reviewedAt: todayStr() }); // 낙관적 (가산 = 자동 검수완료)
     startTransition(async () => {
       try {
         await setEventBonus(id, nextR, nextP);
@@ -102,7 +106,7 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
     const cur = rows.find((r) => r.id === id);
     if (!cur) return;
     if (cur.reviewed) {
-      patch(id, { reviewed: false, rarity: false, practical: false }); // 검수취소 = 가산도 초기화
+      patch(id, { reviewed: false, rarity: false, practical: false, reviewedBy: null, reviewedAt: null }); // 검수취소 = 가산도 초기화
       startTransition(async () => {
         try {
           await clearEventBonus(id);
@@ -112,7 +116,7 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
         }
       });
     } else {
-      patch(id, { reviewed: true });
+      patch(id, { reviewed: true, reviewedBy: me ?? null, reviewedAt: todayStr() });
       startTransition(async () => {
         try {
           await setEventBonus(id, cur.rarity, cur.practical);
@@ -259,6 +263,7 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
                   <div className="text-[11px] text-[var(--muted-2)] mt-0.5">
                     <button type="button" onClick={() => setQ(r.proposer)} className="hover:text-[var(--accent)] hover:underline">{r.proposer}</button>
                     {' · '}{r.date} · 총 {rowTotal(r)}점
+                    {r.reviewed && r.reviewedBy && <span className="text-[var(--accent)]"> · 검수 {r.reviewedBy}</span>}
                   </div>
                 </div>
 

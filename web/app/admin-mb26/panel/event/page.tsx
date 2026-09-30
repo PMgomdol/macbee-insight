@@ -62,11 +62,11 @@ export default async function EventPage({
       .gte('registered_at', START)
       .lt('registered_at', END)
       .order('registered_at', { ascending: false }),
-    sb.from('event_bonus').select('item_id, rarity, practical'),
+    sb.from('event_bonus').select('item_id, rarity, practical, updated_by, updated_at'),
   ]);
 
-  const bonusById = new Map<number, { rarity: boolean; practical: boolean }>();
-  for (const b of bonusRes.data ?? []) bonusById.set((b as any).item_id, { rarity: (b as any).rarity, practical: (b as any).practical });
+  const bonusById = new Map<number, { rarity: boolean; practical: boolean; by: string | null; at: string | null }>();
+  for (const b of bonusRes.data ?? []) bonusById.set((b as any).item_id, { rarity: (b as any).rarity, practical: (b as any).practical, by: (b as any).updated_by ?? null, at: (b as any).updated_at ?? null });
 
   // 중복의심 — 정규화 URL 카운트
   const items = itemsRes.data ?? [];
@@ -91,9 +91,12 @@ export default async function EventPage({
       rarity: b?.rarity ?? false,
       practical: b?.practical ?? false,
       reviewed: bonusById.has(it.id), // event_bonus 행 존재 = 검수완료
+      reviewedBy: b?.by ? b.by.split('@')[0] : null, // 이메일 로컬파트만 표시
+      reviewedAt: b?.at ? b.at.slice(0, 10) : null,
       dup: (normCount.get(n) ?? 0) > 1,
     };
   });
 
-  return <EventDashboard rows={rows} windowLabel={`${fromD} ~ ${toD}`} />;
+  const me = (user.email || '').split('@')[0] || null;
+  return <EventDashboard rows={rows} windowLabel={`${fromD} ~ ${toD}`} me={me} />;
 }
