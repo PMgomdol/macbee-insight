@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { Search, ExternalLink } from 'lucide-react';
-import { setEventBonus } from '../actions';
+import { Search, ExternalLink, Check } from 'lucide-react';
+import { setEventBonus, clearEventBonus } from '../actions';
 
 export type EventRow = {
   id: number;
@@ -14,6 +14,7 @@ export type EventRow = {
   base: number;
   rarity: boolean;
   practical: boolean;
+  reviewed: boolean;
   dup: boolean;
 };
 
@@ -23,9 +24,19 @@ function rowTotal(r: EventRow): number {
   return r.base + (r.rarity ? 1 : 0) + (r.practical ? 2 : 0);
 }
 
+const chip = (active: boolean) =>
+  `shrink-0 px-3 py-1.5 rounded-full text-xs border whitespace-nowrap transition ${
+    active
+      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+      : 'border-[var(--border)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--fg)]'
+  }`;
+
 export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[]; windowLabel?: string }) {
   const [rows, setRows] = useState<EventRow[]>(initial);
   const [q, setQ] = useState('');
+  const [typeF, setTypeF] = useState<'' | '문서' | '링크'>('');
+  const [reviewF, setReviewF] = useState<'' | 'todo' | 'done'>('');
+  const [qualifiedOnly, setQualifiedOnly] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -47,30 +58,70 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
     });
     return arr;
   }, [rows]);
+  const boardShown = qualifiedOnly ? board.filter((e) => e.count >= MIN) : board;
 
   const filtered = useMemo(() => {
     const kws = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
-    if (!kws.length) return rows;
     return rows.filter((r) => {
-      const hay = (r.title + ' ' + r.proposer).toLowerCase();
-      return kws.every((k) => hay.includes(k));
+      if (typeF && r.type !== typeF) return false;
+      if (reviewF === 'todo' && r.reviewed) return false;
+      if (reviewF === 'done' && !r.reviewed) return false;
+      if (kws.length) {
+        const hay = (r.title + ' ' + r.proposer).toLowerCase();
+        if (!kws.every((k) => hay.includes(k))) return false;
+      }
+      return true;
     });
-  }, [rows, q]);
+  }, [rows, q, typeF, reviewF]);
 
-  function toggle(id: number, field: 'rarity' | 'practical') {
+  const reviewedCount = rows.filter((r) => r.reviewed).length;
+
+  function patch(id: number, next: Partial<EventRow>) {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...next } : r)));
+  }
+
+  function toggleBonus(id: number, field: 'rarity' | 'practical') {
     setErr(null);
     const cur = rows.find((r) => r.id === id);
     if (!cur) return;
-    const next = { ...cur, [field]: !cur[field] };
-    setRows((prev) => prev.map((r) => (r.id === id ? next : r))); // 낙관적
+    const nextR = field === 'rarity' ? !cur.rarity : cur.rarity;
+    const nextP = field === 'practical' ? !cur.practical : cur.practical;
+    patch(id, { rarity: nextR, practical: nextP, reviewed: true }); // 낙관적 (가산 = 자동 검수완료)
     startTransition(async () => {
       try {
-        await setEventBonus(id, next.rarity, next.practical);
+        await setEventBonus(id, nextR, nextP);
       } catch (e) {
-        setRows((prev) => prev.map((r) => (r.id === id ? cur : r))); // 롤백
+        patch(id, { rarity: cur.rarity, practical: cur.practical, reviewed: cur.reviewed });
         setErr(e instanceof Error ? e.message : '저장 실패');
       }
     });
+  }
+
+  function toggleReviewed(id: number) {
+    setErr(null);
+    const cur = rows.find((r) => r.id === id);
+    if (!cur) return;
+    if (cur.reviewed) {
+      patch(id, { reviewed: false, rarity: false, practical: false }); // 검수취소 = 가산도 초기화
+      startTransition(async () => {
+        try {
+          await clearEventBonus(id);
+        } catch (e) {
+          patch(id, { reviewed: cur.reviewed, rarity: cur.rarity, practical: cur.practical });
+          setErr(e instanceof Error ? e.message : '저장 실패');
+        }
+      });
+    } else {
+      patch(id, { reviewed: true });
+      startTransition(async () => {
+        try {
+          await setEventBonus(id, cur.rarity, cur.practical);
+        } catch (e) {
+          patch(id, { reviewed: cur.reviewed });
+          setErr(e instanceof Error ? e.message : '저장 실패');
+        }
+      });
+    }
   }
 
   const totalItems = rows.length;
@@ -82,10 +133,10 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">등록이벤트 대시보드</h1>
         <p className="text-sm text-[var(--muted)] mt-1">
           {windowLabel && <span className="text-[var(--muted-2)]">[{windowLabel}] </span>}
-          기간 승인 자료 {totalItems}건 (문서 {totalDocs} · 링크 {totalItems - totalDocs}) · 참가자 {board.length}명 · 최소 {MIN}개 기준
+          승인 {totalItems}건 (문서 {totalDocs} · 링크 {totalItems - totalDocs}) · 참가자 {board.length}명 · 검수 {reviewedCount}/{totalItems}
         </p>
         <p className="text-[11.5px] text-[var(--muted-2)] mt-1">
-          기본점수(링크1·문서2)는 자동. 아래 목록에서 <b>희소성(+1)·실무형(+2)</b>만 체크하면 순위에 바로 반영돼요.
+          기본점수(링크1·문서2) 자동. <b>희소(+1)·실무(+2)</b> 체크 시 자동 검수완료, 가산 없는 자료는 <b>검수</b>만 체크. 최소 {MIN}개 기준.
         </p>
       </div>
 
@@ -95,12 +146,17 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
 
       {/* 참가자 순위 */}
       <section className="flex flex-col gap-2">
-        <div className="text-sm font-medium text-[var(--muted)]">참가자 순위</div>
-        {board.length === 0 ? (
-          <p className="text-sm text-[var(--muted-2)] py-3">아직 이벤트 기간 승인 자료가 없어요.</p>
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm font-medium text-[var(--muted)]">참가자 순위</div>
+          <button type="button" onClick={() => setQualifiedOnly((v) => !v)} className={chip(qualifiedOnly)}>
+            {MIN}개↑ 자격자만
+          </button>
+        </div>
+        {boardShown.length === 0 ? (
+          <p className="text-sm text-[var(--muted-2)] py-3">{board.length === 0 ? '아직 집계된 자료가 없어요.' : '자격 충족자가 아직 없어요.'}</p>
         ) : (
           <div className="border border-[var(--border)] rounded-[var(--r-sm)] overflow-x-auto">
-            <table className="w-full text-sm min-w-[420px]">
+            <table className="w-full text-sm min-w-[440px]">
               <thead>
                 <tr className="text-[11px] text-[var(--muted-2)] border-b border-[var(--border)] bg-[var(--card)]">
                   <th className="text-left font-medium px-3 py-2 w-12">순위</th>
@@ -112,8 +168,13 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
                 </tr>
               </thead>
               <tbody>
-                {board.map((e) => (
-                  <tr key={e.name} className="border-b border-[var(--border)] last:border-0">
+                {boardShown.map((e) => (
+                  <tr
+                    key={e.name}
+                    onClick={() => setQ(e.name)}
+                    className="border-b border-[var(--border)] last:border-0 cursor-pointer hover:bg-[var(--card)]"
+                    title="클릭하면 이 사람 자료만 보기"
+                  >
                     <td className="px-3 py-2 font-semibold tabular-nums">{e.rank}</td>
                     <td className="px-3 py-2 truncate max-w-[160px]">{e.name}</td>
                     <td className="px-3 py-2 text-right tabular-nums">{e.count}</td>
@@ -131,8 +192,9 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
       </section>
 
       {/* 자료 채점 */}
-      <section className="flex flex-col gap-2 border-t border-dashed border-[var(--border)] pt-5">
+      <section className="flex flex-col gap-3 border-t border-dashed border-[var(--border)] pt-5">
         <div className="text-sm font-medium text-[var(--muted)]">자료 채점 ({filtered.length}건)</div>
+
         <div className="flex items-center gap-2 border-2 border-[var(--border)] focus-within:border-[var(--accent)] rounded-[var(--r-sm)] px-3 py-2 bg-[var(--bg)] transition max-w-md">
           <Search size={16} className="text-[var(--muted-2)] shrink-0" aria-hidden />
           <input
@@ -142,6 +204,18 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
             aria-label="자료 검색"
             className="flex-1 bg-transparent outline-none text-sm text-[var(--fg)] placeholder:text-[var(--muted-2)]"
           />
+          {q && <button type="button" onClick={() => setQ('')} className="text-[var(--muted-2)] hover:text-[var(--fg)] text-xs">지우기</button>}
+        </div>
+
+        {/* 필터 — 형식 / 검수여부 */}
+        <div className="flex flex-wrap gap-1.5">
+          {([['', '형식 전체'], ['문서', '문서'], ['링크', '링크']] as const).map(([k, l]) => (
+            <button key={k} type="button" onClick={() => setTypeF(k)} className={chip(typeF === k)}>{l}</button>
+          ))}
+          <span className="w-px bg-[var(--border)] mx-1" />
+          {([['', '검수 전체'], ['todo', '미검수'], ['done', '검수완료']] as const).map(([k, l]) => (
+            <button key={k} type="button" onClick={() => setReviewF(k)} className={chip(reviewF === k)}>{l}</button>
+          ))}
         </div>
 
         {filtered.length === 0 ? (
@@ -149,7 +223,7 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
         ) : (
           <div className="border border-[var(--border)] rounded-[var(--r-sm)] overflow-hidden divide-y divide-[var(--border)]">
             {filtered.map((r) => (
-              <div key={r.id} className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-[var(--card)] transition">
+              <div key={r.id} className={`flex items-center justify-between gap-3 px-3 py-2.5 transition ${r.reviewed ? 'bg-[color-mix(in_srgb,var(--accent)_5%,var(--bg))]' : 'hover:bg-[var(--card)]'}`}>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] shrink-0 ${r.type === '문서' ? 'bg-[var(--accent-bg)] text-[var(--accent)]' : 'bg-[var(--card)] text-[var(--muted)]'}`}>
@@ -165,17 +239,33 @@ export function EventDashboard({ rows: initial, windowLabel }: { rows: EventRow[
                     )}
                     {r.dup && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] bg-[color-mix(in_srgb,var(--danger)_12%,var(--bg))] text-[var(--danger)] shrink-0">중복의심</span>}
                   </div>
-                  <div className="text-[11px] text-[var(--muted-2)] mt-0.5">{r.proposer} · {r.date} · 총 {rowTotal(r)}점</div>
+                  <div className="text-[11px] text-[var(--muted-2)] mt-0.5">
+                    <button type="button" onClick={() => setQ(r.proposer)} className="hover:text-[var(--accent)] hover:underline">{r.proposer}</button>
+                    {' · '}{r.date} · 총 {rowTotal(r)}점
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0 text-xs">
+                <div className="flex items-center gap-2.5 shrink-0 text-xs">
                   <label className="inline-flex items-center gap-1 cursor-pointer select-none" title="희소성 +1">
-                    <input type="checkbox" checked={r.rarity} disabled={pending} onChange={() => toggle(r.id, 'rarity')} className="accent-[var(--accent)] w-3.5 h-3.5" />
-                    <span className="text-[var(--muted)]">희소 <span className="text-[var(--muted-2)]">+1</span></span>
+                    <input type="checkbox" checked={r.rarity} disabled={pending} onChange={() => toggleBonus(r.id, 'rarity')} className="accent-[var(--accent)] w-3.5 h-3.5" />
+                    <span className="text-[var(--muted)]">희소<span className="text-[var(--muted-2)]">+1</span></span>
                   </label>
                   <label className="inline-flex items-center gap-1 cursor-pointer select-none" title="실무형 +2">
-                    <input type="checkbox" checked={r.practical} disabled={pending} onChange={() => toggle(r.id, 'practical')} className="accent-[var(--accent)] w-3.5 h-3.5" />
-                    <span className="text-[var(--muted)]">실무 <span className="text-[var(--muted-2)]">+2</span></span>
+                    <input type="checkbox" checked={r.practical} disabled={pending} onChange={() => toggleBonus(r.id, 'practical')} className="accent-[var(--accent)] w-3.5 h-3.5" />
+                    <span className="text-[var(--muted)]">실무<span className="text-[var(--muted-2)]">+2</span></span>
                   </label>
+                  <button
+                    type="button"
+                    onClick={() => toggleReviewed(r.id)}
+                    disabled={pending}
+                    title={r.reviewed ? '검수완료 (클릭하면 취소)' : '검수완료로 표시'}
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-[var(--r-sm)] border transition ${
+                      r.reviewed
+                        ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                        : 'border-[var(--border-strong)] text-[var(--muted)] hover:bg-[var(--card)]'
+                    }`}
+                  >
+                    <Check size={12} aria-hidden />{r.reviewed ? '검수완료' : '검수'}
+                  </button>
                 </div>
               </div>
             ))}

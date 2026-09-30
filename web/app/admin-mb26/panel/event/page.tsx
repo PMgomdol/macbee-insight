@@ -78,7 +78,7 @@ export default async function EventPage({
 
   const rows: EventRow[] = items.map((it: any) => {
     const doc = isDoc(it);
-    const b = bonusById.get(it.id) ?? { rarity: false, practical: false };
+    const b = bonusById.get(it.id);
     const n = normUrl(it.file_url || it.external_url || '');
     return {
       id: it.id,
@@ -88,8 +88,9 @@ export default async function EventPage({
       date: (it.registered_at || '').slice(0, 10),
       type: doc ? '문서' : '링크',
       base: doc ? 2 : 1,
-      rarity: b.rarity,
-      practical: b.practical,
+      rarity: b?.rarity ?? false,
+      practical: b?.practical ?? false,
+      reviewed: bonusById.has(it.id), // event_bonus 행 존재 = 검수완료
       dup: (normCount.get(n) ?? 0) > 1,
     };
   });

@@ -34,10 +34,28 @@ const SLIDES: Slide[] = [
   },
 ];
 
+// 등록이벤트 배너 — 10/1~10/31에만 자동 노출(그 외엔 숨김). 초록 계열로 기존 파랑/노랑과 구분.
+const EVENT_SLIDE: Slide = {
+  href: '/event',
+  badge: 'EVENT',
+  title: '자료 등록 이벤트 · 10월',
+  sub: '실무 자료 올리고 상품 받아가세요. 참여 방법·시상 내역 보러가기 →',
+  bg: '#E6F4EA',
+  fg: '#0B5323',
+  badgeColor: '#1E8E3E',
+};
+function eventLive(now = Date.now()): boolean {
+  return now >= Date.parse('2026-10-01T00:00:00+09:00') && now < Date.parse('2026-11-01T00:00:00+09:00');
+}
+
 const INTERVAL = 5000;
 
 export function HomeBanner() {
   const [idx, setIdx] = useState(0);
+  const [showEvent, setShowEvent] = useState(false);
+  // 이벤트 기간에만 배너 앞에 추가 — 초기 렌더(서버)엔 없음 → 지금은 숨김, 10/1부터 자동 노출
+  useEffect(() => { setShowEvent(eventLive()); }, []);
+  const slides = showEvent ? [EVENT_SLIDE, ...SLIDES] : SLIDES;
   const [paused, setPaused] = useState(false);
   // 재개 시점마다 증가 — 진행 바 애니메이션과 타이머를 함께 리셋해 항상 동기 유지
   const [epoch, setEpoch] = useState(0);
@@ -51,11 +69,11 @@ export function HomeBanner() {
 
   useEffect(() => {
     if (paused || reduced) return;
-    timer.current = setInterval(() => setIdx((i) => (i + 1) % SLIDES.length), INTERVAL);
+    timer.current = setInterval(() => setIdx((i) => (i + 1) % slides.length), INTERVAL);
     return () => { if (timer.current) clearInterval(timer.current); };
-  }, [paused, idx, epoch, reduced]);
+  }, [paused, idx, epoch, reduced, showEvent]);
 
-  const go = (i: number) => setIdx((i + SLIDES.length) % SLIDES.length);
+  const go = (i: number) => setIdx((i + slides.length) % slides.length);
   const resume = () => { setPaused(false); setEpoch((e) => e + 1); };
 
   // 모바일 스와이프 — 가로 40px 이상 + 가로가 세로보다 크면 전환 (세로 스크롤 방해 금지)
@@ -92,7 +110,7 @@ export function HomeBanner() {
           className="flex transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${idx * 100}%)` }}
         >
-          {SLIDES.map((s, i) => (
+          {slides.map((s, i) => (
             <Link
               key={s.href}
               href={s.href}
@@ -147,7 +165,7 @@ export function HomeBanner() {
       {/* 게이지 도트 — 활성 도트가 필로 늘어나고 안에 남은 시간 게이지가 채워짐 (위치+시간+이동 통합).
           버튼 히트 영역은 44px 확보, 보이는 도트는 그대로 작게. */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex items-center">
-        {SLIDES.map((s, i) => (
+        {slides.map((s, i) => (
           <button
             key={s.href}
             type="button"

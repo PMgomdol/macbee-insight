@@ -381,3 +381,12 @@ export async function setEventBonus(itemId: number, rarity: boolean, practical: 
   if (error) throw new Error('가산점 저장에 실패했어요 — ' + error.message);
   revalidatePath('/admin-mb26/panel/event');
 }
+
+/** 등록이벤트 검수 취소 — event_bonus 행 삭제(미검수로). */
+export async function clearEventBonus(itemId: number) {
+  await assertReviewer();
+  const sb = createAdminClient();
+  const { error } = await sb.from('event_bonus').delete().eq('item_id', itemId);
+  if (error) throw new Error('검수 취소에 실패했어요 — ' + error.message);
+  revalidatePath('/admin-mb26/panel/event');
+}
