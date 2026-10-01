@@ -54,6 +54,10 @@ export function SubmitForm({ categories }: Props) {
   const [emailNudge, setEmailNudge] = useState(false); // 이벤트 기간 이메일 공란 제출 시 안내
   const [dragOver, setDragOver] = useState(false);
   const [progress, setProgress] = useState(0);
+  // ?eventPreview=1 — 10/6 전에 이벤트 UI(이메일 안내)를 미리 확인용. 초기 렌더엔 off → hydration 안전.
+  const [eventPreview, setEventPreview] = useState(false);
+  useEffect(() => { setEventPreview(new URLSearchParams(window.location.search).get('eventPreview') === '1'); }, []);
+  const eventActive = EVENT_ACTIVE || eventPreview;
 
   // 업로드·분석 진행률 — 서버액션이 실제 %를 안 주므로 경과시간 기반으로 90%까지
   // 차오르게 하고(뒤로 갈수록 느리게) 완료 시 사라짐. 30초 정도 걸리는 대기를 시각화.
@@ -320,13 +324,13 @@ export function SubmitForm({ categories }: Props) {
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     // 이벤트 기간에 이메일 없이 제출하려 하면 한 번 짚어줌 (막지는 않음)
-    if (EVENT_ACTIVE && !proposerEmail.trim()) { setEmailNudge(true); return; }
+    if (eventActive && !proposerEmail.trim()) { setEmailNudge(true); return; }
     doSubmit();
   }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full min-w-0">
-      {EVENT_ACTIVE && !submitDone && (
+      {eventActive && !submitDone && (
         <div className="flex items-start gap-2 p-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--accent-bg)] text-sm">
           <span className="text-[var(--fg)]">
             <b>자료 등록 챌린지 진행 중</b> — 순위 집계·상품은 <b>이메일을 남긴 분</b>만 가능해요.{' '}
@@ -597,14 +601,14 @@ export function SubmitForm({ categories }: Props) {
             </div>
             <div className="flex flex-col gap-1.5 min-w-0">
               <label className="text-sm font-medium" htmlFor="proposer-email">
-                이메일 <span className="text-[var(--muted-2)] font-normal">{EVENT_ACTIVE ? '(이벤트 순위 집계용)' : '(선택)'}</span>
+                이메일 <span className="text-[var(--muted-2)] font-normal">{eventActive ? '(이벤트 순위 집계용)' : '(선택)'}</span>
               </label>
               <Textfield
                 id="proposer-email"
                 type="email"
                 value={proposerEmail}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProposerEmail(e.target.value)}
-                placeholder={EVENT_ACTIVE ? '순위 집계·결과 안내를 위해 입력해주세요' : '검토 결과를 알려드려요'}
+                placeholder={eventActive ? '순위 집계·결과 안내를 위해 입력해주세요' : '검토 결과를 알려드려요'}
               />
             </div>
           </div>

@@ -54,7 +54,11 @@ export function HomeBanner() {
   const [idx, setIdx] = useState(0);
   const [showEvent, setShowEvent] = useState(false);
   // 이벤트 기간에만 배너 앞에 추가 — 초기 렌더(서버)엔 없음 → 지금은 숨김, 10/1부터 자동 노출
-  useEffect(() => { setShowEvent(eventLive()); }, []);
+  // ?eventPreview=1 이면 기간 전에도 이벤트 배너를 미리 노출(확인용)
+  useEffect(() => {
+    const preview = new URLSearchParams(window.location.search).get('eventPreview') === '1';
+    setShowEvent(eventLive() || preview);
+  }, []);
   const slides = showEvent ? [EVENT_SLIDE, ...SLIDES] : SLIDES;
   const [paused, setPaused] = useState(false);
   // 재개 시점마다 증가 — 진행 바 애니메이션과 타이머를 함께 리셋해 항상 동기 유지
