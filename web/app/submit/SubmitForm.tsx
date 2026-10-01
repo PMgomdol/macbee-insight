@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect, useRef } from 'react';
 import {
-  Sparkles, Upload, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle, ExternalLink,
+  Sparkles, Upload, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle, ExternalLink, Trophy,
 } from 'lucide-react';
 import { UIButton, UILinkButton } from '@/components/ui/Button';
 import Textfield from '@atlaskit/textfield';
@@ -355,12 +355,22 @@ export function SubmitForm({ categories }: Props) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full min-w-0">
       {eventActive && !submitDone && (
-        <div className="flex items-start gap-2 p-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--accent-bg)] text-sm">
-          <span className="text-[var(--fg)]">
-            <b>자료 등록 챌린지 진행 중</b> — 순위 집계를 위해서는 <b>이메일을 꼭 남겨주세요.</b>{' '}
-            <a href="https://macbe.dothome.co.kr/macbe_archive-challenge.html" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline underline-offset-2">이벤트 안내</a>
-          </span>
-        </div>
+        // 이벤트 배너 — 초록 계열(홈 이벤트 배너와 같은 아이덴티티)로 파란 제품 UI와 구분해 눈에 띄게.
+        // 전체가 맥비 이벤트 안내로 가는 링크(모바일 탭 영역 확보).
+        <a
+          href="https://macbe.dothome.co.kr/macbe_archive-challenge.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 p-4 rounded-[var(--r-md)] bg-[#E6F4EA] text-[#0B5323] hover:brightness-[0.98] transition"
+        >
+          <Trophy size={24} className="shrink-0 text-[#1E8E3E]" aria-hidden />
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="text-[10px] font-semibold tracking-[0.08em] text-[#1E8E3E]">EVENT · 자료 등록 챌린지</span>
+            <span className="text-sm leading-snug">
+              순위 집계를 위해 <b>이메일을 꼭 남겨주세요.</b> <span className="underline underline-offset-2">참여 방법·시상 보기 →</span>
+            </span>
+          </div>
+        </a>
       )}
       {/* 등록 방식 — 밑줄 탭 (박스 중첩 회피, UI 규칙: 전환 탭은 탭답게) */}
       <div role="tablist" aria-label="등록 방식" className="flex gap-1 border-b border-[var(--border)]">
