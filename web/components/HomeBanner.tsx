@@ -39,13 +39,13 @@ const EVENT_SLIDE: Slide = {
   href: '/event',
   badge: 'EVENT',
   title: '자료 등록 이벤트 · 10월',
-  sub: '실무 자료 올리고 상품 받아가세요. 참여 방법·시상 내역 보러가기 →',
+  sub: '실무 자료 올리고 상품 받아가세요. 참여 방법·시상 내역 보러가기',
   bg: '#E6F4EA',
   fg: '#0B5323',
   badgeColor: '#1E8E3E',
 };
 function eventLive(now = Date.now()): boolean {
-  return now >= Date.parse('2026-10-01T00:00:00+09:00') && now < Date.parse('2026-11-01T00:00:00+09:00');
+  return now >= Date.parse('2026-10-06T00:00:00+09:00') && now < Date.parse('2026-11-01T00:00:00+09:00');
 }
 
 const INTERVAL = 5000;

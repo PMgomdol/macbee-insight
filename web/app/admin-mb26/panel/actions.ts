@@ -187,6 +187,7 @@ async function migrateToArchive(row: any, approvers: string[], extraNote?: strin
     format: row.format,
     published_at: row.published_at,
     proposer: row.proposer,
+    proposer_email: row.proposer_email,
     status: 'public',
     exposure_grade: 'free',
     notes: note,

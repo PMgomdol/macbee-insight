@@ -58,20 +58,20 @@ export default function EventPage() {
         <div className="flex flex-wrap items-center gap-3 pt-1">
           <Link
             href="/submit"
-            className="inline-flex items-center px-5 py-2.5 rounded-[var(--r-sm)] bg-[#1E8E3E] text-white text-sm font-semibold hover:brightness-95 transition"
+            className="inline-flex items-center px-5 py-2.5 rounded-[var(--r-md)] bg-[var(--accent)] text-white text-sm font-semibold hover:bg-[var(--accent-hover)] transition"
           >
             자료 등록하러 가기
           </Link>
-          <span className="text-xs opacity-70">10월 1일 ~ 10월 31일 · 맥비기획 전 멤버</span>
+          <span className="text-xs opacity-70">10월 6일 ~ 10월 31일 · 맥비기획 전 멤버</span>
         </div>
       </header>
 
       <Section n="01" title="이벤트 개요">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {[
-            ['진행 기간', '10/1(목) ~ 10/31(토)'],
+            ['진행 기간', '10/6(화) ~ 10/31(토)'],
             ['참여 대상', '맥비기획 모든 멤버'],
-            ['결과 발표', '11/4(수) 예정'],
+            ['결과 발표', '11/9(월) 예정'],
           ].map(([k, v]) => (
             <div key={k} className="rounded-[var(--r-md)] border border-[var(--border)] p-3">
               <div className="text-[11px] text-[var(--muted-2)]">{k}</div>
@@ -159,7 +159,7 @@ export default function EventPage() {
         <p className="text-sm text-[var(--muted)]">기획자·PM의 집단지성으로 더 든든해질 맥비 자료실, 함께 채워가요.</p>
         <Link
           href="/submit"
-          className="inline-flex items-center px-6 py-3 rounded-[var(--r-sm)] bg-[var(--accent)] text-white text-sm font-semibold hover:bg-[var(--accent-hover)] transition"
+          className="inline-flex items-center px-6 py-3 rounded-[var(--r-md)] bg-[var(--accent)] text-white text-sm font-semibold hover:bg-[var(--accent-hover)] transition"
         >
           지금 자료 등록하기
         </Link>

@@ -8,8 +8,8 @@ export const metadata = { title: '등록이벤트 · 운영/관리' };
 
 // 집계 기간 (KST). 기본 시작 = 오늘(테스트 위해), 종료 = 11/1. URL ?from=YYYY-MM-DD&to=YYYY-MM-DD 로 조정 가능.
 // 정식 운영은 from=2026-10-01 로 좁히면 됨.
-const DEFAULT_FROM = '2026-09-30'; // 오늘부터 집계 (테스트)
-const DEFAULT_TO = '2026-11-01';   // 상한(미포함)
+const DEFAULT_FROM = '2026-10-06'; // 이벤트 시작(공지일)
+const DEFAULT_TO = '2026-11-01';   // 10/31까지 (상한 미포함)
 const dateRe = /^\d{4}-\d{2}-\d{2}$/;
 const kst = (d: string) => `${d}T00:00:00+09:00`;
 
@@ -57,7 +57,7 @@ export default async function EventPage({
   const [itemsRes, bonusRes] = await Promise.all([
     sb
       .from('archive_item')
-      .select('id, title, proposer, external_url, file_url, file_ext, registered_at')
+      .select('id, title, proposer, proposer_email, external_url, file_url, file_ext, registered_at')
       .eq('status', 'public')
       .gte('registered_at', START)
       .lt('registered_at', END)
@@ -84,6 +84,7 @@ export default async function EventPage({
       id: it.id,
       title: it.title,
       proposer: (it.proposer || '').trim() || '(미기재)',
+      email: (it.proposer_email || '').trim().toLowerCase() || null,
       url: it.file_url || it.external_url || '',
       date: (it.registered_at || '').slice(0, 10),
       type: doc ? '문서' : '링크',

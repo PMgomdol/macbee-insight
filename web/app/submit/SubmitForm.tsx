@@ -20,6 +20,11 @@ const UPLOAD_BUCKET = 'archive-files';
 
 type Props = { categories: { main_category: string; sub_category: string | null }[] };
 
+// 자료 등록 챌린지 기간(10/6~10/31 KST). 이 기간엔 이메일 없이 제출 시 '순위 집계 제외' 안내를 띄운다.
+const EVENT_ACTIVE =
+  Date.now() >= Date.parse('2026-10-06T00:00:00+09:00') &&
+  Date.now() < Date.parse('2026-11-01T00:00:00+09:00');
+
 export function SubmitForm({ categories }: Props) {
   const [mode, setMode] = useState<'url' | 'file'>('url');
   const [url, setUrl] = useState('');
@@ -46,6 +51,7 @@ export function SubmitForm({ categories }: Props) {
   const [forceSubmit, setForceSubmit] = useState(false);
   const [submitDone, setSubmitDone] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [emailNudge, setEmailNudge] = useState(false); // 이벤트 기간 이메일 공란 제출 시 안내
   const [dragOver, setDragOver] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -275,9 +281,8 @@ export function SubmitForm({ categories }: Props) {
     });
   }
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+  function doSubmit() {
+    const fd = new FormData();
     fd.set('url', finalUrl || url);
     fd.set('file_url', fileUrl);
     fd.set('title', title);
@@ -292,6 +297,7 @@ export function SubmitForm({ categories }: Props) {
     fd.set('proposer_email', proposerEmail);
     if (forceSubmit) fd.set('force', '1');
     setSubmitError(null);
+    setEmailNudge(false);
     startSubmit(async () => {
       const r = await submitProposal(fd);
       if ('ok' in r && r.ok) {
@@ -311,8 +317,23 @@ export function SubmitForm({ categories }: Props) {
     });
   }
 
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    // 이벤트 기간에 이메일 없이 제출하려 하면 한 번 짚어줌 (막지는 않음)
+    if (EVENT_ACTIVE && !proposerEmail.trim()) { setEmailNudge(true); return; }
+    doSubmit();
+  }
+
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4 w-full min-w-0">
+      {EVENT_ACTIVE && !submitDone && (
+        <div className="flex items-start gap-2 p-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--accent-bg)] text-sm">
+          <span className="text-[var(--fg)]">
+            <b>자료 등록 챌린지 진행 중</b> — 순위 집계·상품은 <b>이메일을 남긴 분</b>만 가능해요.{' '}
+            <a href="/event" className="text-[var(--accent)] underline underline-offset-2">이벤트 안내</a>
+          </span>
+        </div>
+      )}
       {/* 등록 방식 — 밑줄 탭 (박스 중첩 회피, UI 규칙: 전환 탭은 탭답게) */}
       <div role="tablist" aria-label="등록 방식" className="flex gap-1 border-b border-[var(--border)]">
         {([['url', 'URL 등록'], ['file', '파일 업로드']] as const).map(([m, label]) => (
@@ -575,12 +596,15 @@ export function SubmitForm({ categories }: Props) {
               />
             </div>
             <div className="flex flex-col gap-1.5 min-w-0">
-              <label className="text-sm font-medium">이메일 <span className="text-[var(--muted-2)] font-normal">(선택)</span></label>
+              <label className="text-sm font-medium" htmlFor="proposer-email">
+                이메일 <span className="text-[var(--muted-2)] font-normal">{EVENT_ACTIVE ? '(이벤트 순위 집계용)' : '(선택)'}</span>
+              </label>
               <Textfield
+                id="proposer-email"
                 type="email"
                 value={proposerEmail}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProposerEmail(e.target.value)}
-                placeholder="검토 결과를 알려드려요"
+                placeholder={EVENT_ACTIVE ? '순위 집계·결과 안내를 위해 입력해주세요' : '검토 결과를 알려드려요'}
               />
             </div>
           </div>
@@ -589,6 +613,30 @@ export function SubmitForm({ categories }: Props) {
             <div role="alert" className="flex items-start gap-2 p-3 rounded-[var(--r-md)] bg-[var(--danger)]/10 text-sm">
               <AlertCircle size={16} className="text-[var(--danger)] shrink-0 mt-0.5" aria-hidden />
               <span>{submitError}</span>
+            </div>
+          )}
+
+          {emailNudge && (
+            <div className="flex flex-col gap-2.5 p-3 rounded-[var(--r-md)] border border-[var(--accent)] bg-[var(--accent-bg)]">
+              <p className="text-sm text-[var(--fg)]">
+                이메일을 남기지 않으면 <b>이벤트 순위 집계에서 빠져요.</b> (등록 자체는 됩니다)
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setEmailNudge(false); document.getElementById('proposer-email')?.focus(); }}
+                  className="px-3 py-1.5 rounded-[var(--r-sm)] bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition"
+                >
+                  이메일 입력할게요
+                </button>
+                <button
+                  type="button"
+                  onClick={doSubmit}
+                  className="px-3 py-1.5 rounded-[var(--r-sm)] border border-[var(--border-strong)] text-xs font-medium hover:bg-[var(--card)] transition"
+                >
+                  순위 없이 그냥 등록
+                </button>
+              </div>
             </div>
           )}
 

@@ -11,6 +11,7 @@ export type EventRow = {
   url: string;
   date: string;
   type: '문서' | '링크';
+  email: string | null;
   base: number;
   rarity: boolean;
   practical: boolean;
@@ -44,24 +45,29 @@ export function EventDashboard({ rows: initial, windowLabel, me }: { rows: Event
   const [err, setErr] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  // 순위는 '이메일' 기준 집계 (이름 자유입력 사칭·오타 방지). 이메일 없는 등록은 순위 제외.
   const board = useMemo(() => {
-    const m = new Map<string, { name: string; count: number; docs: number; total: number; rank: number }>();
+    const m = new Map<string, { name: string; email: string; count: number; docs: number; total: number; rank: number }>();
     for (const r of rows) {
-      const e = m.get(r.proposer) ?? { name: r.proposer, count: 0, docs: 0, total: 0, rank: 0 };
+      if (!r.email) continue;
+      const e = m.get(r.email) ?? { name: r.proposer, email: r.email, count: 0, docs: 0, total: 0, rank: 0 };
       e.count++;
       if (r.type === '문서') e.docs++;
       e.total += rowTotal(r);
-      m.set(r.proposer, e);
+      e.name = r.proposer; // 표시용 이름(최근 값)
+      m.set(r.email, e);
     }
-    const arr = [...m.values()].sort((a, b) => b.total - a.total || b.docs - a.docs);
-    let rank = 0, pt: number | null = null, pd: number | null = null;
+    // 동점: 총점 → 문서 건수 → 총 건수 (포스터 기준)
+    const arr = [...m.values()].sort((a, b) => b.total - a.total || b.docs - a.docs || b.count - a.count);
+    let rank = 0, pt: number | null = null, pd: number | null = null, pc: number | null = null;
     arr.forEach((e, i) => {
-      if (e.total === pt && e.docs === pd) e.rank = rank;
+      if (e.total === pt && e.docs === pd && e.count === pc) e.rank = rank;
       else { rank = i + 1; e.rank = rank; }
-      pt = e.total; pd = e.docs;
+      pt = e.total; pd = e.docs; pc = e.count;
     });
     return arr;
   }, [rows]);
+  const noEmailCount = rows.filter((r) => !r.email).length;
   const boardShown = qualifiedOnly ? board.filter((e) => e.count >= MIN) : board;
 
   const filtered = useMemo(() => {
@@ -151,9 +157,12 @@ export function EventDashboard({ rows: initial, windowLabel, me }: { rows: Event
         <div className="flex items-center justify-between gap-2">
           <div className="text-sm font-medium text-[var(--muted)]">참가자 순위</div>
           <button type="button" onClick={() => setQualifiedOnly((v) => !v)} className={chip(qualifiedOnly)}>
-            {MIN}개↑ 자격자만
+            {MIN}개 이상 자격자만
           </button>
         </div>
+        <p className="text-[11.5px] text-[var(--muted-2)]">
+          순위는 <b>이메일 기준</b>으로 집계돼요.{noEmailCount > 0 && <span className="text-[var(--muted)]"> 이메일 없는 등록 {noEmailCount}건은 순위에서 제외(자료로는 집계).</span>}
+        </p>
         {boardShown.length === 0 ? (
           <p className="text-sm text-[var(--muted-2)] py-3">{board.length === 0 ? '아직 집계된 자료가 없어요.' : '자격 충족자가 아직 없어요.'}</p>
         ) : (
@@ -178,7 +187,10 @@ export function EventDashboard({ rows: initial, windowLabel, me }: { rows: Event
                     title="클릭하면 이 사람 자료만 보기"
                   >
                     <td className="px-3 py-2 font-semibold tabular-nums">{e.rank}</td>
-                    <td className="px-3 py-2 truncate max-w-[160px]">{e.name}</td>
+                    <td className="px-3 py-2 max-w-[200px]">
+                      <div className="truncate">{e.name}</div>
+                      <div className="text-[11px] text-[var(--muted-2)] truncate">{e.email}</div>
+                    </td>
                     <td className="px-3 py-2 text-right tabular-nums">{e.count}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-[var(--muted-2)]">{e.docs}</td>
                     <td className="px-3 py-2 text-right tabular-nums font-semibold text-[var(--accent)]">{e.total}</td>
@@ -236,10 +248,10 @@ export function EventDashboard({ rows: initial, windowLabel, me }: { rows: Event
                   onClick={() => toggleReviewed(r.id)}
                   disabled={pending}
                   title={r.reviewed ? '검수완료 — 클릭하면 미검수로 되돌려요' : '클릭하면 검수완료로 표시돼요'}
-                  className={`shrink-0 inline-flex items-center gap-1 w-[74px] justify-center px-2 py-1.5 rounded-full text-[11px] font-semibold border transition ${
+                  className={`shrink-0 inline-flex items-center gap-1 w-[80px] justify-center px-2 py-1.5 rounded-[var(--r-sm)] text-[11px] font-semibold border transition ${
                     r.reviewed
                       ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                      : 'bg-[var(--bg)] text-[var(--muted-2)] border-[var(--border-strong)] hover:text-[var(--fg)]'
+                      : 'bg-[var(--bg)] text-[var(--muted-2)] border-[var(--border-strong)] border-dashed hover:text-[var(--fg)]'
                   }`}
                 >
                   {r.reviewed ? <><Check size={12} aria-hidden />검수완료</> : '미검수'}
