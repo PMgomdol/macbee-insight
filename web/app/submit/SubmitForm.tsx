@@ -538,6 +538,9 @@ export function SubmitForm({ categories }: Props) {
               />
             </div>
           </div>
+          <p className="text-[12px] text-[var(--muted-2)] -mt-1.5">
+            맞는 분류가 없으면 <b className="text-[var(--muted)]">비워두세요</b> — 운영진이 보고 분류를 정하거나 새로 만들어드려요.
+          </p>
 
           <div className="flex flex-col gap-1.5 min-w-0">
             <label className="text-sm font-medium" htmlFor="published-at">발행일 <span className="text-[var(--muted-2)] font-normal">(선택 · 자동 추출)</span></label>
