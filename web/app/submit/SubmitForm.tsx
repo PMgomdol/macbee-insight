@@ -96,6 +96,17 @@ export function SubmitForm({ categories }: Props) {
     return () => { document.removeEventListener('keydown', onKey); prev?.focus?.(); };
   }, [submitDone]);
 
+  // 이메일 넛지 모달 — ESC 닫기 + 열릴 때 첫 버튼 포커스 + 닫으면 포커스 복원
+  const nudgeRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!emailNudge) return;
+    const prev = document.activeElement as HTMLElement | null;
+    nudgeRef.current?.querySelector<HTMLElement>('button')?.focus();
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') { e.preventDefault(); setEmailNudge(false); } }
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('keydown', onKey); prev?.focus?.(); };
+  }, [emailNudge]);
+
   function resetForm() {
     setUrl('');
     setFileUrl('');
@@ -620,30 +631,6 @@ export function SubmitForm({ categories }: Props) {
             </div>
           )}
 
-          {emailNudge && (
-            <div className="flex flex-col gap-2.5 p-3 rounded-[var(--r-md)] border border-[var(--accent)] bg-[var(--accent-bg)]">
-              <p className="text-sm text-[var(--fg)]">
-                이메일을 남기지 않으면 <b>이벤트 순위 집계에서 빠져요.</b> (등록 자체는 됩니다)
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => { setEmailNudge(false); document.getElementById('proposer-email')?.focus(); }}
-                  className="px-3 py-1.5 rounded-[var(--r-sm)] bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition"
-                >
-                  이메일 입력할게요
-                </button>
-                <button
-                  type="button"
-                  onClick={doSubmit}
-                  className="px-3 py-1.5 rounded-[var(--r-sm)] border border-[var(--border-strong)] text-xs font-medium hover:bg-[var(--card)] transition"
-                >
-                  순위 없이 그냥 등록
-                </button>
-              </div>
-            </div>
-          )}
-
           <div className="mt-4">
             <UIButton
               type="submit"
@@ -654,6 +641,51 @@ export function SubmitForm({ categories }: Props) {
             </UIButton>
           </div>
         </>
+      )}
+
+      {emailNudge && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="email-nudge-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          onClick={() => setEmailNudge(false)}
+        >
+          <div
+            ref={nudgeRef}
+            className="bg-[var(--bg)] border border-[var(--border)] rounded-[var(--r-md)] shadow-[var(--shadow-3)] max-w-md w-full p-6 flex flex-col gap-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={22} className="text-[var(--accent)]" aria-hidden />
+                <h2 id="email-nudge-title" className="text-lg font-bold tracking-tight">이메일 없이 등록할까요?</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEmailNudge(false)}
+                aria-label="닫기"
+                className="p-1 -m-1 text-[var(--muted)] hover:text-[var(--fg)]"
+              >
+                <X size={18} aria-hidden />
+              </button>
+            </div>
+            <p className="text-sm text-[var(--muted)] leading-relaxed">
+              이메일을 남기지 않으면 <b className="text-[var(--fg)]">이벤트 순위 집계에서 빠져요.</b> 등록 자체는 됩니다.
+            </p>
+            <div className="flex gap-2 mt-1">
+              <UIButton
+                onClick={() => { setEmailNudge(false); document.getElementById('proposer-email')?.focus(); }}
+                className="flex-1"
+              >
+                이메일 입력할게요
+              </UIButton>
+              <UIButton onClick={doSubmit} variant="secondary" className="flex-1">
+                순위 없이 그냥 등록
+              </UIButton>
+            </div>
+          </div>
+        </div>
       )}
 
       {submitDone && (
