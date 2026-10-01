@@ -36,7 +36,7 @@ const SLIDES: Slide[] = [
 
 // 등록이벤트 배너 — 10/1~10/31에만 자동 노출(그 외엔 숨김). 초록 계열로 기존 파랑/노랑과 구분.
 const EVENT_SLIDE: Slide = {
-  href: '/event',
+  href: 'https://macbe.dothome.co.kr/macbe_archive-challenge.html',
   badge: 'EVENT',
   title: '자료 등록 이벤트 · 10월',
   sub: '실무 자료 올리고 상품 받아가세요. 참여 방법·시상 내역 보러가기',
@@ -118,6 +118,8 @@ export function HomeBanner() {
             <Link
               key={s.href}
               href={s.href}
+              target={s.href.startsWith('http') ? '_blank' : undefined}
+              rel={s.href.startsWith('http') ? 'noopener noreferrer' : undefined}
               tabIndex={i === idx ? 0 : -1}
               aria-hidden={i !== idx}
               className="w-full shrink-0 flex items-center justify-between gap-4 px-6 sm:px-12 py-7 sm:py-10"

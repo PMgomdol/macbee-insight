@@ -344,8 +344,8 @@ export function SubmitForm({ categories }: Props) {
       {eventActive && !submitDone && (
         <div className="flex items-start gap-2 p-3 rounded-[var(--r-md)] border border-[var(--border)] bg-[var(--accent-bg)] text-sm">
           <span className="text-[var(--fg)]">
-            <b>자료 등록 챌린지 진행 중</b> — 순위 집계·상품은 <b>이메일을 남긴 분</b>만 가능해요.{' '}
-            <a href="/event" className="text-[var(--accent)] underline underline-offset-2">이벤트 안내</a>
+            <b>자료 등록 챌린지 진행 중</b> — 순위 집계를 위해서는 <b>이메일을 꼭 남겨주세요.</b>{' '}
+            <a href="https://macbe.dothome.co.kr/macbe_archive-challenge.html" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] underline underline-offset-2">이벤트 안내</a>
           </span>
         </div>
       )}
