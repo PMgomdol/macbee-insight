@@ -43,6 +43,19 @@ export const TYPE_META: Record<ChangeType, { label: string; color: string }> = {
 
 export const CHANGELOG: Release[] = [
   {
+    date: '2026-10-02',
+    title: '챌린지 10/2 시작 반영 · 업로드 파일 삭제 · 이메일 조회 차단',
+    changes: [
+      { type: 'feature', text: '[자료 등록](/submit)에서 올린 파일을 지우고 다른 파일로 다시 고를 수 있어요. 업로드가 끝나면 파일 이름 옆에 [삭제] 버튼이 생겨요.',
+        media: [{ type: 'image', src: '/changelog/upload-delete.jpg', caption: '업로드한 파일 줄의 [삭제] 버튼' }] },
+      { type: 'improve', text: '챌린지 시작일을 맥비님 공지에 맞춰 10/2로 당겼어요. [홈](/) 첫 배너와 [자료 등록](/submit) 상단 안내가 10/2부터 보이고, [등록이벤트](/admin-mb26/panel/event) 순위도 10/2 승인분부터 집계해요. 등록 화면 안내는 눈에 띄는 초록 배너로 바꿨고, 홈 배너에는 다른 배너와 같은 3D 트로피 일러스트를 넣었어요.',
+        media: [{ type: 'image', src: '/changelog/challenge-banner.jpg', caption: '홈 첫 배너 — 누르면 맥비님 챌린지 안내 페이지로 이동' }] },
+      { type: 'improve', text: '[자료 등록](/submit)에서 이메일 형식이 틀리면 등록 전에 알려줘요. 챌린지 순위가 이메일 기준이라 오타로 집계가 갈리지 않게 하려는 거예요.' },
+      { type: 'fix', text: '자료 데이터에 함께 저장되는 운영진 이메일(승인 기록)과 제안자 이메일·이름을 외부에서 직접 조회할 수 없게 막았어요. 사이트 화면에는 원래 보이지 않았지만, 데이터베이스에 직접 요청하면 읽을 수 있던 부분이에요.' },
+      { type: 'fix', text: '[자료 등록](/submit)에서 파일을 바꿔 올리면 이전 파일로 채워진 제목·설명·분류가 남아 새 파일에 섞이던 문제를 고쳤어요.' },
+    ],
+  },
+  {
     date: '2026-10-01',
     title: '실무 자료 폭풍 등록 챌린지 · 순위 대시보드 · 이메일 기준 집계',
     changes: [
