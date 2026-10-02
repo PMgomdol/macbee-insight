@@ -43,6 +43,7 @@ const EVENT_SLIDE: Slide = {
   bg: '#E6F4EA',
   fg: '#0B5323',
   badgeColor: '#1E8E3E',
+  img: '/banner/event.png', // 나노바나나 3D 트로피 — 다른 슬라이드와 같은 클레이 스타일(배경 제거·세로 640px)
 };
 function eventLive(now = Date.now()): boolean {
   return now >= Date.parse('2026-10-02T00:00:00+09:00') && now < Date.parse('2026-11-01T00:00:00+09:00');
