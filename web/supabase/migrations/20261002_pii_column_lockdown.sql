@@ -1,24 +1,31 @@
 -- =========================================================================
--- 2026-10-02 — 공개(anon) 읽기에서 PII 컬럼 차단 (archive_item · staging_proposal)
+-- 2026-10-02 — archive_item 의 PII 컬럼을 공개(anon) 읽기에서 차단
 --
 -- 문제:
---   RLS는 행(row)만 거르고 컬럼은 못 거른다. 두 테이블은 anon/authenticated 에
---   테이블 단위 SELECT 가 열려 있어, 공개 anon 키(공개값)로 PostgREST 직격 조회가 된다:
---     GET /rest/v1/archive_item?select=id,notes&status=eq.public   → notes 에 운영진 이메일
---     GET /rest/v1/archive_item?select=proposer_email&status=eq.public → 참가자 이메일(이벤트)
---     GET /rest/v1/staging_proposal?select=proposer_email         → 승인 전 참가자 이메일
---   실측(2026-10-02): notes 공개행 중 18건에 실제 운영진/admin 이메일 포함.
---   공개 앱 UI(카드·검색·suggest·sitemap)는 이 컬럼들을 전혀 select 하지 않음 → 누수는
---   오직 anon 키 직격 PostgREST 경로. (profile 은 2026-08-20 에 같은 방식으로 잠갔음)
+--   RLS 는 행(row)만 거르고 컬럼은 못 거른다. archive_item 은 anon/authenticated 에
+--   테이블 단위 SELECT 가 열려 있고, 공개행(status='public')은 RLS 가 허용하므로
+--   공개 anon 키(브라우저 번들에 있는 공개값)로 PostgREST 직격 조회가 된다:
+--     GET /rest/v1/archive_item?select=notes&status=eq.public
+--       → 실측(2026-10-02): notes 공개행 17건에 운영진 gmail 주소 포함(승인 기록 문구).
+--          회사 도메인 노출은 0건.
+--     GET /rest/v1/archive_item?select=proposer_email&status=eq.public
+--       → 지금은 0건이지만, 챌린지 승인 시 migrateToArchive 가 참가자 이메일을
+--          공개행에 복사하므로 승인되는 순간부터 수집 가능해진다.
+--   공개 앱(카드·검색·suggest·sitemap)은 이 컬럼들을 select 하지 않음 → 누수는
+--   anon 키 직격 경로 한정.
+--   참고: staging_proposal 은 RLS 가 anon 행 조회를 이미 막고 있어(실측 anon 0행 /
+--   실제 32행) 이번 조치 대상 아님.
 --
--- 조치(컬럼 단위 grant):
---   - 공개 앱 읽기(createPublicClient=anon)는 카드 컬럼만 select → 영향 없음.
---   - 어드민 페이지·승인/채점·중복검사(findDuplicate)는 전부 service_role(createAdminClient)
---     경유라 grant 를 우회 → 영향 없음.
---   - staging_proposal 익명 insert 는 `.insert(row).select('id')` 반환 때문에 id SELECT 만 필요.
+-- 조치(컬럼 단위 grant — profile 2026-08-20 락다운과 같은 방식):
+--   proposer · proposer_email · notes 를 anon/authenticated SELECT 에서 제외.
+--   - 공개 읽기(createPublicClient=anon)는 명시 컬럼만 select, select('*') 없음 → 영향 없음.
+--   - 어드민·승인·채점·중복검사·지표는 전부 service_role(createAdminClient) → grant 우회.
+--
+-- ⚠️ 이후 주의: archive_item 에 "공개로 읽을" 새 컬럼을 추가하면 반드시
+--    grant select (새컬럼) on table archive_item to anon, authenticated;
+--    를 같이 실행할 것. 안 하면 그 컬럼을 select 하는 공개 쿼리가 permission denied 로 실패.
 -- =========================================================================
 
--- archive_item: proposer · proposer_email · notes 제외, 나머지 공개 컬럼만 허용
 revoke select on table archive_item from anon, authenticated;
 grant select (
   id, main_category, sub_category, tags, title, summary,
@@ -27,14 +34,9 @@ grant select (
   views, downloads, file_ext, kind, featured_at
 ) on table archive_item to anon, authenticated;
 
--- staging_proposal: 익명이 읽을 이유 없음(중복검사도 service_role). insert 반환용 id 만 허용.
-revoke select on table staging_proposal from anon, authenticated;
-grant select (id) on table staging_proposal to anon, authenticated;
-
--- 확인용 — anon/authenticated 에 민감 컬럼 SELECT 가 남아있지 않아야 한다:
---   select grantee, table_name, column_name
+-- 확인용 — anon/authenticated 에 proposer / proposer_email / notes SELECT 가 없어야 한다:
+--   select grantee, column_name
 --   from information_schema.column_privileges
---   where table_name in ('archive_item','staging_proposal')
---     and grantee in ('anon','authenticated') and privilege_type='SELECT'
---   order by table_name, grantee, column_name;
--- proposer / proposer_email / notes 행이 나오면 아직 열려있는 것.
+--   where table_name='archive_item' and grantee in ('anon','authenticated')
+--     and privilege_type='SELECT' and column_name in ('proposer','proposer_email','notes');
+-- 결과가 0행이면 정상.
