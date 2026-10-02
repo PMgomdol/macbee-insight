@@ -466,6 +466,13 @@ export async function submitProposal(formData: FormData): Promise<SubmitResult |
   if (!title) return { ok: false, error: '제목을 입력해주세요' };
   if (!url && !fileUrl) return { ok: false, error: 'URL이나 파일 중 하나는 있어야 해요' };
 
+  // 이메일을 적었으면 형식 검증 + 소문자 정규화 — 이벤트 순위·결과 안내가 이메일 기준이라
+  // 오타·대소문자 섞임으로 집계가 갈리는 걸 막는다. (클라 type=email 은 서버액션 직접호출로 우회 가능)
+  const email = proposer_email.toLowerCase();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { ok: false, error: '이메일 형식을 확인해주세요 (예: name@example.com)' };
+  }
+
   // 최종 안전 검사 — 분석 단계 이후 다른 자료가 등록되었을 수 있어 한 번 더 확인.
   // force=1 이면 운영진이 의도적으로 중복 허용한 케이스
   if (!force) {
@@ -485,7 +492,7 @@ export async function submitProposal(formData: FormData): Promise<SubmitResult |
     usage,
     published_at: publishedAt && /^\d{4}-\d{2}-\d{2}$/.test(publishedAt) ? publishedAt : null,
     proposer: proposer || null,
-    proposer_email: proposer_email || null,
+    proposer_email: email || null,
     status: 'pending',
   };
 
