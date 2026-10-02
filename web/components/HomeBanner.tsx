@@ -38,7 +38,7 @@ const SLIDES: Slide[] = [
 const EVENT_SLIDE: Slide = {
   href: 'https://macbe.dothome.co.kr/macbe_archive-challenge.html',
   badge: 'EVENT',
-  title: '자료 등록 이벤트 · 10월',
+  title: '기획·PM·IT 실무 자료 폭풍 등록 챌린지',
   sub: '실무 자료 올리고 상품 받아가세요. 참여 방법·시상 내역 보러가기',
   bg: '#E6F4EA',
   fg: '#0B5323',

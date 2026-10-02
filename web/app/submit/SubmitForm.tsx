@@ -20,7 +20,7 @@ const UPLOAD_BUCKET = 'archive-files';
 
 type Props = { categories: { main_category: string; sub_category: string | null }[] };
 
-// 자료 등록 챌린지 기간(10/6~10/31 KST). 이 기간엔 이메일 없이 제출 시 '순위 집계 제외' 안내를 띄운다.
+// 기획·PM·IT 실무 자료 폭풍 등록 챌린지 기간(10/6~10/31 KST). 이 기간엔 이메일 없이 제출 시 '순위 집계 제외' 안내를 띄운다.
 const EVENT_ACTIVE =
   Date.now() >= Date.parse('2026-10-06T00:00:00+09:00') &&
   Date.now() < Date.parse('2026-11-01T00:00:00+09:00');
@@ -365,7 +365,7 @@ export function SubmitForm({ categories }: Props) {
         >
           <Trophy size={24} className="shrink-0 text-[#1E8E3E]" aria-hidden />
           <div className="flex flex-col gap-0.5 min-w-0">
-            <span className="text-[10px] font-semibold tracking-[0.08em] text-[#1E8E3E]">EVENT · 자료 등록 챌린지</span>
+            <span className="text-[10px] font-semibold tracking-[0.08em] text-[#1E8E3E]">EVENT · 기획·PM·IT 실무 자료 폭풍 등록 챌린지</span>
             <span className="text-sm leading-snug">
               순위 집계를 위해 <b>이메일을 꼭 남겨주세요.</b> <span className="underline underline-offset-2">참여 방법·시상 보기 →</span>
             </span>

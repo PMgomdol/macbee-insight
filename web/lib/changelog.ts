@@ -44,9 +44,9 @@ export const TYPE_META: Record<ChangeType, { label: string; color: string }> = {
 export const CHANGELOG: Release[] = [
   {
     date: '2026-10-01',
-    title: '자료 등록 이벤트 · 순위 대시보드 · 이메일 기준 집계',
+    title: '실무 자료 폭풍 등록 챌린지 · 순위 대시보드 · 이메일 기준 집계',
     changes: [
-      { type: 'feature', text: '자료 등록 이벤트를 열었어요 — 참여 방법·평가 기준·시상 내역은 [맥비 이벤트 안내 페이지](https://macbe.dothome.co.kr/macbe_archive-challenge.html)에서 볼 수 있고, 기간(10/6~10/31)에는 [홈](/) 배너에서 그 페이지로 연결돼요.' },
+      { type: 'feature', text: '"기획·PM·IT 실무 자료 폭풍 등록 챌린지"를 열었어요 — 참여 방법·평가 기준·시상 내역은 [맥비 이벤트 안내 페이지](https://macbe.dothome.co.kr/macbe_archive-challenge.html)에서 볼 수 있고, 기간(10/6~10/31)에는 [홈](/) 배너에서 그 페이지로 연결돼요.' },
       { type: 'feature', text: '어드민 [등록이벤트](/admin-mb26/panel/event) 대시보드를 새로 만들었어요 — 이벤트 기간에 승인된 자료를 참여자별로 자동 집계해 순위를 매기고, 각 자료에 희소성·실무 가산점을 바로 눌러 채점해요. 검수 상태(미검수/검수완료)와 누가 채점했는지(검수 by)도 표시돼요.' },
       { type: 'improve', text: '순위는 참여자 이름 대신 이메일 기준으로 모아요 — 이름은 자유 입력이라 사칭·오타로 집계가 섞일 수 있어서예요. 그래서 [자료 등록](/submit)에서 이벤트 기간에 이메일을 비운 채 제출하면, "순위에 넣으려면 이메일을 남겨주세요" 팝업으로 한 번 안내하고 [이메일 입력할게요]를 누르면 입력칸으로 데려다줘요. (이메일 없이도 등록은 되지만, 순위 집계에서는 빠져요)' },
       { type: 'improve', text: '분류를 고르지 않고도 자료를 등록할 수 있어요 — 비워두면 [등록요청](/admin-mb26/panel/requests)에서 운영진이 승인할 때 지정해요.' },
