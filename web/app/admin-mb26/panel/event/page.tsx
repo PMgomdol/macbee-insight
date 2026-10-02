@@ -8,7 +8,7 @@ export const metadata = { title: '등록이벤트 · 운영/관리' };
 
 // 집계 기간 (KST). 기본 시작 = 오늘(테스트 위해), 종료 = 11/1. URL ?from=YYYY-MM-DD&to=YYYY-MM-DD 로 조정 가능.
 // 정식 운영은 from=2026-10-01 로 좁히면 됨.
-const DEFAULT_FROM = '2026-10-06'; // 이벤트 시작(공지일)
+const DEFAULT_FROM = '2026-10-02'; // 이벤트 시작(공지일)
 const DEFAULT_TO = '2026-11-01';   // 10/31까지 (상한 미포함)
 const dateRe = /^\d{4}-\d{2}-\d{2}$/;
 const kst = (d: string) => `${d}T00:00:00+09:00`;

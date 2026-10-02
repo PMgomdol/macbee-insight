@@ -20,9 +20,9 @@ const UPLOAD_BUCKET = 'archive-files';
 
 type Props = { categories: { main_category: string; sub_category: string | null }[] };
 
-// 기획·PM·IT 실무 자료 폭풍 등록 챌린지 기간(10/6~10/31 KST). 이 기간엔 이메일 없이 제출 시 '순위 집계 제외' 안내를 띄운다.
+// 기획·PM·IT 실무 자료 폭풍 등록 챌린지 기간(10/2~10/31 KST). 이 기간엔 이메일 없이 제출 시 '순위 집계 제외' 안내를 띄운다.
 const EVENT_ACTIVE =
-  Date.now() >= Date.parse('2026-10-06T00:00:00+09:00') &&
+  Date.now() >= Date.parse('2026-10-02T00:00:00+09:00') &&
   Date.now() < Date.parse('2026-11-01T00:00:00+09:00');
 
 export function SubmitForm({ categories }: Props) {
@@ -55,7 +55,7 @@ export function SubmitForm({ categories }: Props) {
   const [highlightEmail, setHighlightEmail] = useState(false); // '이메일 입력할게요' 후 잠깐 강조
   const [dragOver, setDragOver] = useState(false);
   const [progress, setProgress] = useState(0);
-  // ?eventPreview=1 — 10/6 전에 이벤트 UI(이메일 안내)를 미리 확인용. 초기 렌더엔 off → hydration 안전.
+  // ?eventPreview=1 — 기간 전에 이벤트 UI(이메일 안내)를 미리 확인용. 초기 렌더엔 off → hydration 안전.
   const [eventPreview, setEventPreview] = useState(false);
   useEffect(() => { setEventPreview(new URLSearchParams(window.location.search).get('eventPreview') === '1'); }, []);
   const eventActive = EVENT_ACTIVE || eventPreview;

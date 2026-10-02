@@ -45,7 +45,7 @@ const EVENT_SLIDE: Slide = {
   badgeColor: '#1E8E3E',
 };
 function eventLive(now = Date.now()): boolean {
-  return now >= Date.parse('2026-10-06T00:00:00+09:00') && now < Date.parse('2026-11-01T00:00:00+09:00');
+  return now >= Date.parse('2026-10-02T00:00:00+09:00') && now < Date.parse('2026-11-01T00:00:00+09:00');
 }
 
 const INTERVAL = 5000;
