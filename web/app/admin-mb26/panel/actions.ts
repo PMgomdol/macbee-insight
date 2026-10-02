@@ -188,6 +188,7 @@ async function migrateToArchive(row: any, approvers: string[], extraNote?: strin
     published_at: row.published_at,
     proposer: row.proposer,
     proposer_email: row.proposer_email,
+    proposed_at: row.proposed_at ?? null, // 제출 시각 — 챌린지 마감·동점(등록 일시 기준) 판정용. registered_at 은 승인 시각
     status: 'public',
     exposure_grade: 'free',
     notes: note,
@@ -383,7 +384,20 @@ export async function setEventBonus(itemId: number, rarity: boolean, practical: 
   revalidatePath('/admin-mb26/panel/event');
 }
 
-/** 등록이벤트 검수 취소 — event_bonus 행 삭제(미검수로). */
+/** 등록이벤트 문서(2점)/링크(1점) 수동 지정 — null 이면 자동 판정. 가산점처럼 행이 생기면 검수완료. 운영진만. */
+export async function setEventDocType(itemId: number, docOverride: boolean | null) {
+  await assertReviewer();
+  const me = await getCurrentUser();
+  const sb = createAdminClient();
+  const { error } = await sb.from('event_bonus').upsert(
+    { item_id: itemId, doc_override: docOverride, updated_by: me?.email ?? null, updated_at: new Date().toISOString() },
+    { onConflict: 'item_id' }
+  );
+  if (error) throw new Error('형식 변경에 실패했어요 — ' + error.message);
+  revalidatePath('/admin-mb26/panel/event');
+}
+
+/** 등록이벤트 검수 취소 — event_bonus 행 삭제(미검수로). 가산점·문서/링크 수동 지정도 함께 초기화. */
 export async function clearEventBonus(itemId: number) {
   await assertReviewer();
   const sb = createAdminClient();

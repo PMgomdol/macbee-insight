@@ -1,18 +1,22 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { Search, ExternalLink, Check } from 'lucide-react';
-import { setEventBonus, clearEventBonus } from '../actions';
+import { Search, ExternalLink, Check, ArrowLeftRight } from 'lucide-react';
+import { setEventBonus, clearEventBonus, setEventDocType } from '../actions';
+import { rankBoard } from '@/lib/event-rank';
 
 export type EventRow = {
   id: number;
   title: string;
   proposer: string;
   url: string;
-  date: string;
+  date: string; // 제출일(KST)
+  at: string;   // 제출 시각 ISO — 동점 3순위(15건 먼저 달성) 판정용
   type: '문서' | '링크';
   email: string | null;
   base: number;
+  autoDoc: boolean;            // 자동 판정 결과
+  docOverride: boolean | null; // 운영진 수동 지정(null = 자동)
   rarity: boolean;
   practical: boolean;
   reviewed: boolean;
@@ -46,27 +50,11 @@ export function EventDashboard({ rows: initial, windowLabel, me }: { rows: Event
   const [pending, startTransition] = useTransition();
 
   // 순위는 '이메일' 기준 집계 (이름 자유입력 사칭·오타 방지). 이메일 없는 등록은 순위 제외.
-  const board = useMemo(() => {
-    const m = new Map<string, { name: string; email: string; count: number; docs: number; total: number; rank: number }>();
-    for (const r of rows) {
-      if (!r.email) continue;
-      const e = m.get(r.email) ?? { name: r.proposer, email: r.email, count: 0, docs: 0, total: 0, rank: 0 };
-      e.count++;
-      if (r.type === '문서') e.docs++;
-      e.total += rowTotal(r);
-      e.name = r.proposer; // 표시용 이름(최근 값)
-      m.set(r.email, e);
-    }
-    // 동점: 총점 → 문서 건수 → 총 건수 (포스터 기준)
-    const arr = [...m.values()].sort((a, b) => b.total - a.total || b.docs - a.docs || b.count - a.count);
-    let rank = 0, pt: number | null = null, pd: number | null = null, pc: number | null = null;
-    arr.forEach((e, i) => {
-      if (e.total === pt && e.docs === pd && e.count === pc) e.rank = rank;
-      else { rank = i + 1; e.rank = rank; }
-      pt = e.total; pd = e.docs; pc = e.count;
-    });
-    return arr;
-  }, [rows]);
+  // 동점: 총점 → 문서 건수 → 총 건수 → 15건 먼저 달성(제출 시각) — lib/event-rank.ts
+  const board = useMemo(
+    () => rankBoard(rows.map((r) => ({ email: r.email, proposer: r.proposer, isDoc: r.type === '문서', score: rowTotal(r), at: r.at })), MIN),
+    [rows]
+  );
   const noEmailCount = rows.filter((r) => !r.email).length;
   const boardShown = qualifiedOnly ? board.filter((e) => e.count >= MIN) : board;
 
@@ -107,17 +95,36 @@ export function EventDashboard({ rows: initial, windowLabel, me }: { rows: Event
     });
   }
 
+  // 형식 배지 클릭 — 문서(2점)↔링크(1점). 자동 판정과 같아지면 수동 지정을 풀어(null) 저장. 가산점처럼 검수완료 처리.
+  function toggleDocType(id: number) {
+    setErr(null);
+    const cur = rows.find((r) => r.id === id);
+    if (!cur) return;
+    const nextDoc = cur.type !== '문서';
+    const override = nextDoc === cur.autoDoc ? null : nextDoc;
+    patch(id, { type: nextDoc ? '문서' : '링크', base: nextDoc ? 2 : 1, docOverride: override, reviewed: true, reviewedBy: me ?? cur.reviewedBy, reviewedAt: todayStr() });
+    startTransition(async () => {
+      try {
+        await setEventDocType(id, override);
+      } catch (e) {
+        patch(id, { type: cur.type, base: cur.base, docOverride: cur.docOverride, reviewed: cur.reviewed, reviewedBy: cur.reviewedBy, reviewedAt: cur.reviewedAt });
+        setErr(e instanceof Error ? e.message : '저장 실패');
+      }
+    });
+  }
+
   function toggleReviewed(id: number) {
     setErr(null);
     const cur = rows.find((r) => r.id === id);
     if (!cur) return;
     if (cur.reviewed) {
-      patch(id, { reviewed: false, rarity: false, practical: false, reviewedBy: null, reviewedAt: null }); // 검수취소 = 가산도 초기화
+      // 검수취소 = 가산점·형식 수동 지정 모두 초기화(event_bonus 행 삭제) → 형식은 자동 판정으로
+      patch(id, { reviewed: false, rarity: false, practical: false, reviewedBy: null, reviewedAt: null, docOverride: null, type: cur.autoDoc ? '문서' : '링크', base: cur.autoDoc ? 2 : 1 });
       startTransition(async () => {
         try {
           await clearEventBonus(id);
         } catch (e) {
-          patch(id, { reviewed: cur.reviewed, rarity: cur.rarity, practical: cur.practical });
+          patch(id, { reviewed: cur.reviewed, rarity: cur.rarity, practical: cur.practical, docOverride: cur.docOverride, type: cur.type, base: cur.base });
           setErr(e instanceof Error ? e.message : '저장 실패');
         }
       });
@@ -161,7 +168,9 @@ export function EventDashboard({ rows: initial, windowLabel, me }: { rows: Event
           </button>
         </div>
         <p className="text-[11.5px] text-[var(--muted-2)]">
-          순위는 <b>이메일 기준</b>으로 집계돼요.{noEmailCount > 0 && <span className="text-[var(--muted)]"> 이메일 없는 등록 {noEmailCount}건은 순위에서 제외(자료로는 집계).</span>}
+          순위는 <b>이메일 기준</b>, 기간은 <b>제출 시각</b> 기준(10/31 23:59까지 제출 → 11월 승인도 포함)이에요.
+          동점이면 문서 건수 → 총 건수 → {MIN}건 먼저 달성한 순.
+          {noEmailCount > 0 && <span className="text-[var(--muted)]"> 이메일 없는 등록 {noEmailCount}건은 순위에서 제외(자료로는 집계).</span>}
         </p>
         {boardShown.length === 0 ? (
           <p className="text-sm text-[var(--muted-2)] py-3">{board.length === 0 ? '아직 집계된 자료가 없어요.' : '자격 충족자가 아직 없어요.'}</p>
@@ -181,7 +190,7 @@ export function EventDashboard({ rows: initial, windowLabel, me }: { rows: Event
               <tbody>
                 {boardShown.map((e) => (
                   <tr
-                    key={e.name}
+                    key={e.email}
                     onClick={() => setQ(e.name)}
                     className="border-b border-[var(--border)] last:border-0 cursor-pointer hover:bg-[var(--card)]"
                     title="클릭하면 이 사람 자료만 보기"
@@ -210,7 +219,7 @@ export function EventDashboard({ rows: initial, windowLabel, me }: { rows: Event
         <div className="text-sm font-medium text-[var(--muted)]">자료 채점 ({filtered.length}건)</div>
         <p className="text-[12px] text-[var(--muted-2)] leading-relaxed -mt-1">
           각 줄 왼쪽 상태를 눌러 <b className="text-[var(--fg)]">검수완료</b>로 바꿔요. 가산점(희소·실무)을 체크하면 자동으로 검수완료 처리돼요.
-          기본점수는 링크 1점·문서 2점 자동. (최소 {MIN}개 기준)
+          기본점수는 링크 1점·문서 2점 자동(Figma는 문서). 판정이 애매하면 <b className="text-[var(--fg)]">형식 배지를 눌러</b> 문서/링크를 바꿔요. (최소 {MIN}개 기준)
         </p>
 
         <div className="flex items-center gap-2 border-2 border-[var(--border)] focus-within:border-[var(--accent)] rounded-[var(--r-sm)] px-3 py-2 bg-[var(--bg)] transition max-w-md">
@@ -259,9 +268,19 @@ export function EventDashboard({ rows: initial, windowLabel, me }: { rows: Event
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] shrink-0 ${r.type === '문서' ? 'bg-[var(--accent-bg)] text-[var(--accent)]' : 'bg-[var(--card)] text-[var(--muted)]'}`}>
+                    {/* 형식 스위치 — 누르면 문서↔링크. 바뀐다는 걸 알 수 있게 테두리+⇄ 아이콘(정적 라벨과 구분) */}
+                    <button
+                      type="button"
+                      onClick={() => toggleDocType(r.id)}
+                      disabled={pending}
+                      aria-label={`형식 ${r.type} ${r.base}점${r.docOverride !== null ? '(운영진 지정)' : '(자동 판정)'} — 눌러서 ${r.type === '문서' ? '링크 1점' : '문서 2점'}으로 바꾸기`}
+                      title={`${r.docOverride !== null ? '운영진 지정' : '자동 판정'} — 누르면 ${r.type === '문서' ? '링크(1점)' : '문서(2점)'}로 바꿔요`}
+                      className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] border transition hover:border-[var(--accent)] ${r.type === '문서' ? 'bg-[var(--accent-bg)] text-[var(--accent)] border-[var(--accent)]/30' : 'bg-[var(--card)] text-[var(--muted)] border-[var(--border)]'}`}
+                    >
                       {r.type} {r.base}
-                    </span>
+                      {r.docOverride !== null && <span className="font-normal opacity-70">수동</span>}
+                      <ArrowLeftRight size={10} className="opacity-50" aria-hidden />
+                    </button>
                     {r.url ? (
                       <a href={r.url} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1 text-sm font-medium truncate hover:text-[var(--accent)]" title="새 탭에서 원문">
                         <span className="truncate">{r.title}</span>
