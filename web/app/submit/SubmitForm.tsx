@@ -199,7 +199,11 @@ export function SubmitForm({ categories }: Props) {
   function switchMode(next: 'url' | 'file') {
     if (mode === next) return;
     setMode(next);
-    // 탭 전환 시 이전 탭에서 입력·분석된 정보 모두 초기화 (URL→파일 또는 파일→URL)
+    clearInputs();
+  }
+
+  // 입력·분석 결과 초기화 — 탭 전환, 파일 삭제·교체 때 이전 자료 정보(제목·설명·분류 등)가 섞이지 않게.
+  function clearInputs() {
     setUrl('');
     setFileUrl('');
     setFinalUrl('');
@@ -217,10 +221,13 @@ export function SubmitForm({ categories }: Props) {
     setManual(false);
     setDuplicate(null);
     setForceSubmit(false);
+    setSubmitError(null);
+    // 제안자 이름·이메일은 사람 정보라 유지
   }
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
+    e.target.value = ''; // 삭제 후 같은 파일을 다시 골라도 onChange 가 오게
     if (f) handleFile(f);
   }
 
@@ -232,9 +239,8 @@ export function SubmitForm({ categories }: Props) {
   }
 
   function handleFile(f: File) {
+    clearInputs(); // 교체 시 이전 파일로 분석된 제목·설명·분류가 새 파일에 섞이지 않게
     setFileName(f.name);
-    setFileUrl('');
-    setAnalyzeMsg(null);
 
     if (f.size === 0) {
       setAnalyzeMsg({ kind: 'error', text: `${f.name} — 비어있는 파일이에요. 다른 파일을 골라주세요.` });
@@ -436,37 +442,54 @@ export function SubmitForm({ categories }: Props) {
           <label className="text-sm font-medium">
             파일 <span className="text-[var(--danger)]">*</span>
           </label>
-          <label
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={onDrop}
-            className={`flex items-center justify-center gap-2 px-4 rounded-[var(--r-lg)] border-2 border-dashed cursor-pointer transition-colors ${
-              fileUrl && !uploading
-                ? 'py-4 border-[var(--success)]/50 bg-[var(--success)]/5'
-                : dragOver
-                  ? 'py-8 border-[var(--accent)] bg-[var(--accent-bg)]'
-                  : 'py-8 border-[var(--border-strong)] bg-[var(--card)] hover:border-[var(--accent)]'
-            }`}
-          >
-            <input type="file" onChange={onFileChange} className="hidden" />
-            {uploading ? <Spinner size="small" /> : fileUrl ? <FileCheck2 size={16} className="text-[var(--success)]" aria-hidden /> : <Upload size={16} />}
-            <span className="text-sm truncate">
-              {uploading
-                ? '올리고 있어요...'
-                : dragOver
-                  ? '여기에 놓으면 올라가요'
-                  : fileName ?? '파일을 끌어다 놓거나 눌러서 고르기 (30MB까지)'}
-            </span>
-          </label>
-          {fileUrl && !uploading && (
-            <a
-              href={fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="self-start text-xs text-[var(--accent)] hover:underline inline-flex items-center gap-1"
+          {fileUrl && !uploading ? (
+            // 업로드 완료 — 파일 한 줄 + [삭제]. 삭제하면 빈 업로드 칸으로 돌아가 다른 파일을 고를 수 있음.
+            <div className="flex items-center gap-3 pl-4 pr-2 py-2 rounded-[var(--r-lg)] border border-[var(--success)]/50 bg-[var(--success)]/5">
+              <FileCheck2 size={18} className="shrink-0 text-[var(--success)]" aria-hidden />
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-sm font-medium truncate">{fileName}</span>
+                <a
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="self-start text-xs text-[var(--accent)] hover:underline inline-flex items-center gap-1"
+                >
+                  업로드된 파일 보기 <ExternalLink size={11} aria-hidden />
+                </a>
+              </div>
+              {/* 분석 중엔 막음 — 분석 결과가 삭제 뒤에 도착해 빈 폼을 다시 채우는 것 방지 */}
+              <UIButton
+                variant="secondary"
+                size="sm"
+                onClick={clearInputs}
+                disabled={busy}
+                aria-label={`${fileName ?? '파일'} 삭제하고 다른 파일 고르기`}
+                className="shrink-0 min-h-[44px]"
+              >
+                <X size={14} aria-hidden /> 삭제
+              </UIButton>
+            </div>
+          ) : (
+            <label
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={onDrop}
+              className={`flex items-center justify-center gap-2 px-4 py-8 rounded-[var(--r-lg)] border-2 border-dashed cursor-pointer transition-colors ${
+                dragOver
+                  ? 'border-[var(--accent)] bg-[var(--accent-bg)]'
+                  : 'border-[var(--border-strong)] bg-[var(--card)] hover:border-[var(--accent)]'
+              }`}
             >
-              업로드된 파일 보기 <ExternalLink size={11} aria-hidden />
-            </a>
+              <input type="file" onChange={onFileChange} className="hidden" />
+              {uploading ? <Spinner size="small" /> : <Upload size={16} />}
+              <span className="text-sm truncate">
+                {uploading
+                  ? '올리고 있어요...'
+                  : dragOver
+                    ? '여기에 놓으면 올라가요'
+                    : fileName ?? '파일을 끌어다 놓거나 눌러서 고르기 (30MB까지)'}
+              </span>
+            </label>
           )}
         </div>
       )}
