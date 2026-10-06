@@ -470,7 +470,7 @@ export async function submitProposal(formData: FormData): Promise<SubmitResult |
   // 오타·대소문자 섞임으로 집계가 갈리는 걸 막는다. (클라 type=email 은 서버액션 직접호출로 우회 가능)
   const email = proposer_email.toLowerCase();
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { ok: false, error: '이메일 형식을 확인해주세요 (예: name@example.com)' };
+    return { ok: false, error: '이메일 주소를 확인해주세요 (예: name@example.com)' };
   }
 
   // 최종 안전 검사 — 분석 단계 이후 다른 자료가 등록되었을 수 있어 한 번 더 확인.

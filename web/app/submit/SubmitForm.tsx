@@ -52,7 +52,7 @@ export function SubmitForm({ categories }: Props) {
   const [submitDone, setSubmitDone] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [emailNudge, setEmailNudge] = useState(false); // 이벤트 기간 이메일 공란 제출 시 안내
-  const [highlightEmail, setHighlightEmail] = useState(false); // '이메일 입력할게요' 후 잠깐 강조
+  const [highlightEmail, setHighlightEmail] = useState(false); // '이메일 입력하기' 후 잠깐 강조
   const [dragOver, setDragOver] = useState(false);
   const [progress, setProgress] = useState(0);
   // ?eventPreview=1 — 기간 전에 이벤트 UI(이메일 안내)를 미리 확인용. 초기 렌더엔 off → hydration 안전.
@@ -346,7 +346,7 @@ export function SubmitForm({ categories }: Props) {
     doSubmit();
   }
 
-  // '이메일 입력할게요' — 팝업 닫고 이메일칸으로 유도: 모바일 키보드 + 부드러운 중앙 스크롤 + 잠깐 강조.
+  // '이메일 입력하기' — 팝업 닫고 이메일칸으로 유도: 모바일 키보드 + 부드러운 중앙 스크롤 + 잠깐 강조.
   // focus({preventScroll})로 iOS 키보드는 올리되 즉각 점프는 막고, 우리가 제어하는 smooth 스크롤로 자연스럽게.
   function goToEmail() {
     setEmailNudge(false);
@@ -658,7 +658,7 @@ export function SubmitForm({ categories }: Props) {
             </div>
             <div className="flex flex-col gap-1.5 min-w-0">
               <label className="text-sm font-medium" htmlFor="proposer-email">
-                이메일 <span className="text-[var(--muted-2)] font-normal">{eventActive ? '(이벤트 순위 집계용)' : '(선택)'}</span>
+                이메일 <span className="text-[var(--muted-2)] font-normal">{eventActive ? '(챌린지 순위용)' : '(선택)'}</span>
               </label>
               <div className={`rounded-[var(--r-sm)] transition-shadow duration-300 ${highlightEmail ? 'ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]' : ''}`}>
                 <Textfield
@@ -666,7 +666,7 @@ export function SubmitForm({ categories }: Props) {
                   type="email"
                   value={proposerEmail}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setProposerEmail(e.target.value)}
-                  placeholder={eventActive ? '순위 집계·결과 안내를 위해 입력해주세요' : '검토 결과를 알려드려요'}
+                  placeholder={eventActive ? '순위와 결과 안내를 위해 입력해주세요' : '검토 결과를 알려드려요'}
                 />
               </div>
             </div>
@@ -719,14 +719,14 @@ export function SubmitForm({ categories }: Props) {
               </button>
             </div>
             <p className="text-sm text-[var(--muted)] leading-relaxed">
-              이메일을 남기지 않으면 <b className="text-[var(--fg)]">이벤트 순위 집계에서 빠져요.</b> 등록 자체는 됩니다.
+              이메일이 없으면 자료는 등록되지만 <b className="text-[var(--fg)]">챌린지 순위에는 들어가지 않아요.</b>
             </p>
             <div className="flex gap-2 mt-1">
               <UIButton onClick={goToEmail} className="flex-1">
-                이메일 입력할게요
+                이메일 입력하기
               </UIButton>
               <UIButton onClick={doSubmit} variant="secondary" className="flex-1">
-                순위 없이 그냥 등록
+                그래도 등록하기
               </UIButton>
             </div>
           </div>
