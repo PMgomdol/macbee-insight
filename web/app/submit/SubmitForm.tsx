@@ -48,7 +48,6 @@ export function SubmitForm({ categories }: Props) {
   const [analyzed, setAnalyzed] = useState(false);
   const [manual, setManual] = useState(false);
   const [duplicate, setDuplicate] = useState<DuplicateMatch | null>(null);
-  const [forceSubmit, setForceSubmit] = useState(false);
   const [submitDone, setSubmitDone] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [emailNudge, setEmailNudge] = useState(false); // 이벤트 기간 이메일 공란 제출 시 안내
@@ -125,7 +124,6 @@ export function SubmitForm({ categories }: Props) {
     setAnalyzed(false);
     setManual(false);
     setDuplicate(null);
-    setForceSubmit(false);
     setSubmitDone(false);
     setSubmitError(null);
   }
@@ -162,7 +160,6 @@ export function SubmitForm({ categories }: Props) {
     if (r.finalUrl && r.finalUrl !== url) setFinalUrl(r.finalUrl);
     else setFinalUrl('');
     setDuplicate(r.duplicate ?? null);
-    setForceSubmit(false);
     setAnalyzed(true);
     setAnalyzeMsg({
       kind: 'ok',
@@ -220,7 +217,6 @@ export function SubmitForm({ categories }: Props) {
     setAnalyzed(false);
     setManual(false);
     setDuplicate(null);
-    setForceSubmit(false);
     setSubmitError(null);
     // 제안자 이름·이메일은 사람 정보라 유지
   }
@@ -317,7 +313,8 @@ export function SubmitForm({ categories }: Props) {
     fd.set('published_at', publishedAt);
     fd.set('proposer', proposer);
     fd.set('proposer_email', proposerEmail);
-    if (forceSubmit) fd.set('force', '1');
+    // 중복 경고를 본 뒤 누른 등록 = '그래도 등록하기' → 운영진 재판단으로 넘김
+    if (duplicate) fd.set('force', '1');
     setSubmitError(null);
     setEmailNudge(false);
     startSubmit(async () => {
@@ -329,7 +326,7 @@ export function SubmitForm({ categories }: Props) {
       }
       if ('duplicate' in r && r.duplicate) {
         setDuplicate(r.duplicate);
-        setSubmitError('이미 등록된 자료예요. 아래 안내를 확인해주세요.');
+        setSubmitError('이미 있는 자료예요. 그래도 등록하려면 한 번 더 눌러주세요.');
         track('submit_error', { mode, stage: 'submit', reason: 'duplicate' });
         return;
       }
@@ -414,7 +411,6 @@ export function SubmitForm({ categories }: Props) {
                 // 링크 바꾸면 이전 분석 결과 파생상태 초기화 — stale finalUrl이 제출되는 것 방지
                 setFinalUrl('');
                 setDuplicate(null);
-                setForceSubmit(false);
                 if (analyzed) setAnalyzed(false);
               }}
               onKeyDown={onUrlKeyDown}
@@ -557,15 +553,8 @@ export function SubmitForm({ categories }: Props) {
               </p>
             </div>
           </div>
-          <label className="flex items-center gap-2 text-xs text-[var(--muted)] cursor-pointer pl-6">
-            <input
-              type="checkbox"
-              checked={forceSubmit}
-              onChange={(e) => setForceSubmit(e.target.checked)}
-              className="accent-[var(--warning)]"
-            />
-            그래도 등록하기 (운영진이 다시 판단해요)
-          </label>
+          {/* 체크박스 대신 아래 등록 버튼이 '그래도 등록하기'로 바뀜 — 체크 후 다시 누르는 두 단계에서 연타가 났음 */}
+          <p className="text-xs text-[var(--muted)] pl-6">그래도 등록하면 운영진이 다시 판단해요.</p>
         </div>
       )}
 
@@ -682,10 +671,10 @@ export function SubmitForm({ categories }: Props) {
           <div className="mt-4">
             <UIButton
               type="submit"
-              disabled={submitting || !title || (!url && !fileUrl) || (!!duplicate && !forceSubmit)}
+              disabled={submitting || !title || (!url && !fileUrl)}
               className="w-full min-h-[44px]"
             >
-              {submitting ? '보내고 있어요…' : '등록하기'}
+              {submitting ? '보내고 있어요…' : duplicate ? '그래도 등록하기' : '등록하기'}
             </UIButton>
           </div>
         </>
