@@ -1,5 +1,5 @@
 import { createPublicClient } from './supabase/server';
-import { expand } from './synonyms';
+import { expand, spacingVariants } from './synonyms';
 import { getSearchIndex, isChosungQuery, chosungMatch, fuzzyMatch } from './search-index';
 import type { ArchiveItem, FAQItem } from '@/types/db';
 
@@ -71,6 +71,10 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
   const terms = Array.from(
     new Set([safe, ...tokenTerms, ...(syn?.expanded.map(clean) ?? [])])
   ).filter(Boolean);
+  // 각 검색어의 띄어쓰기 변형 — 같은 검색어로 취급(같은 가중치)
+  const variants = terms.map(spacingVariants);
+  const likeOr = (vs: string[], cols: string[]) =>
+    vs.flatMap((v) => cols.map((c) => `${c}.ilike.%${v}%`)).join(',');
 
   const sb = createPublicClient();
 
@@ -83,13 +87,12 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
   }
 
   const archP = Promise.all(
-    terms.map(async (t) => {
-      const like = `%${t}%`;
+    variants.map(async (vs) => {
       let q1 = sb
         .from('archive_item')
         .select(ARCHIVE_CARD_COLS)
         .eq('status', 'public')
-        .or(`title.ilike.${like},summary.ilike.${like}`);
+        .or(likeOr(vs, ['title', 'summary']));
       if (opts.kind) q1 = q1.eq('kind', opts.kind);
       if (opts.format) q1 = q1.eq('format', opts.format);
       if (opts.main) q1 = q1.eq('main_category', opts.main);
@@ -100,7 +103,7 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
         .from('archive_item')
         .select(ARCHIVE_CARD_COLS)
         .eq('status', 'public')
-        .contains('tags', [t]);
+        .overlaps('tags', vs);
       if (opts.kind) q2 = q2.eq('kind', opts.kind);
       if (opts.format) q2 = q2.eq('format', opts.format);
       if (opts.main) q2 = q2.eq('main_category', opts.main);
@@ -111,12 +114,11 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
   );
 
   const faqP = Promise.all(
-    terms.map(async (t) => {
-      const like = `%${t}%`;
+    variants.map(async (vs) => {
       const r = await sb
         .from('faq')
         .select(FAQ_CARD_COLS)
-        .or(`question.ilike.${like},answer.ilike.${like}`)
+        .or(likeOr(vs, ['question', 'answer']))
         .order('views', { ascending: false })
         .limit(20);
       return r.data ?? [];
@@ -138,7 +140,8 @@ export async function searchAll(qRaw: string, opts: SearchOpts = {}): Promise<Se
     const tScore = weightOf(termIdx);
     for (const r of rows as ArchiveItem[]) {
       const prev = archMap.get(r.id);
-      const titleHit = r.title.toLowerCase().includes(terms[termIdx].toLowerCase()) ? 5 : 0;
+      const title = r.title.toLowerCase();
+      const titleHit = variants[termIdx].some((v) => title.includes(v.toLowerCase())) ? 5 : 0;
       const score = (prev?.score ?? 0) + tScore + titleHit;
       archMap.set(r.id, { item: r, score });
     }

@@ -83,6 +83,28 @@ const MAP: Record<string, string[]> = {
   '양식': ['템플릿', '샘플'],
   '가이드': ['튜토리얼', '가이드라인', '매뉴얼'],
   '튜토리얼': ['가이드', '강의', '학습'],
+
+  // 9~10월 검색 로그 — 결과가 1~3건이라 다른 말로 다시 검색한 묶음
+  '백오피스': ['관리자', '어드민', 'back office', 'CMS'],
+  'backoffice': ['백오피스', '관리자', '어드민', 'back office'],
+  '어드민': ['관리자', '백오피스', 'back office'],
+  '관리자': ['어드민', '백오피스', 'back office', 'CMS'],
+  '요금제': ['요금', '가격', '과금'],
+  '요금': ['요금제', '가격', '과금'],
+  '가격': ['요금', '요금제', '과금'],
+  '결제': ['PG', '간편결제', '포트원', '결제 연동'],
+  '포트원': ['결제', 'PG', '아임포트', '간편결제'],
+  '비속어': ['금지어', '금칙어', '욕설'],
+  '금지어': ['비속어', '금칙어', '욕설'],
+  '포폴': ['포트폴리오', '이력서', '경력기술서'],
+  '간트': ['간트차트', 'gantt', 'WBS', '일정 관리'],
+  'WBS': ['간트', 'gantt', '일정 관리'],
+  'CRM': ['고객관리', '고객 관리'],
+  '카페24': ['쇼핑몰', '이커머스', '커머스'],
+  '저작권': ['라이선스', '저작물'],
+  '고객여정지도': ['저니맵', '고객 여정', 'journey map'],
+  '문제정의': ['문제 해결', '페인포인트', 'pain point'],
+  'painpoint': ['페인포인트', 'pain point', '문제정의'],
 };
 
 /** 큐레이션된 추천 검색어 (입력 없을 때 노출) */
@@ -91,24 +113,37 @@ export const TRENDING: string[] = [
   '데이터 분석', '브랜딩', 'AI', '와이어프레임', '리서치',
 ];
 
+// 띄어쓰기 무시 비교 — "화면 설계서"도 '화면설계서' 키에, "PM 면접"도 'PM면접' 키에 걸리게
+const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '');
+
 /** 입력어를 정규화 + 동의어 확장 */
 export function expand(q: string): SynonymHit | null {
-  const k = q.trim().toLowerCase();
+  const k = norm(q);
   if (!k) return null;
   // 1) 정확 매칭
   for (const [key, vals] of Object.entries(MAP)) {
-    if (key.toLowerCase() === k) {
+    if (norm(key) === k) {
       return { canonical: key, expanded: vals };
     }
   }
   // 2) 부분 매칭 — q가 key의 prefix or contains
   for (const [key, vals] of Object.entries(MAP)) {
-    const kl = key.toLowerCase();
+    const kl = norm(key);
     if (kl.includes(k) || k.includes(kl)) {
       return { canonical: key, expanded: vals };
     }
   }
   return null;
+}
+
+/**
+ * 띄어쓰기 변형 — 자료 제목은 "관리자 페이지"인데 "관리자페이지"로 찾는 경우.
+ * 띄어 쓴 말은 붙인 형태를, 붙여 쓴 한글(3~8자)은 한 칸 띄운 모든 위치를 함께 찾는다.
+ */
+export function spacingVariants(t: string): string[] {
+  if (/\s/.test(t)) return [t, t.replace(/\s+/g, '')];
+  if (!/^[가-힣]{3,8}$/.test(t)) return [t];
+  return [t, ...Array.from({ length: t.length - 1 }, (_, i) => `${t.slice(0, i + 1)} ${t.slice(i + 1)}`)];
 }
 
 /** 모든 동의어 키 — autocomplete 후보로도 활용 */
