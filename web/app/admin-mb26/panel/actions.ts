@@ -2,7 +2,7 @@
 
 import { after } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { revalidatePath, updateTag } from 'next/cache';
+import { revalidatePath, revalidateTag, updateTag } from 'next/cache';
 import { notifyProposalResult } from '@/lib/notify';
 import { transferArchiveFileToDrive } from '@/lib/drive-webapp';
 import { fileExtFromUrl } from '@/lib/file-ext';
@@ -207,7 +207,12 @@ async function migrateToArchive(row: any, approvers: string[], extraNote?: strin
 /** 승인된 자료의 업로드 파일을 맥비님 드라이브로 — 응답 반환 뒤 백그라운드. 실패해도 승인은 유지. */
 function scheduleDriveTransfer(archiveId: number, fileUrl: string | null) {
   if (!fileUrl) return;
-  after(() => transferArchiveFileToDrive(archiveId));
+  after(async () => {
+    const r = await transferArchiveFileToDrive(archiveId);
+    // 링크가 드라이브로 바뀌고 저장소 원본은 지워졌다. 승인 직후 캐시된 목록(/files·/insights)이
+    // 지워진 저장소 링크를 계속 내보내 'Object not found'가 났음(11/5 #954·#955) → 즉시 만료.
+    if (r.ok) revalidateTag('archive', { expire: 0 });
+  });
 }
 
 export async function approveProposal(id: string) {

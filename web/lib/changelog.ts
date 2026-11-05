@@ -43,6 +43,13 @@ export const TYPE_META: Record<ChangeType, { label: string; color: string }> = {
 
 export const CHANGELOG: Release[] = [
   {
+    date: '2026-11-05',
+    title: '승인 직후 파일 링크 오류 수정',
+    changes: [
+      { type: 'fix', text: '[자료 등록](/submit)으로 올린 파일을 승인한 직후, [양식](/files)·[콘텐츠](/insights) 목록에서 그 자료를 누르면 \'Object not found\' 오류가 나던 문제를 고쳤어요. 파일을 맥비님 드라이브로 옮긴 뒤에도 목록이 지워진 임시 링크를 한동안 보여주던 게 원인이었어요. 이제 옮기는 즉시 목록이 드라이브 링크로 바뀌어요.' },
+    ],
+  },
+  {
     date: '2026-11-01',
     title: '검색 동의어 보강 · 붙여 쓴 검색어 · 중복 자료 한 번에 등록',
     changes: [
