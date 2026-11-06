@@ -27,27 +27,32 @@ export function ConsentBanner() {
       className="fixed inset-x-0 bottom-0 z-[90] p-3 sm:p-4"
       style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
     >
-      <div className="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center gap-3 app-card p-4 shadow-lg">
-        <p className="text-[13px] text-[var(--muted)] leading-relaxed flex-1">
-          더 나은 자료실을 만들기 위해 방문 분석에 쿠키를 사용해요. 동의해주시면 어떤 자료가 도움이 되는지 파악해 서비스를 개선하는 데 큰 힘이 돼요.{' '}
+      {/* 모바일: 짧은 문구 + 버튼 한 줄 (첫 화면을 덜 가리게). 버튼은 손가락 터치 영역 44px. */}
+      <div className="max-w-3xl mx-auto flex items-center gap-2 sm:gap-3 app-card p-3 sm:p-4 shadow-lg">
+        <p className="text-[13px] text-[var(--muted)] leading-snug sm:leading-relaxed flex-1">
+          <span className="sm:hidden">더 나은 자료실을 위해 방문 분석에 쿠키를 써요.</span>
+          <span className="hidden sm:inline">
+            더 나은 자료실을 만들기 위해 방문 분석에 쿠키를 사용해요. 동의해주시면 어떤 자료가 도움이 되는지 파악해 서비스를 개선하는 데 큰 힘이 돼요.
+          </span>{' '}
           <Link href="/privacy" className="underline text-[var(--fg)] hover:text-[var(--accent)]">
             자세히
           </Link>
         </p>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
           <button
             type="button"
             onClick={() => setConsent('denied')}
-            className="text-[13px] text-[var(--muted)] hover:text-[var(--fg)] underline underline-offset-2 transition"
+            className="min-h-11 px-2 sm:min-h-0 sm:px-0 text-[13px] text-[var(--muted)] hover:text-[var(--fg)] underline underline-offset-2 transition"
           >
             거부
           </button>
           <button
             type="button"
             onClick={() => setConsent('granted')}
-            className="px-5 py-2 text-[13px] font-semibold rounded-[var(--r-sm)] bg-[var(--accent)] text-white hover:opacity-90 transition"
+            className="min-h-11 sm:min-h-0 px-4 sm:px-5 py-2 text-[13px] font-semibold rounded-[var(--r-sm)] bg-[var(--accent)] text-white hover:opacity-90 transition"
           >
-            동의하고 개선 돕기
+            <span className="sm:hidden">동의하기</span>
+            <span className="hidden sm:inline">동의하고 개선 돕기</span>
           </button>
         </div>
       </div>

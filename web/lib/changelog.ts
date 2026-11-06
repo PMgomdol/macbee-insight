@@ -43,6 +43,14 @@ export const TYPE_META: Record<ChangeType, { label: string; color: string }> = {
 
 export const CHANGELOG: Release[] = [
   {
+    date: '2026-11-06',
+    title: '모바일 첫 화면 더 빠르게 · 쿠키 안내 작게',
+    changes: [
+      { type: 'improve', text: '모바일에서 첫 화면이 더 빨리 떠요. 글꼴 파일(2MB)을 먼저 받느라 화면이 늦게 뜨던 걸, 화면을 먼저 보여주고 글꼴은 뒤에 받도록 바꿨어요.' },
+      { type: 'improve', text: '모바일 쿠키 안내를 한 줄로 줄였어요. 화면을 덜 가리고, [거부]·[동의하기] 버튼은 손가락으로 누르기 쉽게 넓혔어요.' },
+    ],
+  },
+  {
     date: '2026-11-05',
     title: '승인 직후 파일 링크 오류 수정',
     changes: [

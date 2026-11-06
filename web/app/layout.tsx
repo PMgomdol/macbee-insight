@@ -19,9 +19,11 @@ import { SITE_URL } from '@/lib/site';
 
 // Pretendard 변수폰트 셀프호스팅 — CDN(jsdelivr) 의존/렌더블로킹 제거.
 // display:swap → 폰트 로드 전 시스템 폰트로 즉시 렌더, 로드되면 교체.
+// preload:false — 2MB 파일을 <head>에서 미리 받으면 느린 모바일망에서 첫 화면이 그만큼 밀림(slow 4G 16s→5.7s 실측, 11/5).
 const pretendard = localFont({
   src: './fonts/PretendardVariable.woff2',
   display: 'swap',
+  preload: false,
   weight: '45 920',
   variable: '--font-pretendard',
 });
