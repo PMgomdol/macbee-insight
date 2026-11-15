@@ -23,7 +23,8 @@ export function EventHomeBanner() {
       <img src="/banner/event.png" alt="" className="hidden sm:block w-16 h-16 object-contain shrink-0" />
       <div className="flex flex-col gap-1 min-w-0 flex-1">
         <span className="text-[10px] font-semibold tracking-[0.08em] text-[#1E8E3E]">EVENT · {EVENT.label}</span>
-        <strong className="text-[15px] sm:text-lg font-bold tracking-tight leading-snug">자료 1건만 올려도 커피 추첨</strong>
+        <strong className="text-[15px] sm:text-lg font-bold tracking-tight leading-snug">꿀 아티클·북마크 폭풍 등록 챌린지</strong>
+        <span className="text-[13px] sm:text-sm font-medium">1건만 올려도 커피 추첨</span>
         <a
           href={EVENT.url}
           target="_blank"

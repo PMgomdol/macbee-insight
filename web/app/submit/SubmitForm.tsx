@@ -368,7 +368,7 @@ export function SubmitForm({ categories }: Props) {
         >
           <Trophy size={24} className="shrink-0 text-[#1E8E3E]" aria-hidden />
           <div className="flex flex-col gap-0.5 min-w-0">
-            <span className="text-[10px] font-semibold tracking-[0.08em] text-[#1E8E3E]">EVENT · 자료 등록 챌린지 · {EVENT.label}</span>
+            <span className="text-[10px] font-semibold tracking-[0.08em] text-[#1E8E3E]">EVENT · 꿀 아티클·북마크 폭풍 등록 챌린지 · {EVENT.label}</span>
             <span className="text-sm leading-snug">
               1건만 올려도 커피 추첨! 결과 안내를 위해 <b>이메일을 꼭 남겨주세요.</b> <span className="underline underline-offset-2">참여 방법·시상 보기 →</span>
             </span>
