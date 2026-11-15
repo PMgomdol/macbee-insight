@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { eventPromoVisible } from '@/lib/event';
 
 // 파스텔 배너 (인프런풍): 연한 배경 50 + 진한 텍스트 900 + 중간 뱃지 500 — 단계별 톤 스케일
 // Blue = 브랜드(Toss Blue) 스케일: 50 #E8F3FF · 500 #3182F6 · 900 #194086
@@ -44,6 +45,10 @@ export function HomeBanner() {
   const [epoch, setEpoch] = useState(0);
   // 움직임 축소 설정 사용자: 자동재생·게이지 애니메이션 끔 (수동 이동만)
   const [reduced, setReduced] = useState(false);
+  // 챌린지 기간엔 숨김 — 맨 위 이벤트 배너와 같은 모양의 홍보 칸이 위아래로 겹치고 등록 입구도 셋이 돼서.
+  // 오픈 후 홈 방문 144명 중 이 슬라이드 클릭 0~1명(11/15). 초기값 true → 기간 중 깜빡임 없음, 종료 후 자동 복귀.
+  const [eventPromo, setEventPromo] = useState(true);
+  useEffect(() => setEventPromo(eventPromoVisible()), []);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -76,11 +81,13 @@ export function HomeBanner() {
     resume();
   };
 
+  if (eventPromo) return null;
+
   return (
     <section
       aria-roledescription="carousel"
       aria-label="바로가기 배너"
-      className="w-full relative group"
+      className="w-full mt-6 sm:mt-12 relative group"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={resume}
       onFocus={() => setPaused(true)}

@@ -128,10 +128,8 @@ export default async function Home() {
         </section>
       )}
 
-      {/* 하단 슬라이드 배너 — 위 캐러셀과 간격 확보 */}
-      <div className="w-full mt-6 sm:mt-12">
-        <HomeBanner />
-      </div>
+      {/* 하단 슬라이드 배너 (챌린지 기간엔 숨김 — 간격 mt는 컴포넌트 안에) */}
+      <HomeBanner />
     </div>
   );
 }
