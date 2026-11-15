@@ -6,6 +6,7 @@ import Textfield from '@atlaskit/textfield';
 import TextArea from '@atlaskit/textarea';
 import { submitFeedback, type FeedbackKind } from '@/app/actions/feedback';
 import { track } from '@/lib/track';
+import { FEEDBACK_OPEN_EVENT } from './FeedbackWidgetLoader';
 
 const KINDS: { v: FeedbackKind; label: string }[] = [
   { v: 'suggestion', label: '개선 제안' },
@@ -14,7 +15,7 @@ const KINDS: { v: FeedbackKind; label: string }[] = [
   { v: 'praise', label: '칭찬' },
 ];
 
-export function FeedbackWidget() {
+export function FeedbackWidget({ autoOpen = false, hideFab = false }: { autoOpen?: boolean; hideFab?: boolean }) {
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<FeedbackKind>('suggestion');
   const [message, setMessage] = useState('');
@@ -29,6 +30,15 @@ export function FeedbackWidget() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [open]);
+
+  // 푸터 링크로 열기 — 로드 전 클릭이면 autoOpen으로, 로드 후엔 이벤트로
+  useEffect(() => {
+    if (autoOpen) openWidget();
+    const h = () => openWidget();
+    window.addEventListener(FEEDBACK_OPEN_EVENT, h);
+    return () => window.removeEventListener(FEEDBACK_OPEN_EVENT, h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function openWidget() {
     setOpen(true);
@@ -74,16 +84,16 @@ export function FeedbackWidget() {
 
   return (
     <>
-      <button
+      {!hideFab && <button
         type="button"
         onClick={openWidget}
         aria-label="의견 보내기"
         style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
-        className="fixed z-40 right-5 sm:bottom-6 sm:right-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[var(--bg)] text-[var(--fg)] border border-[var(--border)] font-semibold text-sm shadow-[var(--shadow-8)] hover:bg-[var(--card)] transition"
+        className="fixed z-40 right-5 sm:bottom-6 sm:right-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[var(--accent)] text-white font-semibold text-sm shadow-[var(--shadow-8)] hover:bg-[var(--accent-hover)] transition"
       >
         <MessageCircle size={16} aria-hidden />
         의견 보내기
-      </button>
+      </button>}
 
       {open && (
         <div

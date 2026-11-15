@@ -1,6 +1,10 @@
 'use client';
 import { useEffect, useState, Suspense, lazy } from 'react';
 import { MessageCircle } from 'lucide-react';
+import { useRegisterFabShown } from './RegisterFab';
+
+/** 푸터 '의견 보내기' 링크 등에서 위젯을 여는 브라우저 이벤트 */
+export const FEEDBACK_OPEN_EVENT = 'feedback:open';
 
 const FeedbackWidgetLazy = lazy(() =>
   import('./FeedbackWidget').then((m) => ({ default: m.FeedbackWidget }))
@@ -13,6 +17,14 @@ const FeedbackWidgetLazy = lazy(() =>
  */
 export function FeedbackWidgetLoader() {
   const [ready, setReady] = useState(false);
+  const [autoOpen, setAutoOpen] = useState(false); // 위젯 로드 전에 푸터 링크로 열었을 때
+  const hideFab = useRegisterFabShown(); // 자료 등록 버튼이 뜨는 동안엔 떠 있는 버튼 하나만
+
+  useEffect(() => {
+    const h = () => { setAutoOpen(true); setReady(true); };
+    window.addEventListener(FEEDBACK_OPEN_EVENT, h);
+    return () => window.removeEventListener(FEEDBACK_OPEN_EVENT, h);
+  }, []);
 
   useEffect(() => {
     const idle = (window as any).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
@@ -25,13 +37,13 @@ export function FeedbackWidgetLoader() {
 
   // 스켈레톤 FAB — 실 위젯 FAB와 동일 위치·크기·스타일. ready 전과 청크 로딩 중(Suspense
   // fallback) 둘 다에 써서, 실 위젯으로 교체될 때 사라지는 틈(깜빡임)이 없게 한다.
-  const fab = (
+  const fab = hideFab ? null : (
     <button
       type="button"
       aria-label="의견 보내기"
       onClick={() => setReady(true)}
       style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
-      className="fixed z-40 right-5 sm:bottom-6 sm:right-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[var(--bg)] text-[var(--fg)] border border-[var(--border)] font-semibold text-sm shadow-[var(--shadow-8)] hover:bg-[var(--card)] transition"
+      className="fixed z-40 right-5 sm:bottom-6 sm:right-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[var(--accent)] text-white font-semibold text-sm shadow-[var(--shadow-8)] hover:bg-[var(--accent-hover)] transition"
     >
       <MessageCircle size={16} aria-hidden />
       의견 보내기
@@ -42,7 +54,7 @@ export function FeedbackWidgetLoader() {
 
   return (
     <Suspense fallback={fab}>
-      <FeedbackWidgetLazy />
+      <FeedbackWidgetLazy autoOpen={autoOpen} hideFab={hideFab} />
     </Suspense>
   );
 }

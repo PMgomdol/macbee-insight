@@ -108,7 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <SiteFooter />
-        <FeedbackWidgetLoader />
+        <Suspense fallback={null}><FeedbackWidgetLoader /></Suspense>
         <Suspense fallback={null}><RegisterFab /></Suspense>
         </AtlaskitProvider>
       </body>

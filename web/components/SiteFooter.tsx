@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { MessageCircle, Video, FolderOpen, ExternalLink } from 'lucide-react';
 import { FooterAdminLink } from './FooterAdminLink';
 import { ConsentResetLink } from './ConsentResetLink';
+import { FeedbackOpenLink } from './FeedbackOpenLink';
 
 const ROOMS = [
   { label: '1번방', url: 'https://bit.ly/맥비' },
@@ -29,6 +30,15 @@ export function SiteFooter() {
             <div className="flex flex-col gap-2">
               <h3 className="font-bold text-sm text-white/90">맥비기획 자료실 운영팀</h3>
               <p className="text-xs">맥비 · 김소정 · 서지연 · 안재찬 · 임종헌</p>
+            </div>
+
+            {/* 의견·문의 — 챌린지 기간엔 떠 있는 의견 버튼 대신 여기서 연다 */}
+            <div className="flex flex-col gap-2">
+              <h3 className="font-bold text-sm text-white/90">의견·문의</h3>
+              <p className="text-xs">
+                불편한 점이나 바라는 점을 알려주세요.{' '}
+                <FeedbackOpenLink className="underline underline-offset-2 text-white/80 hover:text-white transition-colors" />
+              </p>
             </div>
 
           </div>
