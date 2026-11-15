@@ -43,6 +43,16 @@ export const TYPE_META: Record<ChangeType, { label: string; color: string }> = {
 
 export const CHANGELOG: Release[] = [
   {
+    date: '2026-11-15',
+    title: '자료 등록 챌린지 2회차 — 홈 배너·등록 버튼',
+    changes: [
+      { type: 'feature', text: '[홈](/) 맨 위에 자료 등록 챌린지(11/16~12/15) 배너를 달았어요. [자료 등록하기]를 누르면 바로 [자료 등록](/submit)으로 가요.' },
+      { type: 'feature', text: '모든 화면 오른쪽 아래에 [자료 등록하기] 버튼이 떠 있어요. 등록 화면과 운영진 화면에선 숨겨요. 바로 아래 [의견 보내기]는 흰색으로 바꿔 구분했어요. 챌린지가 끝나면 배너와 등록 버튼은 자동으로 사라져요.' },
+      { type: 'improve', text: '[자료 등록](/submit) 안내를 2회차 기준으로 바꿨어요. 1건만 올려도 커피 추첨 대상이고, 이메일을 남겨야 추첨·시상 대상이 돼요.' },
+      { type: 'improve', text: '[등록이벤트](/admin-mb26/panel/event) 집계 기간을 11/16~12/15로, 기본 자격을 승인 1건 이상으로 바꿨어요. 10월 회차는 주소 뒤에 ?from=2026-10-02&to=2026-11-01을 붙이면 볼 수 있어요.' },
+    ],
+  },
+  {
     date: '2026-11-06',
     title: '모바일 첫 화면 더 빠르게 · 쿠키 안내 작게',
     changes: [

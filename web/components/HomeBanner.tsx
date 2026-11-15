@@ -34,33 +34,11 @@ const SLIDES: Slide[] = [
   },
 ];
 
-// 등록이벤트 배너 — 10/1~10/31에만 자동 노출(그 외엔 숨김). 초록 계열로 기존 파랑/노랑과 구분.
-const EVENT_SLIDE: Slide = {
-  href: 'https://macbe.dothome.co.kr/macbe_archive-challenge.html',
-  badge: 'EVENT',
-  title: '기획·PM·IT 실무 자료 폭풍 등록 챌린지',
-  sub: '실무 자료 올리고 상품 받아가세요. 참여 방법·시상 내역 보러가기',
-  bg: '#E6F4EA',
-  fg: '#0B5323',
-  badgeColor: '#1E8E3E',
-  img: '/banner/event.png', // 나노바나나 3D 트로피 — 다른 슬라이드와 같은 클레이 스타일(배경 제거·세로 640px)
-};
-function eventLive(now = Date.now()): boolean {
-  return now >= Date.parse('2026-10-02T00:00:00+09:00') && now < Date.parse('2026-11-01T00:00:00+09:00');
-}
-
 const INTERVAL = 5000;
 
 export function HomeBanner() {
   const [idx, setIdx] = useState(0);
-  const [showEvent, setShowEvent] = useState(false);
-  // 이벤트 기간에만 배너 앞에 추가 — 초기 렌더(서버)엔 없음 → 지금은 숨김, 10/1부터 자동 노출
-  // ?eventPreview=1 이면 기간 전에도 이벤트 배너를 미리 노출(확인용)
-  useEffect(() => {
-    const preview = new URLSearchParams(window.location.search).get('eventPreview') === '1';
-    setShowEvent(eventLive() || preview);
-  }, []);
-  const slides = showEvent ? [EVENT_SLIDE, ...SLIDES] : SLIDES;
+  const slides = SLIDES;
   const [paused, setPaused] = useState(false);
   // 재개 시점마다 증가 — 진행 바 애니메이션과 타이머를 함께 리셋해 항상 동기 유지
   const [epoch, setEpoch] = useState(0);
@@ -76,7 +54,7 @@ export function HomeBanner() {
     if (paused || reduced) return;
     timer.current = setInterval(() => setIdx((i) => (i + 1) % slides.length), INTERVAL);
     return () => { if (timer.current) clearInterval(timer.current); };
-  }, [paused, idx, epoch, reduced, showEvent]);
+  }, [paused, idx, epoch, reduced]);
 
   const go = (i: number) => setIdx((i + slides.length) % slides.length);
   const resume = () => { setPaused(false); setEpoch((e) => e + 1); };

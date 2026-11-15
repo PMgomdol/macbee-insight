@@ -4,6 +4,7 @@ import { ItemCard } from '@/components/ItemCard';
 import { HorizontalScroll } from '@/components/HorizontalScroll';
 import { SearchAutocomplete } from '@/components/SearchAutocomplete';
 import { HomeBanner } from '@/components/HomeBanner';
+import { EventHomeBanner } from '@/components/EventHomeBanner';
 import { getMonthlyPopularItems, getRecommendedItems, getTopTags } from '@/lib/queries';
 import { SITE_URL } from '@/lib/site';
 
@@ -67,6 +68,9 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSONLD) }}
       />
+      {/* 챌린지 기간 최상단 배너 (종료 후 자동 숨김) */}
+      <EventHomeBanner />
+
       {/* 중앙 검색 영역 */}
       <section
         className="w-full max-w-2xl flex flex-col items-center gap-5 sm:gap-6 pb-1"

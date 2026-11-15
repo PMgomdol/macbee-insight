@@ -1,5 +1,6 @@
 'use client';
 
+import { EVENT, eventLive } from '@/lib/event';
 import { useState, useTransition, useEffect, useRef } from 'react';
 import {
   Sparkles, Upload, CheckCircle2, AlertCircle, FileCheck2, X, AlertTriangle, ExternalLink, Trophy,
@@ -20,10 +21,6 @@ const UPLOAD_BUCKET = 'archive-files';
 
 type Props = { categories: { main_category: string; sub_category: string | null }[] };
 
-// 기획·PM·IT 실무 자료 폭풍 등록 챌린지 기간(10/2~10/31 KST). 이 기간엔 이메일 없이 제출 시 '순위 집계 제외' 안내를 띄운다.
-const EVENT_ACTIVE =
-  Date.now() >= Date.parse('2026-10-02T00:00:00+09:00') &&
-  Date.now() < Date.parse('2026-11-01T00:00:00+09:00');
 
 export function SubmitForm({ categories }: Props) {
   const [mode, setMode] = useState<'url' | 'file'>('url');
@@ -54,10 +51,13 @@ export function SubmitForm({ categories }: Props) {
   const [highlightEmail, setHighlightEmail] = useState(false); // '이메일 입력하기' 후 잠깐 강조
   const [dragOver, setDragOver] = useState(false);
   const [progress, setProgress] = useState(0);
-  // ?eventPreview=1 — 기간 전에 이벤트 UI(이메일 안내)를 미리 확인용. 초기 렌더엔 off → hydration 안전.
-  const [eventPreview, setEventPreview] = useState(false);
-  useEffect(() => { setEventPreview(new URLSearchParams(window.location.search).get('eventPreview') === '1'); }, []);
-  const eventActive = EVENT_ACTIVE || eventPreview;
+  // 자료 등록 챌린지 기간(lib/event)엔 이벤트 배너·이메일 안내('추첨·시상 대상 제외')를 띄운다.
+  // 브라우저에서만 판정 — 빌드 시점(기간 전)에 그려진 HTML과 어긋나지 않게 초기 렌더엔 off.
+  // ?eventPreview=1 — 기간 전에 이벤트 UI를 미리 확인용.
+  const [eventActive, setEventActive] = useState(false);
+  useEffect(() => {
+    setEventActive(eventLive() || new URLSearchParams(window.location.search).get('eventPreview') === '1');
+  }, []);
 
   // 업로드·분석 진행률 — 서버액션이 실제 %를 안 주므로 경과시간 기반으로 90%까지
   // 차오르게 하고(뒤로 갈수록 느리게) 완료 시 사라짐. 30초 정도 걸리는 대기를 시각화.
@@ -361,16 +361,16 @@ export function SubmitForm({ categories }: Props) {
         // 이벤트 배너 — 초록 계열(홈 이벤트 배너와 같은 아이덴티티)로 파란 제품 UI와 구분해 눈에 띄게.
         // 전체가 맥비 이벤트 안내로 가는 링크(모바일 탭 영역 확보).
         <a
-          href="https://macbe.dothome.co.kr/macbe_archive-challenge.html"
+          href={EVENT.url}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-3 p-4 rounded-[var(--r-md)] bg-[#E6F4EA] text-[#0B5323] hover:brightness-[0.98] transition"
         >
           <Trophy size={24} className="shrink-0 text-[#1E8E3E]" aria-hidden />
           <div className="flex flex-col gap-0.5 min-w-0">
-            <span className="text-[10px] font-semibold tracking-[0.08em] text-[#1E8E3E]">EVENT · 기획·PM·IT 실무 자료 폭풍 등록 챌린지</span>
+            <span className="text-[10px] font-semibold tracking-[0.08em] text-[#1E8E3E]">EVENT · 자료 등록 챌린지 · {EVENT.label}</span>
             <span className="text-sm leading-snug">
-              순위 집계를 위해 <b>이메일을 꼭 남겨주세요.</b> <span className="underline underline-offset-2">참여 방법·시상 보기 →</span>
+              1건만 올려도 커피 추첨! 결과 안내를 위해 <b>이메일을 꼭 남겨주세요.</b> <span className="underline underline-offset-2">참여 방법·시상 보기 →</span>
             </span>
           </div>
         </a>
@@ -647,7 +647,7 @@ export function SubmitForm({ categories }: Props) {
             </div>
             <div className="flex flex-col gap-1.5 min-w-0">
               <label className="text-sm font-medium" htmlFor="proposer-email">
-                이메일 <span className="text-[var(--muted-2)] font-normal">{eventActive ? '(챌린지 순위용)' : '(선택)'}</span>
+                이메일 <span className="text-[var(--muted-2)] font-normal">{eventActive ? '(챌린지 결과 안내용)' : '(선택)'}</span>
               </label>
               <div className={`rounded-[var(--r-sm)] transition-shadow duration-300 ${highlightEmail ? 'ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--bg)]' : ''}`}>
                 <Textfield
@@ -708,7 +708,7 @@ export function SubmitForm({ categories }: Props) {
               </button>
             </div>
             <p className="text-sm text-[var(--muted)] leading-relaxed">
-              이메일이 없으면 자료는 등록되지만 <b className="text-[var(--fg)]">챌린지 순위에는 들어가지 않아요.</b>
+              이메일이 없으면 자료는 등록되지만 <b className="text-[var(--fg)]">챌린지 추첨·시상 대상에서 빠져요.</b>
             </p>
             <div className="flex gap-2 mt-1">
               <UIButton onClick={goToEmail} className="flex-1">

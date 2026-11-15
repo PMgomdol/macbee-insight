@@ -13,6 +13,7 @@ import { AnalyticsGate } from '@/components/AnalyticsGate';
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import { ConsentBanner } from '@/components/ConsentBanner';
 import { FeedbackWidgetLoader } from '@/components/FeedbackWidgetLoader';
+import { RegisterFab } from '@/components/RegisterFab';
 import { AtlaskitProvider } from '@/components/AtlaskitProvider';
 import './globals.css';
 import { SITE_URL } from '@/lib/site';
@@ -108,6 +109,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <SiteFooter />
         <FeedbackWidgetLoader />
+        <Suspense fallback={null}><RegisterFab /></Suspense>
         </AtlaskitProvider>
       </body>
     </html>

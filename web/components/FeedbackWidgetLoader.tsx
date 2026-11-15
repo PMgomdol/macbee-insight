@@ -31,7 +31,7 @@ export function FeedbackWidgetLoader() {
       aria-label="의견 보내기"
       onClick={() => setReady(true)}
       style={{ bottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
-      className="fixed z-40 right-5 sm:bottom-6 sm:right-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[var(--accent)] text-white font-semibold text-sm shadow-[var(--shadow-8)] hover:bg-[var(--accent-hover)] transition"
+      className="fixed z-40 right-5 sm:bottom-6 sm:right-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[var(--bg)] text-[var(--fg)] border border-[var(--border)] font-semibold text-sm shadow-[var(--shadow-8)] hover:bg-[var(--card)] transition"
     >
       <MessageCircle size={16} aria-hidden />
       의견 보내기

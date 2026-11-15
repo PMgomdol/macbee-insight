@@ -27,7 +27,7 @@ export type EventRow = {
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
-const MIN = 15; // 최소 등록 기준(2일 1개)
+const MIN = 1; // 최소 등록 기준 — 11월 회차: 승인 1개 이상(커피 추첨 대상). 10월 회차는 15
 
 function rowTotal(r: EventRow): number {
   return r.base + (r.rarity ? 1 : 0) + (r.practical ? 2 : 0);
