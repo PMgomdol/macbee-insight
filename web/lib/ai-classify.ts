@@ -163,6 +163,7 @@ function buildVisionPrompt(url: string, meta: { title: string; description: stri
 - summary_ko는 1문장. 파일에 보이는 실제 내용("어떤 자료이고 무슨 주제를 다루는지")을 구체적으로.
   파일명만 가지고 추측하지 말 것 — 본문/이미지에서 본 것만 기술.
   **명사구로 마무리** — "~을 정리한 자료", "~용 템플릿", "~을 담은 가이드" 형태. "~합니다/~입니다" 종결어미 금지.
+  ${SUMMARY_RULE}
   내용이 흐릿하거나 알 수 없으면 "확인 불가" 명시.
 - main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
 - sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
@@ -187,6 +188,7 @@ URL: ${url}
 - summary_ko는 1문장. "이 글이 무엇에 대한 무슨 내용인지" 명확히.
   **명사구로 마무리** — "~하는 글", "~을 다루는 아티클", "~을 정리한 글" 형태.
   "~합니다/~입니다/~한다" 같은 종결어미로 끝내지 말 것.
+  ${SUMMARY_RULE}
   ${meta.body ? '**본문 발췌를 기준으로 작성**. og 설명이 사이트 소개/광고문구면 무시하고 본문 내용 우선.' : '알 수 없으면 "확인 불가".'}
 - title_ko도 본문과 og 제목이 다르면 실제 글 내용에 맞는 쪽으로.
 - title_ko에서 **이모지·특수기호, 시리즈 번호(#819, 819화, [시리즈명], Vol.3 등), 사이트명 꼬리(" | 블로그명", " - 회사명")는 제거**하고 글 내용을 나타내는 제목만 남길 것.
@@ -219,6 +221,7 @@ function buildVideoPrompt(url: string, meta: { title: string; description: strin
 - title_ko: 영상 실제 내용을 반영한 한글 제목. 원제목이 적절하면 그대로/번역, 낚시성이면 내용 기반으로 재작성.
 - summary_ko: 1문장. 영상이 실제로 다루는 핵심(무슨 주제를 어떻게 설명·시연하는지)을 구체적으로. 제목 반복 금지. 힌트만 베끼지 말고 영상에서 본 내용 기술.
   **명사구로 마무리** — "~을 설명하는 영상", "~을 시연하는 강의" 형태. "~합니다/~입니다" 종결어미 금지.
+  ${SUMMARY_RULE}
 - main_category: ${Object.keys(CATEGORIES).join(' | ')} 중 1개
 - sub_category: main에 맞는 것 (${Object.entries(CATEGORIES).map(([m, subs]) => `${m}=[${subs.join(',')}]`).join('; ')})
 - tags: 3~6개. 영상 핵심 키워드. 한글 우선. 너무 일반적인 단어 단독 금지
@@ -267,6 +270,10 @@ const TAG_DICT: Array<{ pat: RegExp; tag: string }> = [
  * 파일 본문이 그대로 요약에 들어오는 경우 방지. 첫 문장 종결부호에서 자르고,
  * 문장부호가 없으면(정상적인 명사구 요약) 길 때만 하드컷. 정상 요약은 그대로 통과.
  */
+/** 한 줄 설명 길이·문체 — 사이트 규칙(개조식·마침표 없음·20~55자, 2026-08-19 합의). 링크·파일·영상 지시문 공통. */
+const SUMMARY_RULE = `**공백 포함 20~55자**. 핵심 하나만 — 배경·이점·사례를 줄줄이 나열하지 말 것. 마침표 없음.
+  좋은 예: "UX Writer 직무 수요·역량을 링크드인 채용 데이터로 분석한 아티클", "안드로이드 앱 개발용 머티리얼 디자인 공식 리소스"`;
+
 function clampSummary(s: string, max = 160): string {
   s = (s || '').replace(/\s+/g, ' ').trim();
   // 첫 문장 종결(마침표/물음표/느낌표 뒤 공백·끝)에서 자르기 — 따옴표 안 물음표는 제외

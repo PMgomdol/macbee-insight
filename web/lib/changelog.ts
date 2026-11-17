@@ -43,6 +43,13 @@ export const TYPE_META: Record<ChangeType, { label: string; color: string }> = {
 
 export const CHANGELOG: Release[] = [
   {
+    date: '2026-11-17',
+    title: '자동 분석 한 줄 설명 길이',
+    changes: [
+      { type: 'fix', text: '[자료 등록](/submit)에서 자동 분석이 채우는 한 줄 설명이 90자 넘게 길어지던 문제를 고쳤어요. 이제 사이트 규칙(20~55자, 개조식)에 맞게 나와서 승인할 때 고칠 일이 줄어요. 링크 4건으로 확인해 보니 29~46자였어요.' },
+    ],
+  },
+  {
     date: '2026-11-15',
     title: '자료 등록 챌린지 2회차 — 홈 배너·등록 버튼',
     changes: [
