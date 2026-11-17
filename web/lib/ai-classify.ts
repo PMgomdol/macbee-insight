@@ -54,10 +54,12 @@ export async function classify(
   const parts: Array<
     { text: string }
     | { inline_data: { mime_type: string; data: string } }
-    | { file_data: { file_uri: string } }
+    | { file_data: { file_uri: string }; video_metadata?: { end_offset: string } }
   > = [{ text: prompt }];
   if (inline) parts.push({ inline_data: { mime_type: inline.mime, data: inline.base64 } });
-  if (videoUrl) parts.push({ file_data: { file_uri: videoUrl } });
+  // 영상은 저화질·앞 10분만 — 15분 영상 원본이 27만 토큰이라 무료 등급 분당 한도(25만)를 혼자 다 써서
+  // 그 1분 동안 다른 사람 분석까지 429로 막혔다(11/17 측정). 저화질+10분 = 약 6만 토큰. 주제 파악엔 앞부분이면 충분.
+  if (videoUrl) parts.push({ file_data: { file_uri: videoUrl }, video_metadata: { end_offset: '600s' } });
 
   const body = JSON.stringify({
     contents: [{ parts }],
@@ -77,8 +79,10 @@ export async function classify(
         required: ['title_ko', 'summary_ko', 'main_category', 'format', 'tags', 'usage'],
       },
       temperature: 0.2,
+      ...(videoUrl ? { mediaResolution: 'MEDIA_RESOLUTION_LOW' } : {}),
     },
   });
+  // 영상 30초: 긴 영상은 10분으로 잘라도 40초+ 걸려 어차피 넘김 → 오래 붙잡지 말고 제목 기반 분석으로 넘긴다(analyzeYouTube)
   const timeout = inline || videoUrl ? 30000 : 15000;
 
   try {
