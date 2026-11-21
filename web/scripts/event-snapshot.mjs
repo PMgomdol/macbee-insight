@@ -22,9 +22,15 @@ for (let page = 1; ; page++) {
 }
 
 // ── 등록 (DB)
-const { data: props, error } = await sb.from('staging_proposal').select('proposed_at, proposer_email, status, external_url, file_url').gte('proposed_at', SINCE);
+const { data: props, error } = await sb.from('staging_proposal').select('proposed_at, proposer, proposer_email, status, external_url, file_url').gte('proposed_at', SINCE);
 if (error) throw new Error(error.message);
-const who = (p) => { const e = (p.proposer_email || '').toLowerCase(); return !e ? '이메일없음' : staff.has(e) ? '운영진' : '일반'; };
+// 운영진이 로그인 계정과 다른 이메일로 등록하기도 함(1회차 10/7 건) → 이름이 운영진 명단(사이트 푸터와 동일)이면 운영진으로.
+const STAFF_NAMES = ['맥비', '김소정', '서지연', '안재찬', '임종헌'];
+const who = (p) => {
+  const e = (p.proposer_email || '').toLowerCase();
+  if (staff.has(e) || STAFF_NAMES.some((n) => (p.proposer || '').includes(n))) return '운영진';
+  return e ? '일반' : '이메일없음';
+};
 const tally = (rows, f) => rows.reduce((m, r) => ((m[f(r)] = (m[f(r)] || 0) + 1), m), {});
 console.log(`\n■ 챌린지 ${EVENT.label} — ${kstDay(new Date().toISOString())} 기준`);
 console.log(`등록 ${props.length}건`, JSON.stringify(tally(props, who)), '| 상태', JSON.stringify(tally(props, (p) => p.status)), '| 방식', JSON.stringify(tally(props, (p) => (p.file_url ? '파일' : '링크'))));
